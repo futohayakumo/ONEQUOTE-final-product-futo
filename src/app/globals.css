@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   Design System v2 — intro.md §3 is canonical.
+   Do NOT colour-pick from examples/*.png (warm cream + serif).
+   ───────────────────────────────────────────────────────────── */
+
+@theme {
+  /* 1. NAMESPACE RESETS — off-token utilities emit NOTHING, so a
+        mistake fails FLAT instead of failing round or soft. */
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --text-*: initial;
+  --font-*: initial;
+
+  /* 2. COLOUR TOKENS (intro.md §3.1) */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-studio: #ffffff; /* Studio White    — panels, card faces        */
+  --color-canvas: #f8fafc; /* Clean Off-White — app background            */
+  --color-border: #cbd5e1; /* Neutral Border  — 1px outlines              */
+  --color-charcoal: #0f172a; /* Deep Charcoal   — headings, console bg      */
+  --color-muted: #64748b; /* Muted Slate     — captions, metadata        */
+  --color-crimson: #e1127a; /* Deep Crimson    — accent, <10% of screen    */
+  --color-tint: #fdf2f8; /* Active Tint     — active item background    */
+  --color-console: #0f172a; /* Dark Slate      — terminal background       */
+  --color-terminal: #34d399; /* Terminal Green  — CONSOLE ONLY (1.75:1 on white) */
+
+  /* 3. GEOMETRY — exactly one legal radius */
+  --radius-sharp: 4px;
+
+  /* 4. ELEVATION — one legal value, and it is "none" */
+  --shadow-none: 0 0 #0000;
+}
+
+/* `inline` so next/font's runtime vars resolve in one hop */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-mono-src), ui-monospace, "SFMono-Regular", Menlo,
+    Consolas, monospace;
+  /* --font-serif intentionally NOT defined. `font-serif` is a dead utility. */
+}
+
+@layer base {
+  /* v4 preflight sets border-color: currentColor. Without this, every bare
+     `border` renders near-black instead of #CBD5E1. LOAD-BEARING. */
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    border-color: var(--color-border);
+  }
+
+  :root {
+    color-scheme: only light;
+  }
+
+  html {
+    background-color: var(--color-canvas);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Nothing in this system is rounder than 4px, ever. */
+  input,
+  select,
+  textarea,
+  button,
+  fieldset {
+    border-radius: var(--radius-sharp);
+  }
+
+  /* outline, NOT box-shadow — the shadow reset must never kill focus. */
+  :focus-visible {
+    outline: 2px solid var(--color-crimson);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-tint);
+    color: var(--color-charcoal);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ── TYPE SCALE ────────────────────────────────────────────────
+   Bundled so size/weight/leading/colour can never be mixed off-scale.
+   @utility MUST be top level — it does not compile inside @layer.
+   ───────────────────────────────────────────────────────────── */
+
+/* 56px is the design size. It is clamped at the bottom because a single
+   11-character word (ENGINEERING) at 56px overflows a 375px phone, and a
+   fixed size that overflows is worse than a scaled one. */
+@utility type-display {
+  font-size: clamp(2rem, 8vw, 56px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-charcoal);
+}
+
+@utility type-page {
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  color: var(--color-charcoal);
+}
+
+@utility type-section {
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--color-charcoal);
+}
+
+@utility type-body {
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--color-charcoal);
+}
+
+@utility type-label {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--color-charcoal);
+}
+
+@utility type-caption {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+@utility type-console {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  font-weight: 400;
+  font-variant-ligatures: none;
+}
+
+@utility type-eyebrow {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-crimson);
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── MOTION ────────────────────────────────────────────────────
+   Short, linear, small-amplitude. Editorial, not playful.
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-caret {
+  animation: caret-blink 1s step-end infinite;
+}
+
+@utility animate-panel-enter {
+  animation: panel-enter 180ms ease-out both;
+}
+
+/* Screen-reader-only, used for aria-live regions. */
+@utility sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
