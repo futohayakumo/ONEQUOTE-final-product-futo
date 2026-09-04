@@ -17,7 +17,10 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       {/* No horizontal padding here — the persona gateway must reach the
           viewport edges. Each page owns its own container. */}
-      <body className="min-h-svh bg-canvas type-body">{children}</body>
+      <body className="min-h-svh bg-canvas type-body">
+        {/* Clips the route transition's sideways travel. See .app-shell. */}
+        <div className="app-shell">{children}</div>
+      </body>
     </html>
   );
 }

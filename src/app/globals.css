@@ -67,6 +67,23 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /*
+   * The route entrance translates the whole page 14px sideways, which
+   * overflows to the RIGHT and is therefore scrollable in a left-to-right
+   * document. Clipping on the animated element does nothing (it overflows its
+   * ancestor, not itself) and clipping on `body` does nothing either, because
+   * overflow on the body propagates to the viewport rather than clipping. So
+   * the clip lives on an ordinary wrapper between them.
+   *
+   * This is not only about the 260ms the animation runs: any time it is paused
+   * or slow — a backgrounded tab, a locked screen, a struggling device — the
+   * page sits on its first keyframe and shows a horizontal scrollbar the whole
+   * while. `clip` rather than `hidden` so no scroll container is created.
+   */
+  .app-shell {
+    overflow-x: clip;
+  }
+
   body {
     background-color: var(--color-canvas);
     color: var(--color-charcoal);
