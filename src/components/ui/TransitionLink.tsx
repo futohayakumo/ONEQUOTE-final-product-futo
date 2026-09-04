@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
-import { markNavDirection, type NavDirection } from "./navigation";
+import {
+  markNavDirection,
+  noteInAppNavigation,
+  type NavDirection,
+} from "./navigation";
 
 interface Props extends Omit<ComponentProps<typeof Link>, "onClick"> {
   direction?: NavDirection;
@@ -22,12 +26,9 @@ export function TransitionLink({ direction = "forward", ...rest }: Props) {
   return (
     <Link
       {...rest}
-      onMouseDown={() => markNavDirection(direction)}
-      onTouchStart={() => markNavDirection(direction)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          markNavDirection(direction);
-        }
+      onClick={() => {
+        markNavDirection(direction);
+        noteInAppNavigation();
       }}
     />
   );

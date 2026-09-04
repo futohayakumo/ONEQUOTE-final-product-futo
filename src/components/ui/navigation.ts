@@ -13,6 +13,35 @@ export function markNavDirection(direction: NavDirection) {
   document.documentElement.dataset.nav = direction;
 }
 
+/**
+ * How many in-app navigations this session has made.
+ *
+ * The "Back" control has to know whether there is anywhere to go back TO. A
+ * visitor who deep-linked straight onto an inner screen has nothing behind
+ * them, and history.back() would take them off the site.
+ *
+ * This lives on `window`, not in a module variable. The two callers — the
+ * links that increment it and the Back control that reads it — are code-split
+ * into different chunks, and a module-scoped counter is only shared if the
+ * bundler happens to give them the same module instance. It did not: Back kept
+ * reading zero and pushing a new entry, so the stack grew and the browser's own
+ * back button returned to the page you had just left.
+ */
+const COUNTER = "__portfolioInAppNavigations";
+
+type NavWindow = Window & { [COUNTER]?: number };
+
+export function noteInAppNavigation() {
+  if (typeof window === "undefined") return;
+  const w = window as NavWindow;
+  w[COUNTER] = (w[COUNTER] ?? 0) + 1;
+}
+
+export function canGoBackInApp() {
+  if (typeof window === "undefined") return false;
+  return ((window as NavWindow)[COUNTER] ?? 0) > 0;
+}
+
 /*
  * There is deliberately no View Transitions API here any more.
  *
