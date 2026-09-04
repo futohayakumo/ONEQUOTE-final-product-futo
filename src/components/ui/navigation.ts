@@ -13,69 +13,18 @@ export function markNavDirection(direction: NavDirection) {
   document.documentElement.dataset.nav = direction;
 }
 
-export function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-interface ViewTransition {
-  finished: Promise<void>;
-  updateCallbackDone: Promise<void>;
-  ready: Promise<void>;
-  skipTransition(): void;
-}
-
-type StartViewTransition = (cb: () => void | Promise<void>) => ViewTransition;
-
-let active: ViewTransition | null = null;
-
-/**
- * Wraps a client navigation in a View Transition where the browser supports it,
- * which is what produces the OUTGOING half of the animation. Everything else
- * falls back to the template's enter animation alone — the page still moves,
- * it just does not cross-fade.
+/*
+ * There is deliberately no View Transitions API here any more.
+ *
+ * Wrapping the navigation in document.startViewTransition() deadlocked: the
+ * update callback has to resolve before the browser will capture the new
+ * state, but Next's router.push is asynchronous, so the callback returned a
+ * promise that waited a frame — and frames do not run while a view transition
+ * is holding rendering. Every navigation sat on the API's 4-second timeout.
+ * Measured: 4034, 4038, 4026, 4036, 4031, 4033 ms.
+ *
+ * The outgoing half of the animation is not worth four seconds. The template
+ * remount already plays a directional entrance in CSS at no cost, and Next
+ * keeps the old route on screen until the new one is ready, so the perceived
+ * transition is intact.
  */
-export function runWithViewTransition(navigate: () => void) {
-  const doc = document as Document & {
-    startViewTransition?: StartViewTransition;
-  };
-
-  if (typeof doc.startViewTransition !== "function" || prefersReducedMotion()) {
-    navigate();
-    return;
-  }
-
-  // A transition still running when the next one starts throws
-  // InvalidStateError. Skipping it first is cheaper than queueing.
-  active?.skipTransition();
-
-  const transition = doc.startViewTransition(() => {
-    navigate();
-    // Give React one paint to commit the new route before the browser
-    // captures the "after" snapshot. Resolving on the next frame stays well
-    // inside the update budget; waiting for a heavy subtree (the WebGL scene)
-    // to finish mounting does not, and blows the 4s timeout.
-    return new Promise<void>((resolve) =>
-      requestAnimationFrame(() => resolve()),
-    );
-  });
-
-  active = transition;
-
-  /*
-   * A View Transition exposes three promises and skipTransition() rejects
-   * `ready` as well as the others. Any of them left unhandled surfaces as an
-   * uncaught rejection and puts the dev overlay's error badge on screen during
-   * a demo.
-   *
-   * All three failures are cosmetic: the navigation itself already happened
-   * inside the callback. So every one is swallowed deliberately.
-   */
-  transition.ready.catch(() => {});
-  transition.updateCallbackDone.catch(() => {});
-  transition.finished
-    .catch(() => {})
-    .finally(() => {
-      if (active === transition) active = null;
-    });
-}

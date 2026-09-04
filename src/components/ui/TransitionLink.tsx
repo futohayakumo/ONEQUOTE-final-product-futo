@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { startTransition, type ComponentProps, type ReactNode } from "react";
-import {
-  markNavDirection,
-  runWithViewTransition,
-  type NavDirection,
-} from "./navigation";
+import type { ComponentProps, ReactNode } from "react";
+import { markNavDirection, type NavDirection } from "./navigation";
 
 interface Props extends Omit<ComponentProps<typeof Link>, "onClick"> {
   direction?: NavDirection;
@@ -15,41 +10,25 @@ interface Props extends Omit<ComponentProps<typeof Link>, "onClick"> {
 }
 
 /**
- * A next/link that announces its direction and, where supported, animates the
- * outgoing page as well as the incoming one. Falls back to an ordinary link:
- * modified clicks and non-left buttons are left entirely to the browser.
+ * An ordinary next/link that records which way it is travelling, so the
+ * template's entrance animation can come from the right side going deeper and
+ * from the left coming back.
+ *
+ * It does NOT intercept the navigation. An earlier version called
+ * preventDefault and router.push inside a view transition, which cost four
+ * seconds a click and threw away Link's prefetching for nothing.
  */
-export function TransitionLink({
-  direction = "forward",
-  href,
-  children,
-  ...rest
-}: Props) {
-  const router = useRouter();
-
+export function TransitionLink({ direction = "forward", ...rest }: Props) {
   return (
     <Link
       {...rest}
-      href={href}
-      onClick={(event) => {
-        if (
-          event.defaultPrevented ||
-          event.metaKey ||
-          event.ctrlKey ||
-          event.shiftKey ||
-          event.altKey ||
-          event.button !== 0
-        ) {
-          return;
+      onMouseDown={() => markNavDirection(direction)}
+      onTouchStart={() => markNavDirection(direction)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          markNavDirection(direction);
         }
-        event.preventDefault();
-        markNavDirection(direction);
-        runWithViewTransition(() =>
-          startTransition(() => router.push(String(href))),
-        );
       }}
-    >
-      {children}
-    </Link>
+    />
   );
 }
