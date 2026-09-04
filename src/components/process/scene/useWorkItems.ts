@@ -92,6 +92,7 @@ export class WorkItemRuntime {
    */
   private growthTimer = 0;
   private decayTimer = 0;
+  private pausedAt: number | null = null;
 
   private publish() {
     this.handlers.onItemsChanged?.([...this.items]);
@@ -119,6 +120,21 @@ export class WorkItemRuntime {
     this.backlog = [...SEED_BACKLOG];
     this.publish();
     this.publishBacklog();
+  }
+
+  /** Freeze every in-flight run. Time spent on another tab is not cycle time. */
+  pause() {
+    if (this.pausedAt === null) this.pausedAt = performance.now();
+  }
+
+  resume() {
+    if (this.pausedAt === null) return;
+    const away = performance.now() - this.pausedAt;
+    this.pausedAt = null;
+    for (const item of this.items) {
+      item.startedAt += away;
+      item.lastEmit += away;
+    }
   }
 
   spawn(sp: StoryPoint, step?: StepId): string {
@@ -213,6 +229,7 @@ export class WorkItemRuntime {
   }
 
   tick(dt: number, now: number, invalidate: () => void): boolean {
+    if (this.pausedAt !== null) return false;
     let busy = false;
     const dtMs = Math.min(100, dt * 1000);
 
@@ -282,7 +299,12 @@ export class WorkItemRuntime {
       if (now - item.lastEmit >= EMIT_INTERVAL_MS) {
         item.lastEmit = now;
         const stepIndex = Math.max(0, item.segments.indexOf(seg));
-        const phase: ItemPhase = seg.kind === "wait" ? "waiting" : "working";
+        // "working" only once the item has actually landed. Reporting it at
+        // segment start made the card claim work was happening while the box
+        // was still in transit and the machine above it was dark.
+        const arrived = local >= this.arrivalFraction(item);
+        const phase: ItemPhase =
+          seg.kind === "wait" ? "waiting" : arrived ? "working" : "transit";
         const place: StationId =
           item.mode === "traditional" ? seg.stepId : "belt";
         const gap = Math.max(0, STEP_IDS.indexOf(seg.stepId) - 1);
@@ -297,8 +319,7 @@ export class WorkItemRuntime {
           phase,
           overallProgress: overall,
           elapsedDays:
-            item.totalDays *
-            Math.min(1, t / Math.max(1, item.outboundStartMs)),
+            item.totalDays * Math.min(1, t / Math.max(1, item.outboundStartMs)),
           elapsedMs: t,
           queueDepth:
             item.mode === "traditional" && seg.kind === "wait"

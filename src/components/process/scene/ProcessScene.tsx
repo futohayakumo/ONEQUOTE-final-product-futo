@@ -132,6 +132,19 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
      * box immediately on observe, so this costs one extra render and removes
      * the race entirely.
      */
+    // rAF is suspended while the tab is hidden, but performance.now() keeps
+    // running — so time away was charged to the run. Pausing the runtime's
+    // clock means you come back to where you left off.
+    useEffect(() => {
+      const onVisibility = () => {
+        if (document.visibilityState === "visible") runtime.resume();
+        else runtime.pause();
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+      return () =>
+        document.removeEventListener("visibilitychange", onVisibility);
+    }, [runtime]);
+
     useEffect(() => {
       const el = wrapper.current;
       if (!el) return;
@@ -152,6 +165,11 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
         role="img"
         aria-label={ariaLabel}
       >
+        {box ? null : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="type-caption">Preparing the floor plan…</span>
+          </div>
+        )}
         {box ? (
           <Canvas
             /*
@@ -161,7 +179,13 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
              * direction, so neither is left to chance.
              */
             flat
-            shadows="soft"
+            /*
+             * Plain `shadows`, not "soft". three deprecated PCFSoftShadowMap,
+             * warns about it roughly sixty times a second, and downgrades to
+             * PCFShadowMap anyway — so asking for soft bought nothing but 2,500
+             * console messages a minute.
+             */
+            shadows
             dpr={[1, quality === "low" ? 1 : 1.75]}
             /*
              * The scene is never static: workers keep their hands moving, the

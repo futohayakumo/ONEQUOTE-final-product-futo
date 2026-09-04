@@ -236,7 +236,12 @@ export function ProcessComparison() {
                 return {
                   ...prev,
                   step: p.station as StepId,
-                  phase: p.phase === "waiting" ? "wait" : "work",
+                  phase:
+                    p.phase === "waiting"
+                      ? "wait"
+                      : p.phase === "working"
+                        ? "work"
+                        : null,
                   // The wait at THIS gap, not the whole run so far. Showing
                   // the run total here made two different labels display the
                   // same number, which reads as decoration.

@@ -178,7 +178,8 @@ export function buildSchedule(
 
     const belt = beltDays(sp) * share;
     const checkpoints =
-      MODEL.CHECKPOINT_DAYS * Math.max(1, Math.round(MODEL.CHECKPOINT_COUNT * share));
+      MODEL.CHECKPOINT_DAYS *
+      Math.max(1, Math.round(MODEL.CHECKPOINT_COUNT * share));
     // The decision is made once per item, wherever it enters.
     const decision = consoleDays(sp);
     const total = belt + checkpoints + decision;

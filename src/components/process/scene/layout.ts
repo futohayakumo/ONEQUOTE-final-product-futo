@@ -58,8 +58,12 @@ export const BELT = {
 } as const;
 
 export const TRUCK = { x: 11.3, z: 0.35, rotY: -1.15, scale: 0.6 } as const;
-/** The single human console in the AI room, set back from the line. */
-export const AI_CONSOLE = { x: 0, z: 3.0 } as const;
+/**
+ * The single human console in the AI room. Pushed left and forward: at the
+ * centre it sat directly behind the "No queue" cards, so the one beat that
+ * says the people did not vanish was the one thing you could not see.
+ */
+export const AI_CONSOLE = { x: -7.4, z: 2.5 } as const;
 
 /** Where an item rests while a station works on it. */
 export function workAnchor(index: number): [number, number, number] {
@@ -76,7 +80,9 @@ export function waitAnchor(index: number): [number, number, number] {
  * Where a completed item ends up. The run needs a visible ending: previously
  * the box simply disappeared in mid-air at the last station.
  */
-export function outboundAnchor(mode: "traditional" | "ai-driven"): [number, number, number] {
+export function outboundAnchor(
+  mode: "traditional" | "ai-driven",
+): [number, number, number] {
   return mode === "traditional"
     ? [PALLET_X, 0.32, STATION_Z]
     : [TRUCK.x - 1.1, 1.05, TRUCK.z];

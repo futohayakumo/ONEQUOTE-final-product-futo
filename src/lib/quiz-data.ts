@@ -1,5 +1,16 @@
 import type { QuizQuestion } from "@/types/quiz";
 
+/*
+ * Answer positions are deliberately spread across the four slots.
+ *
+ * An earlier version had the correct answer at option B in all five questions,
+ * which meant the quiz could be passed 5/5 by clicking the second row without
+ * reading a word. Everything else about the screen — real radios, redundant
+ * non-colour cues, an explanation that gives the reason rather than the answer
+ * — made that giveaway worse rather than better, because it turned a genuine
+ * exercise into a prop. quiz-data.test.ts now fails if the spread degenerates.
+ */
+
 export const QUIZ: readonly QuizQuestion[] = [
   {
     id: "q1",
@@ -7,11 +18,11 @@ export const QUIZ: readonly QuizQuestion[] = [
       "Under the Agile Delivery Protocol, which commit message structure is mandatory?",
     options: [
       { id: "a", text: "Free-form text describing the change" },
-      { id: "b", text: "[Ticket_ID] Commit Message" },
-      { id: "c", text: "type(scope): message, and nothing else" },
-      { id: "d", text: "The branch name repeated as the subject line" },
+      { id: "b", text: "type(scope): message, and nothing else" },
+      { id: "c", text: "The branch name repeated as the subject line" },
+      { id: "d", text: "[Ticket_ID] Commit Message" },
     ],
-    correctId: "b",
+    correctId: "d",
     whyItMatters:
       "Every commit stays traceable to a ticket. Release notes and audit trails are generated from the tag, and the pre-receive hook rejects any subject line that does not open with the ticket id — so the convention is enforced by the repository, not by reviewer goodwill.",
   },
@@ -20,12 +31,12 @@ export const QUIZ: readonly QuizQuestion[] = [
     prompt:
       "At what TEU milestone interval does a Blue Wave customer earn a performance reward?",
     options: [
-      { id: "a", text: "Every 1 TEU" },
-      { id: "b", text: "Every 5 TEUs" },
-      { id: "c", text: "Every 10 TEUs" },
-      { id: "d", text: "Every 20 TEUs" },
+      { id: "a", text: "Every 20 TEUs" },
+      { id: "b", text: "Every 10 TEUs" },
+      { id: "c", text: "Every 5 TEUs" },
+      { id: "d", text: "Every 1 TEU" },
     ],
-    correctId: "b",
+    correctId: "c",
     whyItMatters:
       "Blue Wave is the entry tier and carries no rate discount at all — its entire value is the coupon granted every 5 TEUs of accrued volume. Get the interval wrong and the whole entry-tier incentive is mispriced.",
   },
@@ -34,12 +45,12 @@ export const QUIZ: readonly QuizQuestion[] = [
     prompt:
       "How many peer approvals must a Pull Request carry before it can be merged?",
     options: [
-      { id: "a", text: "One approval" },
-      { id: "b", text: "Two or more approvals" },
-      { id: "c", text: "None — a green build is sufficient" },
+      { id: "a", text: "Two or more approvals" },
+      { id: "b", text: "Exactly one approval" },
+      { id: "c", text: "None, provided the build is green" },
       { id: "d", text: "Only the Technical Advisor (TA)'s approval" },
     ],
-    correctId: "b",
+    correctId: "a",
     whyItMatters:
       "The Agile Delivery Protocol requires at least two independent approvals so that no single reviewer becomes a bottleneck or a single point of failure. Branch protection enforces it; a green build alone never unlocks the merge.",
   },
@@ -61,14 +72,14 @@ export const QUIZ: readonly QuizQuestion[] = [
     prompt: "What is the Quotation Flex Cart responsible for?",
     options: [
       { id: "a", text: "Issuing the final bill of lading" },
+      { id: "b", text: "Segmenting customers into marketing cohorts" },
       {
-        id: "b",
+        id: "c",
         text: "Holding short-term freight rates across multiple ports so a customer can compare and book later",
       },
-      { id: "c", text: "Segmenting customers into marketing cohorts" },
       { id: "d", text: "Persisting booking records in the Legacy ERP Engine" },
     ],
-    correctId: "b",
+    correctId: "c",
     whyItMatters:
       "The Quotation Flex Cart is a rate-hold layer, not a booking system. It keeps quotes valid for a fixed window across several lanes; the transaction is only committed once the Legacy ERP Engine confirms the booking.",
   },

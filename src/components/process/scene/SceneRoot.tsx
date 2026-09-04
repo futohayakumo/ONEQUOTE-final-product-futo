@@ -192,8 +192,7 @@ export function SceneRoot({
 
       if (outbound) {
         // The visible ending: carried onto the pallet, or loaded into the truck.
-        const from =
-          item.mode === "ai-driven" ? beltAnchor(4) : workAnchor(4);
+        const from = item.mode === "ai-driven" ? beltAnchor(4) : workAnchor(4);
         const to = outboundAnchor(item.mode);
         scratchFrom.set(from[0], from[1], from[2]);
         scratchTo.set(to[0], to[1], to[2]);

@@ -28,7 +28,7 @@ export function StoryPointChip({
       type="button"
       draggable
       aria-pressed={armed}
-      aria-label={`Send a ${sp} story point item through the pipeline`}
+      aria-label={`Send ${sp === 8 ? "an" : "a"} ${sp} story point item through the pipeline`}
       onClick={onArm}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}

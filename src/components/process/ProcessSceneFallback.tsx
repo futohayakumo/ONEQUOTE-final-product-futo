@@ -57,6 +57,9 @@ export const ProcessSceneFallback = forwardRef<
   ref,
 ) {
   const [flights, setFlights] = useState<Flight[]>([]);
+  // One source of truth for depth here too, so the number and the drawn pile
+  // are the same fact rather than two independent guesses.
+  const backlog = useRef<number[]>([3, 3, 3, 5]);
   const [hovered, setHovered] = useState<StepId | null>(null);
   const [, force] = useState(0);
   const host = useRef<HTMLDivElement>(null);
@@ -124,6 +127,27 @@ export const ProcessSceneFallback = forwardRef<
         }
       }
 
+      // Grow the queue the item is sitting in; drain the rest back to rest.
+      const resting = [3, 3, 3, 5];
+      const waitingGaps = new Set<number>();
+      for (const f of flightsRef.current) {
+        const t = now - f.startedAt;
+        const m = f.marks.find((mm) => t >= mm.startMs && t < mm.endMs);
+        if (m && t < m.startMs + m.wait) {
+          waitingGaps.add(STEP_IDS.indexOf(m.stepId) - 1);
+        }
+      }
+      for (let g = 0; g < backlog.current.length; g += 1) {
+        if (waitingGaps.has(g)) {
+          backlog.current[g] = Math.min(
+            resting[g] + 4,
+            backlog.current[g] + 0.02,
+          );
+        } else if (backlog.current[g] > resting[g]) {
+          backlog.current[g] = Math.max(resting[g], backlog.current[g] - 0.04);
+        }
+      }
+
       for (const f of flightsRef.current) {
         const t = now - f.startedAt;
         const m = f.marks.find((mm) => t >= mm.startMs && t < mm.endMs);
@@ -146,7 +170,7 @@ export const ProcessSceneFallback = forwardRef<
           elapsedDays: s.totalDays * (t / f.totalWallMs),
           elapsedMs: t,
           queueDepth: 0,
-          backlog: [3, 3, 3, 5],
+          backlog: backlog.current.map((n) => Math.round(n)),
           segmentDays: segDays,
           segmentElapsedDays:
             segSpan > 0
@@ -270,12 +294,14 @@ export const ProcessSceneFallback = forwardRef<
                   className="absolute bottom-6 left-0 flex -translate-x-1/2 flex-col-reverse items-center gap-0.5"
                 >
                   {mode === "traditional"
-                    ? Array.from({ length: 3 + waiting.length }).map((_, k) => (
-                        <span
-                          key={k}
-                          className="h-2 w-8 border border-border bg-studio"
-                        />
-                      ))
+                    ? Array.from({ length: backlog.current[i - 1] ?? 3 }).map(
+                        (_, k) => (
+                          <span
+                            key={k}
+                            className="h-2 w-8 border border-border bg-studio"
+                          />
+                        ),
+                      )
                     : null}
                   {waiting.length > 0 ? (
                     <span className="h-3 w-9 border-2 border-crimson bg-crimson" />

@@ -23,10 +23,10 @@ export default function EngineeringJourneyPage() {
           actors. Naming that is more useful than either claiming or hiding it.
         */}
         <p className="type-caption max-w-[58ch]">
-          Roughly a container-level view: stage 01 holds the external actors
-          and channels, and everything to its right is a separately deployable
-          unit. Component-level detail lives in each deep dive rather than on
-          the map, so the map stays readable.
+          Roughly a container-level view: stage 01 holds the external actors and
+          channels, and everything to its right is a separately deployable unit.
+          Component-level detail lives in each deep dive rather than on the map,
+          so the map stays readable.
         </p>
       </div>
 
