@@ -78,7 +78,19 @@ The spec this was built from (`intro.md`) and the design mockups (`examples/`)
 are deliberately gitignored: the spec contains the mapping between real names
 and the abstractions used throughout the app, so publishing it would undo all
 of them. `pnpm check:tokens` enforces this across every tracked file, tracked
-filenames, the deployable project name and git history.
+filenames, the deployable project name and git history. A `pre-push` hook runs
+the same guard, so a repository that would leak cannot be pushed by accident.
+
+**One item is outstanding and needs a human decision.** The spec is gitignored
+now, but it remains recoverable from an earlier commit, and a public repository
+publishes its history. Nothing has been pushed, so this is still free to fix.
+Rewriting history is not reversible, so it is left deliberately:
+
+```bash
+git checkout --orphan clean && git add -A   && git commit -m "feat: interactive delivery portfolio"   && git branch -D main && git branch -m main
+```
+
+Until `pnpm check:tokens` passes, do not add a remote.
 
 ## Stack
 
