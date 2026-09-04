@@ -30,6 +30,10 @@ export interface FlowNode {
   id: NodeId;
   label: string;
   stage: StageId;
+  /** One line, on EVERY node. There is never a dead click. */
+  role: string;
+  /** Present only where a full what/when/how deep dive exists. */
+  componentId?: ComponentId;
 }
 
 export interface FlowStage {
@@ -43,6 +47,8 @@ export interface FlowEdge {
   from: NodeId;
   to: NodeId;
 }
+
+export type RouteMap = Record<NodeId, readonly NodeId[]>;
 
 export interface CatalogEntry {
   id: ComponentId;

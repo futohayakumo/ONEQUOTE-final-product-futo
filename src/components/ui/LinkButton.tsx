@@ -1,5 +1,6 @@
 import cn from "clsx";
-import Link from "next/link";
+import type Link from "next/link";
+import { TransitionLink } from "./TransitionLink";
 import type { ComponentProps, ReactNode } from "react";
 import { ArrowRight } from "../icons/ArrowRight";
 
@@ -28,7 +29,7 @@ export function LinkButton({
   ...rest
 }: Props) {
   return (
-    <Link
+    <TransitionLink
       {...rest}
       className={cn(
         "inline-flex items-center gap-3 type-label rounded-sharp transition-colors duration-150",
@@ -44,6 +45,6 @@ export function LinkButton({
           className="transition-transform duration-150 group-hover/link:translate-x-1"
         />
       ) : null}
-    </Link>
+    </TransitionLink>
   );
 }

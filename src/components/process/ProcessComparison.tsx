@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
   ProcessMode,
@@ -12,13 +11,14 @@ import type {
 } from "@/types/process-scene";
 import { detectWebGL, useBrowserValue } from "@/lib/useBrowserValue";
 import { ArrowRight } from "../icons/ArrowRight";
-import { DropOverlay } from "./DropOverlay";
+import { TransitionLink } from "../ui/TransitionLink";
+import { StationOverlay, type Anchor } from "./StationOverlay";
 import { ModeBadgeRow } from "./ModeBadgeRow";
 import { ModeToggle } from "./ModeToggle";
 import { ProcessSceneFallback } from "./ProcessSceneFallback";
 import { RunReadout, type RunRow } from "./RunReadout";
 import { StoryPointTray } from "./StoryPointTray";
-import { STEP_LABEL, compare } from "./model/processModel";
+import { STEP_IDS, STEP_LABEL, compare } from "./model/processModel";
 
 /**
  * `ssr: false` is only legal from a client component in the App Router, which
@@ -41,6 +41,13 @@ export function ProcessComparison() {
   const [armed, setArmed] = useState<StoryPoint | null>(null);
   const [hovered, setHovered] = useState<StepId | null>(null);
   const [runs, setRuns] = useState<RunRow[]>([]);
+  const [anchors, setAnchors] = useState<Anchor[]>([]);
+  const [live, setLive] = useState<{
+    step: StepId | null;
+    phase: "work" | "wait" | null;
+    waitDays: number;
+    queues: number[];
+  }>({ step: null, phase: null, waitDays: 0, queues: [3, 3, 3, 5] });
   const [announcement, setAnnouncement] = useState("");
   // null until hydration, so the server HTML and the first client paint agree.
   const detected = useBrowserValue(detectWebGL);
@@ -61,25 +68,14 @@ export function ProcessComparison() {
   }, []);
 
   const place = useCallback(
-    (sp: StoryPoint, step: StepId, clientPoint?: { x: number; y: number }) => {
-      sceneRef.current?.setHoveredStep(step);
-      const itemId = sceneRef.current?.dropItem(sp, clientPoint) ?? `wi-${Date.now()}`;
+    (sp: StoryPoint, step: StepId) => {
+      const itemId = sceneRef.current?.dropItem(sp, step) ?? `wi-${Date.now()}`;
       record(sp, step, itemId);
       setArmed(null);
       setHovered(null);
       sceneRef.current?.setHoveredStep(null);
     },
     [record],
-  );
-
-  const onDrop = useCallback(
-    (step: StepId, e: React.DragEvent) => {
-      const raw = e.dataTransfer.getData(DND_TYPE);
-      const sp = Number(raw) as StoryPoint;
-      if (!raw || Number.isNaN(sp)) return;
-      place(sp, step, { x: e.clientX, y: e.clientY });
-    },
-    [place],
   );
 
   // Pointer path for touch. HTML5 drag and drop simply does not exist on iOS,
@@ -114,15 +110,21 @@ export function ProcessComparison() {
           ev.clientY >= rect.top &&
           ev.clientY <= rect.bottom;
         if (!inside) return;
-        const step =
-          sceneRef.current?.hitTest({ x: ev.clientX, y: ev.clientY }) ?? "intake";
-        place(held, step, { x: ev.clientX, y: ev.clientY });
+        // Nearest projected station to the release point.
+        const local = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+        let best: { id: string; d: number } | null = null;
+        for (const a of anchors) {
+          if (a.id.startsWith("gap-")) continue;
+          const d = Math.hypot(a.x - local.x, a.y - local.y);
+          if (!best || d < best.d) best = { id: a.id, d };
+        }
+        place(held, (best?.id as StepId) ?? "intake");
       };
 
       target.addEventListener("pointermove", move);
       target.addEventListener("pointerup", up);
     },
-    [place],
+    [anchors, place],
   );
 
   const hint = useMemo(
@@ -143,7 +145,7 @@ export function ProcessComparison() {
 
       <div
         ref={surfaceRef}
-        className="relative aspect-[16/9] w-full overflow-hidden border border-border bg-studio rounded-sharp"
+        className="relative aspect-[5/2] w-full overflow-hidden border border-border bg-studio rounded-sharp"
         onDragOver={(e) => e.preventDefault()}
       >
         {use3d === null ? (
@@ -154,11 +156,31 @@ export function ProcessComparison() {
           <SceneImpl
             ref={sceneRef}
             mode={mode}
-            onItemComplete={(r: WorkItemResult) =>
+            onAnchors={setAnchors}
+            onItemProgress={(p) =>
+              setLive((prev) => {
+                // The pile the item is sitting in is the gap BEFORE its step,
+                // so its live depth belongs to that index.
+                const gap = STEP_IDS.indexOf(p.station as StepId) - 1;
+                const queues =
+                  p.phase === "waiting" && gap >= 0 && gap < prev.queues.length
+                    ? prev.queues.map((n, i) => (i === gap ? p.queueDepth : n))
+                    : prev.queues;
+                return {
+                  step: p.station as StepId,
+                  phase: p.phase === "waiting" ? "wait" : "work",
+                  waitDays:
+                    p.phase === "waiting" ? p.elapsedDays : prev.waitDays,
+                  queues,
+                };
+              })
+            }
+            onItemComplete={(r: WorkItemResult) => {
+              setLive((prev) => ({ ...prev, step: null, phase: null }));
               setAnnouncement(
                 `${r.sp} story point item completed in ${r.totalDays.toFixed(1)} simulated days.`,
-              )
-            }
+              );
+            }}
             onUnavailable={() => setForcedFallback(true)}
             ariaLabel={
               mode === "traditional"
@@ -168,15 +190,20 @@ export function ProcessComparison() {
           />
         )}
 
-        <DropOverlay
+        <StationOverlay
+          anchors={anchors}
           mode={mode}
           hovered={hovered}
-          armed={armed !== null}
+          armed={armed}
+          activeStep={live.step}
+          activePhase={live.phase}
+          activeWaitDays={live.waitDays}
+          queueDepths={live.queues}
           onHover={(step) => {
             setHovered(step);
             sceneRef.current?.setHoveredStep(step);
           }}
-          onDrop={onDrop}
+          onDrop={(step, sp) => place(sp, step)}
         />
       </div>
 
@@ -212,20 +239,16 @@ export function ProcessComparison() {
 
       {armed !== null ? (
         <div className="flex flex-wrap items-center gap-3 border-2 border-crimson bg-tint p-4 rounded-sharp">
-          <span className="type-label">Place {armed} SP at</span>
-          {(mode === "traditional"
-            ? (["intake", "analysis", "dev", "test", "deploy"] as StepId[])
-            : (["intake"] as StepId[])
-          ).map((step) => (
-            <button
-              key={step}
-              type="button"
-              onClick={() => place(armed, step)}
-              className="border border-border bg-studio px-3 py-2 type-caption rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
-            >
-              {mode === "traditional" ? STEP_LABEL[step] : "The belt"}
-            </button>
-          ))}
+          <span className="type-label">
+            {armed} SP selected. Choose a station on the floor above, or
+          </span>
+          <button
+            type="button"
+            onClick={() => place(armed, "intake")}
+            className="border border-border bg-studio px-3 py-2 type-caption rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
+          >
+            start at the beginning
+          </button>
           <button
             type="button"
             onClick={() => setArmed(null)}
@@ -239,13 +262,13 @@ export function ProcessComparison() {
       <RunReadout runs={runs} />
 
       <div>
-        <Link
+        <TransitionLink
           href="/journeys/process/quiz"
           className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3 type-label text-studio rounded-sharp transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
         >
           Take Quiz
           <ArrowRight size={18} />
-        </Link>
+        </TransitionLink>
       </div>
 
       {/* Touch drag ghost. */}

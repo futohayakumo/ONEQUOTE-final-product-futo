@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { TransitionLink } from "../ui/TransitionLink";
 import { QUIZ } from "@/lib/quiz-data";
 import { CheckIcon, CrossIcon } from "../icons/quiz";
 import { SectionTitle } from "../ui/SectionTitle";
@@ -68,12 +68,13 @@ export function QuizResult({
         >
           Retake
         </button>
-        <Link
+        <TransitionLink
           href="/journeys/process"
+          direction="back"
           className="border border-border bg-studio px-6 py-3 type-label rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
         >
           Back to Process Comparison
-        </Link>
+        </TransitionLink>
       </div>
     </div>
   );

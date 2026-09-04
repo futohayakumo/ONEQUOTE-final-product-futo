@@ -1,6 +1,5 @@
 "use client";
 
-import cn from "clsx";
 import { useEffect, useMemo, useRef } from "react";
 import { logLineText, type LogLine, type LogTone } from "@/lib/simulate-log";
 import { useLineReveal } from "./useLineReveal";
@@ -22,14 +21,14 @@ const TONE: Record<LogTone, string> = {
 
 export function QuoteConsole({ lines }: { lines: LogLine[] }) {
   const plain = useMemo(() => lines.map(logLineText), [lines]);
-  const { visibleCount, partial, done, revealAll } = useLineReveal(plain);
+  const { visibleCount, done, revealAll } = useLineReveal(plain);
   const scroller = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
 
   useEffect(() => {
     const el = scroller.current;
     if (el && pinned.current) el.scrollTop = el.scrollHeight;
-  }, [visibleCount, partial]);
+  }, [visibleCount]);
 
   const onScroll = () => {
     const el = scroller.current;
@@ -63,7 +62,7 @@ export function QuoteConsole({ lines }: { lines: LogLine[] }) {
       >
         <pre className="type-console whitespace-pre-wrap break-words">
           {lines.slice(0, visibleCount).map((line) => (
-            <div key={line.id}>
+            <div key={line.id} className="animate-line-in">
               {line.spans.map((span, i) => (
                 <span key={i} className={TONE[span.tone]}>
                   {span.text}
@@ -72,19 +71,14 @@ export function QuoteConsole({ lines }: { lines: LogLine[] }) {
             </div>
           ))}
 
-          {!done && visibleCount < lines.length ? (
-            <div>
-              <span className="text-border">{partial}</span>
-              <span
-                className={cn(
-                  "animate-caret ml-px inline-block w-[1ch] bg-crimson align-text-bottom",
-                )}
-                style={{ height: "1em" }}
-                aria-hidden
-              >
-                &nbsp;
-              </span>
-            </div>
+          {!done ? (
+            <span
+              className="animate-caret inline-block w-[1ch] bg-crimson align-text-bottom"
+              style={{ height: "1em" }}
+              aria-hidden
+            >
+              &nbsp;
+            </span>
           ) : null}
         </pre>
       </div>

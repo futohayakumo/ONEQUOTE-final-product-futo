@@ -1,7 +1,8 @@
 "use client";
 
 import { Edges } from "@react-three/drei";
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { StoryPoint } from "@/types/process-scene";
 import { G, screenTexture, spLabelTexture } from "../geometry";
@@ -109,18 +110,45 @@ export function Chair({
   );
 }
 
+/**
+ * The worker animates itself from a mutable "is this station busy" lookup
+ * rather than from props. Idle hands read as an idle person, and that contrast
+ * is half the argument the screen makes — but it must not cost a React render
+ * every time an item arrives at a desk.
+ *
+ * The nested groups ARE the shoulder and elbow pivots. Getting that for free is
+ * the reason this geometry is authored in code rather than imported as meshes.
+ */
 export function Worker({
   position,
   rotationY = 0,
-  armPhase = 0,
+  seed = 0,
+  isBusy,
 }: {
   position: [number, number, number];
   rotationY?: number;
-  /** 0..1. Drives the elbow hinge, which is the whole point of not using STL. */
-  armPhase?: number;
+  seed?: number;
+  isBusy: () => boolean;
 }) {
-  const lift = Math.sin(armPhase * Math.PI * 2) * 0.16;
-  const lift2 = Math.sin(armPhase * Math.PI * 2 + 1.1) * 0.16;
+  const left = useRef<THREE.Group>(null);
+  const right = useRef<THREE.Group>(null);
+  const leftFore = useRef<THREE.Group>(null);
+  const rightFore = useRef<THREE.Group>(null);
+  const phase = useRef(seed);
+  const amp = useRef(0.04);
+
+  useFrame((_, dt) => {
+    const target = isBusy() ? 0.24 : 0.04;
+    amp.current += (target - amp.current) * Math.min(1, dt * 5);
+    phase.current += dt * (isBusy() ? 5.5 : 1.4);
+
+    const a = Math.sin(phase.current) * amp.current;
+    const b = Math.sin(phase.current + 1.1) * amp.current;
+    if (left.current) left.current.rotation.x = -0.5 + a;
+    if (right.current) right.current.rotation.x = -0.5 + b;
+    if (leftFore.current) leftFore.current.rotation.x = -0.5 - a;
+    if (rightFore.current) rightFore.current.rotation.x = -0.5 - b;
+  });
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -129,17 +157,16 @@ export function Worker({
       </mesh>
       <mesh geometry={G.head} material={M.personHead} position={[0, 1.28, 0]} castShadow />
 
-      {/* Shoulder pivots. The nesting IS the hinge — no origin hunting. */}
-      <group position={[-0.2, 1.1, 0]} rotation={[-0.5 + lift, 0, 0]}>
+      <group ref={left} position={[-0.2, 1.1, 0]}>
         <mesh geometry={G.upperArm} material={M.person} position={[0, 0, 0.13]} />
-        <group position={[0, 0, 0.26]} rotation={[-0.5 - lift, 0, 0]}>
+        <group ref={leftFore} position={[0, 0, 0.26]}>
           <mesh geometry={G.foreArm} material={M.person} position={[0, 0, 0.12]} />
         </group>
       </group>
 
-      <group position={[0.2, 1.1, 0]} rotation={[-0.5 + lift2, 0, 0]}>
+      <group ref={right} position={[0.2, 1.1, 0]}>
         <mesh geometry={G.upperArm} material={M.person} position={[0, 0, 0.13]} />
-        <group position={[0, 0, 0.26]} rotation={[-0.5 - lift2, 0, 0]}>
+        <group ref={rightFore} position={[0, 0, 0.26]}>
           <mesh geometry={G.foreArm} material={M.person} position={[0, 0, 0.12]} />
         </group>
       </group>

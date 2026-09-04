@@ -4,6 +4,7 @@ import cn from "clsx";
 import { useCallback } from "react";
 import { NODES } from "@/lib/flow-data";
 import type { NodeId } from "@/types/flow";
+import { ChevronRight } from "../icons/ChevronRight";
 import {
   BarsIcon,
   BellIcon,
@@ -40,39 +41,93 @@ const ICON: Record<NodeId, React.ComponentType<{ size?: number }>> = {
   analytics: BarsIcon,
 };
 
+/**
+ * A real button. The previous version was an inert div, and the only way to
+ * inspect anything was a separate scrolling bar — which is exactly what people
+ * could not find.
+ *
+ * The hop badge and the deep-dive chevron are absolutely positioned inside a
+ * permanently reserved gutter, so selecting a node changes COLOUR ONLY. If
+ * selection changed the box height, the ResizeObserver that measures these
+ * rects would fire, re-render, and make the connectors flicker.
+ */
 export function FlowNode({
   id,
-  active,
-  onPath,
+  selected,
+  hopIndex,
+  focused,
   register,
+  onSelect,
+  onPeek,
+  onPeekEnd,
 }: {
   id: NodeId;
-  active: boolean;
-  onPath: boolean;
+  selected: boolean;
+  hopIndex: number | null;
+  focused: boolean;
   register: (id: NodeId, el: HTMLElement | null) => void;
+  onSelect: (id: NodeId) => void;
+  onPeek: (id: NodeId) => void;
+  onPeekEnd: () => void;
 }) {
+  const node = NODES[id];
   const Icon = ICON[id];
+  const onRoute = hopIndex !== null;
+
   const ref = useCallback(
-    (el: HTMLDivElement | null) => register(id, el),
+    (el: HTMLButtonElement | null) => register(id, el),
     [id, register],
   );
 
   return (
-    <div
+    <button
       ref={ref}
+      type="button"
+      data-node={id}
+      aria-pressed={selected}
+      tabIndex={focused ? 0 : -1}
+      onClick={() => onSelect(id)}
+      onMouseEnter={() => onPeek(id)}
+      onMouseLeave={onPeekEnd}
+      onFocus={() => onPeek(id)}
+      onBlur={onPeekEnd}
       className={cn(
-        "relative z-10 flex items-center gap-3 px-3 py-3 rounded-sharp transition-colors duration-150",
-        active
+        "relative z-10 flex w-full items-center gap-3 py-3 pl-9 pr-7 text-left rounded-sharp transition-colors duration-150",
+        selected
           ? "border-2 border-crimson bg-tint"
-          : onPath
-            ? "border border-crimson bg-studio"
-            : "border border-border bg-studio",
+          : onRoute
+            ? "border-2 border-crimson bg-studio"
+            : "border border-border bg-studio hover:border-crimson",
       )}
     >
-      <span className={active || onPath ? "text-crimson" : "text-muted"}>
+      {/* Reserved gutter — always present, so geometry never changes. */}
+      <span className="absolute left-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center">
+        {onRoute ? (
+          <span
+            aria-hidden
+            className="flex h-5 w-5 items-center justify-center bg-crimson type-console text-studio tnum"
+            /* A hop number is a mark, not a container — outside the 4px rule. */
+            style={{ borderRadius: 9999 }}
+          >
+            {hopIndex + 1}
+          </span>
+        ) : null}
+      </span>
+
+      <span className={onRoute ? "text-crimson" : "text-muted"}>
         <Icon size={20} />
       </span>
-      <span className="type-caption text-charcoal">{NODES[id].label}</span>
-    </div>
+      <span className="type-caption text-charcoal">{node.label}</span>
+
+      {node.componentId ? (
+        <span
+          aria-hidden
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted"
+          title="Has a deep dive"
+        >
+          <ChevronRight size={14} />
+        </span>
+      ) : null}
+    </button>
   );
 }

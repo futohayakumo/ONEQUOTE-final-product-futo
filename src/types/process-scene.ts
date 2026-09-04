@@ -89,6 +89,13 @@ export interface ProcessSceneProps {
   onReady?: () => void;
   /** Fires if the renderer cannot run. The parent should swap in the fallback. */
   onUnavailable?: (reason: SceneUnavailableReason) => void;
+  /**
+   * Projected screen positions, in CSS pixels relative to the scene element,
+   * for each station (and, in the traditional room, each queue gap). The
+   * parent renders its labels and drop zones at these points, which is what
+   * keeps the 2D overlay aligned with the 3D model.
+   */
+  onAnchors?: (anchors: { id: string; x: number; y: number }[]) => void;
   reducedMotion?: "auto" | "force" | "off";
   quality?: "auto" | "high" | "low";
   maxConcurrentItems?: number;
@@ -99,13 +106,11 @@ export interface ProcessSceneProps {
 
 export interface ProcessSceneHandle {
   /**
-   * Inject a work item. `clientPoint` (viewport px) is hit-tested to pick the
-   * entry step; omit it (the keyboard path) to use the mode's default entry.
+   * Inject a work item at a named step. The caller always knows the step,
+   * because drop zones are DOM elements placed on the projected anchors.
    * Returns the item id synchronously so the 2D panel can add its row at once.
    */
-  dropItem(sp: StoryPoint, clientPoint?: { x: number; y: number }): string;
-  /** Which step is under this viewport point right now, or null. rAF-safe. */
-  hitTest(clientPoint: { x: number; y: number }): StepId | null;
+  dropItem(sp: StoryPoint, step?: StepId): string;
   /** Purely visual hover state. Pass null to clear. */
   setHoveredStep(step: StepId | null): void;
   cancelItem(itemId: string): void;

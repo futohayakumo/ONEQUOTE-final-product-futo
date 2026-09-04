@@ -1,87 +1,104 @@
 "use client";
 
-import { EDGES, edgeKey } from "@/lib/flow-data";
-import { NODES } from "@/lib/flow-data";
-import type { NodeId } from "@/types/flow";
-import type { Rect } from "./useNodeGeometry";
+import type { FlowEdge, NodeId } from "@/types/flow";
+import {
+  arrowD,
+  edgeGeometry,
+  routeGeometry,
+  type Rect,
+} from "./routeGeometry";
 
 /**
- * Orthogonal polylines only — horizontal and vertical segments, never a curve.
- * That restraint IS the hard-edged aesthetic, and it also makes the geometry
- * trivially predictable at any breakpoint.
+ * Three layers, never seventeen lines at once.
+ *
+ * 1. The spine, always on, so the left-to-right direction of the system never
+ *    disappears when a route is selected.
+ * 2. The selected route, drawn on top with arrowheads and a travelling pulse.
+ * 3. The hovered node's direct connections, and nothing else.
+ *
+ * Rendering every edge permanently was the reason nobody could read this
+ * diagram. Fading them was not enough: thirteen faded lines still cross.
  */
-function orthogonalPath(from: Rect, to: Rect): string | null {
-  const sameColumn = Math.abs(from.x - to.x) < 4;
-
-  if (sameColumn) {
-    // Vertical hop within a stage column: bottom edge to top edge.
-    const x = Math.round(from.x + from.w / 2);
-    const y1 = Math.round(from.y + from.h);
-    const y2 = Math.round(to.y);
-    if (y2 <= y1) return null;
-    return `M ${x} ${y1} L ${x} ${y2}`;
-  }
-
-  // Cross-column: exit right, run to the mid-gutter, step vertically, enter left.
-  const x1 = Math.round(from.x + from.w);
-  const y1 = Math.round(from.y + from.h / 2);
-  const x2 = Math.round(to.x);
-  const y2 = Math.round(to.y + to.h / 2);
-  if (x2 <= x1) return null;
-  const mid = Math.round(x1 + (x2 - x1) / 2);
-
-  if (Math.abs(y1 - y2) < 3) return `M ${x1} ${y1} L ${x2} ${y1}`;
-  return `M ${x1} ${y1} L ${mid} ${y1} L ${mid} ${y2} L ${x2} ${y2}`;
-}
-
 export function FlowConnectors({
   rects,
   size,
-  activeEdges,
+  route,
+  spineEdges,
+  peekEdges,
 }: {
   rects: Partial<Record<NodeId, Rect>>;
   size: { w: number; h: number };
-  activeEdges: Set<string>;
+  route: readonly NodeId[];
+  spineEdges: readonly FlowEdge[];
+  peekEdges: readonly FlowEdge[];
 }) {
-  if (size.w === 0) return null;
+  // Below the lg breakpoint the stage grid collapses to one column and every
+  // pair of boxes reads as "same column", which would draw vertical spaghetti.
+  // The numbered route readout carries the flow on narrow screens instead.
+  if (size.w < 1024) return null;
 
-  const drawn = EDGES.map((edge) => {
-    const from = rects[edge.from];
-    const to = rects[edge.to];
-    if (!from || !to) return null;
-    const d = orthogonalPath(from, to);
-    if (!d) return null;
-    return { key: edgeKey(edge), d, active: activeEdges.has(edgeKey(edge)) };
-  }).filter((x): x is { key: string; d: string; active: boolean } => x !== null);
+  const spine = edgeGeometry(spineEdges, rects as Record<string, Rect>);
+  const peek = edgeGeometry(peekEdges, rects as Record<string, Rect>);
+  const selected = routeGeometry(route, rects as Record<string, Rect>);
+  const routeKeys = new Set<string>();
+  for (let i = 0; i < route.length - 1; i += 1) {
+    routeKeys.add(`${route[i]}->${route[i + 1]}`);
+  }
 
   return (
     <svg
-      // Must be pointer-events-none or it swallows every node click.
+      // Must stay pointer-events-none or it swallows every node click.
       className="pointer-events-none absolute inset-0"
       width={size.w}
       height={size.h}
       aria-hidden
     >
-      {/* Alternative paths first, so the selected path always draws on top. */}
-      {drawn
-        .filter((p) => !p.active)
-        .map((p) => (
+      {spine
+        .filter((e) => !routeKeys.has(e.key))
+        .map((e) => (
+          <g key={`spine:${e.key}`}>
+            <path d={e.d} fill="none" stroke="#CBD5E1" strokeWidth={1} />
+            <path d={arrowD(e.arrow)} fill="#CBD5E1" />
+          </g>
+        ))}
+
+      {peek
+        .filter((e) => !routeKeys.has(e.key))
+        .map((e) => (
           <path
-            key={p.key}
-            d={p.d}
+            key={`peek:${e.key}`}
+            d={e.d}
             fill="none"
             stroke="#CBD5E1"
             strokeWidth={1}
             strokeDasharray="4 4"
           />
         ))}
-      {drawn
-        .filter((p) => p.active)
-        .map((p) => (
-          <path key={p.key} d={p.d} fill="none" stroke="#E1127A" strokeWidth={2} />
-        ))}
+
+      {selected ? (
+        <g>
+          <path d={selected.d} fill="none" stroke="#E1127A" strokeWidth={2} />
+          {selected.arrows.map((a, i) => (
+            <path key={i} d={arrowD(a)} fill="#E1127A" />
+          ))}
+          {/*
+            One dash chasing the whole route. The SVG sits behind the nodes, so
+            the pulse vanishes under each box and re-emerges — a packet moving
+            through the system, at no runtime cost.
+          */}
+          <path
+            d={selected.d}
+            fill="none"
+            stroke="#E1127A"
+            strokeWidth={2}
+            className="motion-safe:animate-route-pulse"
+            style={{
+              strokeDasharray: `16 ${selected.length}`,
+              ["--route-span" as string]: `${selected.length + 16}px`,
+            }}
+          />
+        </g>
+      ) : null}
     </svg>
   );
 }
-
-export const NODE_LABELS = NODES;

@@ -1,8 +1,8 @@
 import cn from "clsx";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Persona } from "@/lib/personas";
 import { ArrowRight } from "../icons/ArrowRight";
+import { TransitionLink } from "../ui/TransitionLink";
 
 export function PersonaPanel({
   persona,
@@ -12,7 +12,7 @@ export function PersonaPanel({
   icon: ReactNode;
 }) {
   return (
-    <Link
+    <TransitionLink
       href={persona.href}
       className={cn(
         "group/panel relative flex min-h-svh flex-1 flex-col justify-center gap-10 px-8 py-16 md:px-12",
@@ -40,6 +40,6 @@ export function PersonaPanel({
           className="text-crimson transition-transform duration-150 group-hover/panel:translate-x-1"
         />
       </span>
-    </Link>
+    </TransitionLink>
   );
 }

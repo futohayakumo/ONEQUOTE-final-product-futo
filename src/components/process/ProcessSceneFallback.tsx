@@ -16,16 +16,17 @@ import type {
   StoryPoint,
   WorkItemResult,
 } from "@/types/process-scene";
-import { STEP_IDS, STEP_LABEL, buildSchedule } from "./model/processModel";
+import { STEP_IDS, buildSchedule } from "./model/processModel";
 
 /**
- * The no-WebGL rendering of the pipeline. Implements the SAME props and the
- * SAME imperative handle as <ProcessScene />, and imports the SAME timing
- * model — so the cycle-time numbers and every callback payload are identical.
- * The argument survives with no GPU.
+ * The no-WebGL rendering. It implements the SAME props and handle as
+ * <ProcessScene /> and imports the SAME timing model, so every number and
+ * every callback payload is identical — the argument survives with no GPU.
  *
- * Screen 5 is built against this first; swapping in the 3D scene must not
- * require a single change at the call site.
+ * It also publishes anchors in the same shape, so the station overlay (labels,
+ * queue markers, drop zones) renders on top of it unchanged. Screen 5 was
+ * built against this first; swapping in the 3D scene changed nothing at the
+ * call site.
  */
 
 interface Flight {
@@ -34,8 +35,7 @@ interface Flight {
   startStep: StepId;
   startedAt: number;
   totalWallMs: number;
-  /** Wall-clock ms at which each step in the run begins. */
-  marks: { stepId: StepId; startMs: number; endMs: number }[];
+  marks: { stepId: StepId; startMs: number; endMs: number; wait: number }[];
 }
 
 let seq = 0;
@@ -44,12 +44,23 @@ export const ProcessSceneFallback = forwardRef<
   ProcessSceneHandle,
   ProcessSceneProps
 >(function ProcessSceneFallback(
-  { mode, onItemComplete, onItemProgress, onDropTargetChange, onReady, className },
+  {
+    mode,
+    onItemComplete,
+    onItemProgress,
+    onDropTargetChange,
+    onAnchors,
+    onReady,
+    className,
+    ariaLabel,
+  },
   ref,
 ) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [hovered, setHovered] = useState<StepId | null>(null);
   const [, force] = useState(0);
+  const host = useRef<HTMLDivElement>(null);
+  const slots = useRef(new Map<string, HTMLElement>());
   const raf = useRef<number | null>(null);
   const flightsRef = useRef<Flight[]>([]);
   flightsRef.current = flights;
@@ -58,17 +69,40 @@ export const ProcessSceneFallback = forwardRef<
     onReady?.();
   }, [onReady]);
 
-  // One rAF loop advances every in-flight item and retires the finished ones.
+  // Publish the same anchor shape the renderer does, measured from the DOM.
+  useEffect(() => {
+    const publish = () => {
+      const base = host.current?.getBoundingClientRect();
+      if (!base || !onAnchors) return;
+      const out: { id: string; x: number; y: number }[] = [];
+      slots.current.forEach((el, id) => {
+        const r = el.getBoundingClientRect();
+        out.push({
+          id,
+          x: r.left - base.left + r.width / 2,
+          y: r.top - base.top + (id.startsWith("gap-") ? r.height : 0),
+        });
+      });
+      onAnchors(out);
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    if (host.current) ro.observe(host.current);
+    window.addEventListener("resize", publish);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", publish);
+    };
+  }, [onAnchors, mode]);
+
   useEffect(() => {
     if (flights.length === 0) return;
 
     const tick = () => {
       const now = performance.now();
-      const done: Flight[] = [];
-
-      for (const f of flightsRef.current) {
-        if (now - f.startedAt >= f.totalWallMs) done.push(f);
-      }
+      const done = flightsRef.current.filter(
+        (f) => now - f.startedAt >= f.totalWallMs,
+      );
 
       if (done.length > 0) {
         setFlights((prev) => prev.filter((f) => !done.includes(f)));
@@ -90,6 +124,24 @@ export const ProcessSceneFallback = forwardRef<
         }
       }
 
+      for (const f of flightsRef.current) {
+        const t = now - f.startedAt;
+        const m = f.marks.find((mm) => t >= mm.startMs && t < mm.endMs);
+        if (!m) continue;
+        onItemProgress?.({
+          itemId: f.itemId,
+          sp: f.sp,
+          mode,
+          station: m.stepId,
+          stepIndex: STEP_IDS.indexOf(m.stepId),
+          phase: t < m.startMs + m.wait ? "waiting" : "working",
+          overallProgress: t / f.totalWallMs,
+          elapsedDays: 0,
+          elapsedMs: t,
+          queueDepth: 0,
+        });
+      }
+
       force((n) => n + 1);
       raf.current = requestAnimationFrame(tick);
     };
@@ -101,8 +153,8 @@ export const ProcessSceneFallback = forwardRef<
   }, [flights.length, mode, onItemComplete, onItemProgress]);
 
   const dropItem = useCallback(
-    (sp: StoryPoint) => {
-      const startStep: StepId = hovered ?? "intake";
+    (sp: StoryPoint, step?: StepId) => {
+      const startStep: StepId = step ?? hovered ?? "intake";
       const s = buildSchedule(mode, sp, startStep);
 
       let acc = 0;
@@ -110,7 +162,12 @@ export const ProcessSceneFallback = forwardRef<
         const share = (p.workDays + p.waitDays) / s.totalDays;
         const startMs = acc * s.wallMs;
         acc += share;
-        return { stepId: p.stepId, startMs, endMs: acc * s.wallMs };
+        return {
+          stepId: p.stepId,
+          startMs,
+          endMs: acc * s.wallMs,
+          wait: (p.waitDays / s.totalDays) * s.wallMs,
+        };
       });
 
       seq += 1;
@@ -134,8 +191,7 @@ export const ProcessSceneFallback = forwardRef<
   useImperativeHandle(
     ref,
     () => ({
-      dropItem: (sp: StoryPoint) => dropItem(sp),
-      hitTest: () => hovered,
+      dropItem,
       setHoveredStep: (step) => {
         setHovered(step);
         onDropTargetChange?.(step);
@@ -145,72 +201,85 @@ export const ProcessSceneFallback = forwardRef<
       reset: () => setFlights([]),
       captureFrame: () => "",
     }),
-    [dropItem, hovered, onDropTargetChange],
+    [dropItem, onDropTargetChange],
   );
 
   const now = performance.now();
+  const register = (id: string) => (el: HTMLElement | null) => {
+    if (el) slots.current.set(id, el);
+    else slots.current.delete(id);
+  };
 
   return (
     <div
-      className={cn(
-        "flex h-full w-full flex-col justify-center gap-6 p-6",
-        className,
-      )}
+      ref={host}
+      role="img"
+      aria-label={ariaLabel}
+      className={cn("relative flex h-full w-full items-end px-6 pb-24 pt-40", className)}
     >
-      <div className="grid grid-cols-5 gap-2">
-        {STEP_IDS.map((stepId, i) => {
+      <div className="relative flex w-full items-end">
+        {/* The line the work runs along. Solid in the AI room, broken by the
+            partitions in the traditional one. */}
+        <div
+          className={cn(
+            "absolute bottom-6 left-0 right-0 h-1",
+            mode === "ai-driven" ? "bg-border" : "bg-transparent",
+          )}
+          aria-hidden
+        />
+
+        {STEP_IDS.map((step, i) => {
           const occupied = flights.filter((f) => {
             const t = now - f.startedAt;
-            const m = f.marks.find((mm) => mm.stepId === stepId);
-            return m && t >= m.startMs && t < m.endMs;
+            const m = f.marks.find((mm) => mm.stepId === step);
+            return m && t >= m.startMs + m.wait && t < m.endMs;
           });
-
-          // Queue depth is a traditional-room phenomenon only.
-          const queued =
-            mode === "traditional" ? Math.max(0, 3 - Math.min(i, 2)) : 0;
+          const waiting =
+            mode === "traditional" && i > 0
+              ? flights.filter((f) => {
+                  const t = now - f.startedAt;
+                  const m = f.marks.find((mm) => mm.stepId === step);
+                  return m && t >= m.startMs && t < m.startMs + m.wait;
+                })
+              : [];
 
           return (
-            <div key={stepId} className="flex flex-col gap-2">
+            <div key={step} className="relative flex flex-1 items-end justify-center">
+              {mode === "traditional" && i > 0 ? (
+                <div
+                  ref={register(`gap-${i - 1}`)}
+                  className="absolute bottom-6 left-0 flex -translate-x-1/2 flex-col-reverse items-center gap-0.5"
+                >
+                  {Array.from({ length: 3 + waiting.length }).map((_, k) => (
+                    <span key={k} className="h-2 w-8 border border-border bg-studio" />
+                  ))}
+                  {waiting.length > 0 ? (
+                    <span className="h-3 w-9 border-2 border-crimson bg-crimson" />
+                  ) : null}
+                </div>
+              ) : null}
+
               <div
-                className={cn(
-                  "flex min-h-[5.5rem] flex-col justify-between p-3 rounded-sharp transition-colors duration-150",
-                  hovered === stepId
-                    ? "border-2 border-crimson bg-tint"
-                    : "border border-border bg-studio",
-                )}
+                ref={register(step)}
+                className="flex flex-col items-center gap-2"
               >
-                <span className="type-caption tnum">{i + 1}</span>
-                <span className="type-label">{STEP_LABEL[stepId]}</span>
-                <span className="flex h-4 gap-1">
+                <span className="flex h-6 items-end gap-1">
                   {occupied.map((f) => (
-                    <span
-                      key={f.itemId}
-                      className="h-3 w-3 bg-crimson"
-                      title={`${f.sp} SP`}
-                    />
+                    <span key={f.itemId} className="h-4 w-4 bg-crimson" />
                   ))}
                 </span>
-              </div>
-
-              {/* The pile-up. Absent by construction in the AI-driven room. */}
-              <div className="flex h-10 flex-col-reverse items-center gap-0.5">
-                {Array.from({ length: queued }).map((_, k) => (
-                  <span
-                    key={k}
-                    className="h-2 w-6 border border-border bg-studio"
-                  />
-                ))}
+                <span
+                  className={cn(
+                    "h-12 w-14 border bg-studio",
+                    mode === "ai-driven" ? "border-crimson" : "border-border",
+                  )}
+                />
+                <span className="h-6 w-px bg-border" />
               </div>
             </div>
           );
         })}
       </div>
-
-      <p className="type-caption">
-        {mode === "traditional"
-          ? "Work moves in discrete steps. A queue forms before every hand-off, and the gate before Deploy waits on two approvals."
-          : "Work moves continuously. There is no queue to join and no hand-off to wait on."}
-      </p>
     </div>
   );
 });

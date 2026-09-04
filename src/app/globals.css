@@ -178,6 +178,39 @@
   color: var(--color-crimson);
 }
 
+/* Back navigation reverses the entrance. */
+:root[data-nav="back"] .route-enter {
+  animation-name: route-in-back;
+}
+
+/* Where the View Transitions API is available it also animates the OUTGOING
+   page, which is the half a template alone cannot do. The pseudo-elements are
+   cross-faded by default; these rules replace that with the same directional
+   move used above so both halves agree. */
+::view-transition-old(root) {
+  animation: route-out-forward 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: route-in-forward 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:root[data-nav="back"]::view-transition-old(root) {
+  animation-name: route-out-back;
+}
+
+:root[data-nav="back"]::view-transition-new(root) {
+  animation-name: route-in-back;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter,
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
 @utility tnum {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
@@ -197,6 +230,74 @@
   }
 }
 
+/* ── ROUTE TRANSITIONS ─────────────────────────────────────────
+   Short, linear and small-amplitude, like every other motion here.
+   Going deeper enters from the right; coming back enters from the left,
+   so the direction of travel is legible rather than decorative.
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes route-in-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes route-in-back {
+  from {
+    opacity: 0;
+    transform: translate3d(-14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes route-out-forward {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-10px, 0, 0);
+  }
+}
+
+@keyframes route-out-back {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(10px, 0, 0);
+  }
+}
+
+/* One dash travelling the selected route. Negative offset shifts the pattern
+   forward; a period of length + dash means one dash leaves the end exactly as
+   the next enters the start. */
+@keyframes route-pulse {
+  to {
+    stroke-dashoffset: calc(-1 * var(--route-span));
+  }
+}
+
+@keyframes line-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes panel-enter {
   from {
     opacity: 0;
@@ -210,6 +311,18 @@
 
 @utility animate-caret {
   animation: caret-blink 1s step-end infinite;
+}
+
+@utility route-enter {
+  animation: route-in-forward 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-route-pulse {
+  animation: route-pulse 2600ms linear infinite;
+}
+
+@utility animate-line-in {
+  animation: line-in 90ms linear both;
 }
 
 @utility animate-panel-enter {

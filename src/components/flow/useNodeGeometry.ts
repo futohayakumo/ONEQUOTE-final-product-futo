@@ -2,13 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeId } from "@/types/flow";
+import type { Rect } from "./routeGeometry";
 
-export interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+export type { Rect } from "./routeGeometry";
 
 /**
  * Measures every registered node relative to the grid container.

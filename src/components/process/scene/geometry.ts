@@ -38,15 +38,14 @@ export const G = {
   gateLintel: new THREE.BoxGeometry(1.8, 0.12, 0.1),
   gateDoor: new THREE.BoxGeometry(1.6, 1.8, 0.06),
 
-  cpPost: new THREE.BoxGeometry(0.08, 1.55, 0.08),
+  cpPost: new THREE.BoxGeometry(0.08, 1.6, 0.08),
+  aiHead: new THREE.IcosahedronGeometry(0.17, 0),
+  unitBox: new THREE.BoxGeometry(1, 1, 1),
   cpLintel: new THREE.BoxGeometry(1.3, 0.1, 0.08),
   scanBar: new THREE.BoxGeometry(1.1, 0.03, 0.03),
 
   beltLeg: new THREE.BoxGeometry(0.08, 0.5, 0.08),
 
-  aiDais: new THREE.CylinderGeometry(1.1, 1.2, 0.18, 6),
-  aiCore: new THREE.IcosahedronGeometry(0.28, 0),
-  aiRing: new THREE.RingGeometry(1.3, 1.32, 48),
 
   truckBody: new THREE.BoxGeometry(4.0, 1.3, 1.2),
   truckCab: new THREE.BoxGeometry(1.3, 1.1, 1.2),

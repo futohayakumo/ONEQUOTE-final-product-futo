@@ -1,4 +1,5 @@
 import { COMPONENT_CATALOG } from "@/lib/component-catalog";
+import { STAGES } from "@/lib/flow-data";
 import type { ComponentId } from "@/types/flow";
 import { CodeBlock } from "../ui/CodeBlock";
 import { SectionTitle } from "../ui/SectionTitle";
@@ -39,11 +40,6 @@ export function ComponentDetailCard({ id }: { id: ComponentId }) {
 }
 
 function stageLabel(stage: string) {
-  return stage === "client"
-    ? "01 Client Request"
-    : stage === "portal"
-      ? "02 Web Portal"
-      : stage === "service"
-        ? "03 Service Layer"
-        : "04 ERP / Data Platform";
+  const found = STAGES.find((s) => s.id === stage);
+  return found ? `${found.no} ${found.title}` : stage;
 }

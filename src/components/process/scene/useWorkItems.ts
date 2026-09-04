@@ -68,8 +68,12 @@ export class WorkItemRuntime {
   hoveredStep: StepId | null = null;
   /** Per-gap queue depth in the traditional room. Index 0..3. */
   backlog: number[] = [...SEED_BACKLOG];
-  /** Wall-clock spin for the AI core. */
-  spin = 0;
+  /**
+   * Stations currently holding an item. Maintained in tick() and read directly
+   * by the meshes in their own useFrame, so an item arriving at a desk never
+   * costs a React render.
+   */
+  busyStations = new Set<StepId>();
   private backlogTimer = 0;
 
   private publish() {
@@ -185,6 +189,8 @@ export class WorkItemRuntime {
 
     const finished: WorkItem[] = [];
 
+    this.busyStations.clear();
+
     for (const item of this.items) {
       const { seg, local, overall, t } = this.locate(item, now);
 
@@ -194,6 +200,7 @@ export class WorkItemRuntime {
       }
 
       busy = true;
+      if (seg.kind === "work") this.busyStations.add(seg.stepId);
 
       if (now - item.lastEmit >= EMIT_INTERVAL_MS) {
         item.lastEmit = now;

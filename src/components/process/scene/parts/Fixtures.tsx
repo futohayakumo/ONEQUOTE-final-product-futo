@@ -6,7 +6,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { G } from "../geometry";
 import { EDGE_COLOR, EDGE_THRESHOLD, M } from "../materials";
-import { CHECKPOINT_U, LOOP, STACK, seededJitter } from "../layout";
+import { BELT, STACK, seededJitter } from "../layout";
 
 function Hairline() {
   return <Edges threshold={EDGE_THRESHOLD} color={EDGE_COLOR} />;
@@ -88,7 +88,7 @@ export function BoxStack({
   return (
     <group>
       {slots.map((s, i) => (
-        <group key={i} position={s.pos} rotation={[0, s.rot, 0]} scale={0.86}>
+        <group key={i} position={s.pos} rotation={[0, s.rot, 0]} scale={STACK.scale}>
           <mesh geometry={G.boxBody} material={M.surface} castShadow receiveShadow />
           <mesh geometry={G.boxSeam} material={M.secondary} position={[0, 0.152, 0]} />
         </group>
@@ -97,160 +97,112 @@ export function BoxStack({
   );
 }
 
-/** Builds the conveyor path once. A rounded rectangle at belt height. */
-export function buildLoopCurve(): THREE.CurvePath<THREE.Vector3> {
-  const { w, d, r, y } = LOOP;
-  const hw = w / 2;
-  const hd = d / 2;
-  const path = new THREE.CurvePath<THREE.Vector3>();
-  const v = (x: number, z: number) => new THREE.Vector3(x, y, z);
-
-  path.add(new THREE.LineCurve3(v(-hw + r, -hd), v(hw - r, -hd)));
-  path.add(new THREE.QuadraticBezierCurve3(v(hw - r, -hd), v(hw, -hd), v(hw, -hd + r)));
-  path.add(new THREE.LineCurve3(v(hw, -hd + r), v(hw, hd - r)));
-  path.add(new THREE.QuadraticBezierCurve3(v(hw, hd - r), v(hw, hd), v(hw - r, hd)));
-  path.add(new THREE.LineCurve3(v(hw - r, hd), v(-hw + r, hd)));
-  path.add(new THREE.QuadraticBezierCurve3(v(-hw + r, hd), v(-hw, hd), v(-hw, hd - r)));
-  path.add(new THREE.LineCurve3(v(-hw, hd - r), v(-hw, -hd + r)));
-  path.add(new THREE.QuadraticBezierCurve3(v(-hw, -hd + r), v(-hw, -hd), v(-hw + r, -hd)));
-
-  return path;
-}
-
-export function ConveyorLoop({
-  curve,
-  steps,
-  drawFraction = 1,
-}: {
-  curve: THREE.CurvePath<THREE.Vector3>;
-  steps: number;
-  /** 0..1 — the belt materialises along its own path during the transition. */
-  drawFraction?: number;
-}) {
-  const beltGeo = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(-0.5, -0.03);
-    shape.lineTo(0.5, -0.03);
-    shape.lineTo(0.5, 0.03);
-    shape.lineTo(-0.5, 0.03);
-    shape.closePath();
-    return new THREE.ExtrudeGeometry(shape, {
-      extrudePath: curve,
-      steps,
-      bevelEnabled: false,
-    });
-  }, [curve, steps]);
-
+/**
+ * A straight conveyor running through the same five station slots the
+ * traditional room uses. It replaced a rounded-rectangle loop: a loop looked
+ * decorative and made the five steps impossible to line up against the other
+ * room, which is the only comparison this screen exists to make.
+ */
+export function StraightConveyor({ drawFraction = 1 }: { drawFraction?: number }) {
+  const length = BELT.x1 - BELT.x0;
   const legs = useMemo(() => {
-    const out: [number, number, number][] = [];
-    const total = curve.getLength();
-    const n = Math.max(8, Math.floor(total / 1.2));
-    for (let i = 0; i < n; i += 1) {
-      const p = curve.getPointAt(i / n);
-      out.push([p.x, 0.25, p.z]);
-    }
+    const out: number[] = [];
+    const n = Math.max(4, Math.round(length / 1.3));
+    for (let i = 0; i <= n; i += 1) out.push(BELT.x0 + (length * i) / n);
     return out;
-  }, [curve]);
+  }, [length]);
 
-  const visibleLegs = Math.floor(legs.length * drawFraction);
-
-  // setDrawRange is near-zero cost and reads as the conveyor being laid down.
-  // ExtrudeGeometry is NON-INDEXED, so geometry.index is null and reading
-  // index.count yields 0 — which draws nothing at all. Fall back to the
-  // position attribute.
-  const count = beltGeo.index?.count ?? beltGeo.attributes.position.count;
-  beltGeo.setDrawRange(0, Math.floor(count * drawFraction));
+  const shown = Math.max(0.001, drawFraction);
+  const visibleLegs = Math.floor(legs.length * shown);
 
   return (
     <group>
-      <mesh geometry={beltGeo} material={M.belt} castShadow receiveShadow />
-      {legs.slice(0, visibleLegs).map((p, i) => (
-        <mesh key={i} geometry={G.beltLeg} material={M.secondary} position={p} />
+      <mesh
+        geometry={G.unitBox}
+        material={M.belt}
+        position={[BELT.x0 + (length * shown) / 2, BELT.y, BELT.z]}
+        scale={[length * shown, 0.08, BELT.width]}
+        castShadow
+        receiveShadow
+      >
+        <Hairline />
+      </mesh>
+      {/* Side rails, so the belt reads as a machine rather than a road. */}
+      {[-1, 1].map((side) => (
+        <mesh
+          key={side}
+          geometry={G.unitBox}
+          material={M.secondary}
+          position={[
+            BELT.x0 + (length * shown) / 2,
+            BELT.y + 0.07,
+            BELT.z + side * (BELT.width / 2 + 0.02),
+          ]}
+          scale={[length * shown, 0.06, 0.05]}
+        />
+      ))}
+      {legs.slice(0, visibleLegs).map((x, i) => (
+        <mesh
+          key={i}
+          geometry={G.beltLeg}
+          material={M.secondary}
+          position={[x, 0.25, BELT.z]}
+        />
       ))}
     </group>
   );
 }
 
-export function CheckpointGate({
-  curve,
-  index,
-  scanProgress = 0,
-}: {
-  curve: THREE.CurvePath<THREE.Vector3>;
-  index: number;
-  /** 0..1 — the scan bar sweeps down as an item passes. */
-  scanProgress?: number;
-}) {
-  const u = CHECKPOINT_U[index];
-  const point = useMemo(() => curve.getPointAt(u), [curve, u]);
-  const tangent = useMemo(() => curve.getTangentAt(u), [curve, u]);
-  const rotY = Math.atan2(tangent.x, tangent.z);
-
-  return (
-    <group position={[point.x, 0, point.z]} rotation={[0, rotY, 0]}>
-      <mesh geometry={G.cpPost} material={M.structure} position={[-0.65, 0.78, 0]} castShadow />
-      <mesh geometry={G.cpPost} material={M.structure} position={[0.65, 0.78, 0]} castShadow />
-      <mesh geometry={G.cpLintel} material={M.structure} position={[0, 1.55, 0]} castShadow />
-      <mesh
-        geometry={G.scanBar}
-        material={scanProgress > 0 ? M.success : M.secondary}
-        position={[0, 1.45 - scanProgress * 0.83, 0]}
-      />
-    </group>
-  );
-}
-
 /**
- * The reference render gives this a blue glow. Emissive and glow are both
- * forbidden, so authority is carried by a hexagonal dais, one crimson ring,
- * and dashed hairline links instead.
+ * The AI unit that stands over a station in the AI-driven room. It is the
+ * visible answer to "where does AI actually touch this?" — a gantry with a
+ * scan bar that flashes as an item passes underneath, and no queue in front
+ * of it.
  */
-export function AIOrchestrationNode({
-  scale = 1,
-  spinning = true,
+export function AIGantry({
+  x,
+  z,
+  isActive,
+  agency,
 }: {
-  scale?: number;
-  spinning?: boolean;
+  x: number;
+  z: number;
+  isActive: () => boolean;
+  agency: "human" | "assisted" | "automated";
 }) {
-  const core = useRef<THREE.Mesh>(null);
+  const bar = useRef<THREE.Mesh>(null);
+  const sweep = useRef(0);
 
-  // The rotation never needs to reach React, so it is driven straight onto the
-  // object3D here rather than threaded down as a per-frame prop.
   useFrame((_, dt) => {
-    if (spinning && core.current) core.current.rotation.y += dt * 0.15;
+    if (!bar.current) return;
+    sweep.current = isActive()
+      ? Math.min(1, sweep.current + dt * 5)
+      : Math.max(0, sweep.current - dt * 4);
+    bar.current.position.y = 1.5 - sweep.current * 0.78;
+    bar.current.visible = sweep.current > 0.02;
   });
-  const ringMat = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: "#E1127A",
-        side: THREE.DoubleSide,
-        toneMapped: false,
-      }),
-    [],
-  );
 
-  if (scale <= 0.001) return null;
+  // A human-only step gets no gantry at all — the absence is the information.
+  if (agency === "human") return null;
 
   return (
-    <group scale={scale}>
-      <mesh geometry={G.aiDais} material={M.belt} position={[0, 0.09, 0]} castShadow receiveShadow>
-        <Edges threshold={EDGE_THRESHOLD} color={EDGE_COLOR} />
+    <group position={[x, 0, z]}>
+      <mesh geometry={G.cpPost} material={M.structure} position={[-0.72, 0.8, 0]} castShadow />
+      <mesh geometry={G.cpPost} material={M.structure} position={[0.72, 0.8, 0]} castShadow />
+      <mesh geometry={G.cpLintel} material={M.structure} position={[0, 1.6, 0]} castShadow>
+        <Hairline />
       </mesh>
+      {/* Automated stations carry a solid head; assisted ones a hollow one, so
+          the two levels of AI involvement are distinguishable in the model. */}
       <mesh
-        geometry={G.aiRing}
-        material={ringMat}
-        position={[0, 0.19, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-      />
-      <mesh
-        ref={core}
-        geometry={G.aiCore}
-        material={M.structure}
-        position={[0, 0.95, 0]}
+        geometry={G.aiHead}
+        material={agency === "automated" ? M.accent : M.surface}
+        position={[0, 1.42, 0]}
         castShadow
       >
-        <Edges threshold={1} color={EDGE_COLOR} />
+        <Edges threshold={1} color={agency === "automated" ? "#E1127A" : EDGE_COLOR} />
       </mesh>
+      <mesh ref={bar} geometry={G.scanBar} material={M.accent} position={[0, 1.5, 0]} />
     </group>
   );
 }

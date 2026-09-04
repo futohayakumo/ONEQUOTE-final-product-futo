@@ -19,10 +19,6 @@ import type {
 import { SceneRoot } from "./SceneRoot";
 import { WorkItemRuntime, type WorkItem } from "./useWorkItems";
 
-// Module-scope scratch — never allocate per pointer event.
-const raycaster = new THREE.Raycaster();
-const ndc = new THREE.Vector2();
-
 /**
  * The chunk boundary. three.js is imported here and in this directory only;
  * an ESLint restricted-import zone enforces that the other five screens never
@@ -38,6 +34,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
       onModeSettled,
       onReady,
       onUnavailable,
+      onAnchors,
       reducedMotion = "auto",
       quality = "auto",
       className,
@@ -51,8 +48,9 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
     const sceneRef = useRef<THREE.Scene | null>(null);
     const camRef = useRef<THREE.Camera | null>(null);
     const invalidateRef = useRef<() => void>(() => {});
-    const [hovered, setHovered] = useState<StepId | null>(null);
+    const [, setHovered] = useState<StepId | null>(null);
     const [items, setItems] = useState<WorkItem[]>([]);
+    const [box, setBox] = useState<{ w: number; h: number } | null>(null);
     const [reduced, setReduced] = useState(reducedMotion === "force");
 
     // Callbacks are written onto the runtime rather than closed over, so
@@ -77,52 +75,24 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
       return () => mq.removeEventListener("change", onChange);
     }, [reducedMotion]);
 
-    const hitTest = useCallback(
-      (point: { x: number; y: number }): StepId | null => {
-        const el = wrapper.current;
-        const scene = sceneRef.current;
-        const cam = camRef.current;
-        if (!el || !scene || !cam) return null;
-
-        const rect = el.getBoundingClientRect();
-        ndc.set(
-          ((point.x - rect.left) / rect.width) * 2 - 1,
-          -(((point.y - rect.top) / rect.height) * 2 - 1),
-        );
-        raycaster.setFromCamera(ndc, cam);
-        const hits = raycaster.intersectObjects(scene.children, true);
-        for (const h of hits) {
-          const name = h.object.name;
-          if (name.startsWith("droppad:")) {
-            return name.slice("droppad:".length) as StepId;
-          }
-        }
-        return null;
-      },
-      [],
-    );
-
+    /**
+     * Drop targets are DOM elements positioned from the projected station
+     * anchors, so the caller already knows which step was hit. Raycasting into
+     * the canvas is gone — it was the source of the misaligned drop positions.
+     */
     const dropItem = useCallback(
-      (sp: StoryPoint, clientPoint?: { x: number; y: number }) => {
-        // Traditional: the step you pick genuinely changes the cycle time, so
-        // we raycast. AI-driven: a drop anywhere enters the belt, because
-        // demanding precision there would contradict the whole claim.
-        const step =
-          mode === "traditional" && clientPoint
-            ? (hitTest(clientPoint) ?? "intake")
-            : "intake";
-        const id = runtime.spawn(sp, step);
+      (sp: StoryPoint, step?: StepId) => {
+        const id = runtime.spawn(sp, step ?? "intake");
         invalidateRef.current();
         return id;
       },
-      [hitTest, mode, runtime],
+      [runtime],
     );
 
     useImperativeHandle(
       ref,
       () => ({
         dropItem,
-        hitTest,
         setHoveredStep: (step) => {
           runtime.hoveredStep = step;
           setHovered(step);
@@ -146,8 +116,32 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
           return gl.domElement.toDataURL("image/png");
         },
       }),
-      [dropItem, hitTest, onDropTargetChange, runtime],
+      [dropItem, onDropTargetChange, runtime],
     );
+
+    /**
+     * R3F measures its parent once, at mount. This component is lazily
+     * imported INTO a subtree that is mid route-transition, so that first
+     * measurement can land before layout settles — leaving the canvas stuck at
+     * its 300x150 default and the scene invisible.
+     *
+     * Rather than nudge it afterwards, the canvas is simply not mounted until
+     * the wrapper has a real measured size. ResizeObserver reports the current
+     * box immediately on observe, so this costs one extra render and removes
+     * the race entirely.
+     */
+    useEffect(() => {
+      const el = wrapper.current;
+      if (!el) return;
+      const ro = new ResizeObserver(([entry]) => {
+        const r = entry.contentRect;
+        if (r.width > 0 && r.height > 0) {
+          setBox({ w: Math.round(r.width), h: Math.round(r.height) });
+        }
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, []);
 
     return (
       <div
@@ -156,43 +150,55 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
         role="img"
         aria-label={ariaLabel}
       >
-        <Canvas
-          /*
-           * `flat` is non-negotiable. R3F defaults to ACESFilmic tone mapping,
-           * which shifts #E1127A toward salmon and lifts #0F172A — the palette
-           * would break silently. `linear` is equally wrong in the other
-           * direction, so neither is left to chance.
-           */
-          flat
-          shadows="soft"
-          dpr={[1, quality === "low" ? 1 : 1.75]}
-          frameloop="demand"
-          resize={{ scroll: false }}
-          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-          onCreated={({ gl, scene, camera, invalidate }) => {
-            gl.toneMapping = THREE.NoToneMapping;
-            gl.outputColorSpace = THREE.SRGBColorSpace;
-            glRef.current = gl;
-            sceneRef.current = scene;
-            camRef.current = camera;
-            invalidateRef.current = invalidate;
-            gl.domElement.addEventListener("webglcontextlost", (e) => {
-              e.preventDefault();
-              onUnavailable?.("context-lost");
-            });
-          }}
-        >
-          <SceneRoot
-            runtime={runtime}
-            items={items}
-            mode={mode}
-            reduced={reduced}
-            quality={quality === "low" ? "low" : "high"}
-            hoveredStep={hovered}
-            onModeSettled={onModeSettled}
-            onReady={onReady}
-          />
-        </Canvas>
+        {box ? (
+          <Canvas
+            /*
+             * `flat` is non-negotiable. R3F defaults to ACESFilmic tone mapping,
+             * which shifts #E1127A toward salmon and lifts #0F172A — the palette
+             * would break silently. `linear` is equally wrong in the other
+             * direction, so neither is left to chance.
+             */
+            flat
+            shadows="soft"
+            dpr={[1, quality === "low" ? 1 : 1.75]}
+            /*
+             * The scene is never static: workers keep their hands moving, the
+             * gantries sweep, and the camera eases. "demand" starved every one
+             * of those — and worse, the camera fit lives in useFrame, so a
+             * scheduled frame is what applies it. Reduced motion is genuinely
+             * static, so it keeps the on-demand loop.
+             */
+            frameloop={reduced ? "demand" : "always"}
+            resize={{ scroll: false }}
+            gl={{
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance",
+            }}
+            onCreated={({ gl, scene, camera, invalidate }) => {
+              gl.toneMapping = THREE.NoToneMapping;
+              gl.outputColorSpace = THREE.SRGBColorSpace;
+              glRef.current = gl;
+              sceneRef.current = scene;
+              camRef.current = camera;
+              invalidateRef.current = invalidate;
+              gl.domElement.addEventListener("webglcontextlost", (e) => {
+                e.preventDefault();
+                onUnavailable?.("context-lost");
+              });
+            }}
+          >
+            <SceneRoot
+              runtime={runtime}
+              items={items}
+              mode={mode}
+              reduced={reduced}
+              onAnchors={onAnchors}
+              onModeSettled={onModeSettled}
+              onReady={onReady}
+            />
+          </Canvas>
+        ) : null}
       </div>
     );
   },

@@ -2,21 +2,21 @@
 
 import { OrthographicCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { easing } from "maath";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
 import { STEP_IDS } from "../model/processModel";
 import {
-  BELT_STEPS_HIGH,
-  BELT_STEPS_LOW,
+  BELT,
   CAMERA,
   STATION_X,
-  STATION_Z,
   ZOOM_CLAMP,
+  beltAnchor,
+  waitAnchor,
+  workAnchor,
 } from "./layout";
-import { buildLoopCurve } from "./parts/Fixtures";
-import { AIRoom, TraditionalRoom, useWorkerPhase } from "./parts/Rooms";
+import { AIRoom, TraditionalRoom } from "./parts/Rooms";
 import { CardboardBox } from "./parts/Primitives";
 import { Ground, LightRig } from "./rig/LightRig";
 import type { WorkItem, WorkItemRuntime } from "./useWorkItems";
@@ -26,38 +26,43 @@ const scratchTarget = new THREE.Vector3();
 const scratchPos = new THREE.Vector3();
 const scratchFrom = new THREE.Vector3();
 const scratchTo = new THREE.Vector3();
+const projectV = new THREE.Vector3();
 
-function stationAnchor(step: StepId, out: THREE.Vector3) {
-  const i = Math.max(0, STEP_IDS.indexOf(step));
-  return out.set(STATION_X[i], 0.95, STATION_Z + 0.55);
-}
-
-function queueAnchor(step: StepId, out: THREE.Vector3) {
-  const i = Math.max(0, STEP_IDS.indexOf(step));
-  const x = i === 0 ? STATION_X[0] - 1.6 : (STATION_X[i - 1] + STATION_X[i]) / 2;
-  return out.set(x, 0.6, 0.75);
+/** Screen-space position of a world point, in CSS pixels of the canvas. */
+export interface Anchor {
+  id: string;
+  x: number;
+  y: number;
 }
 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/**
+ * Fraction of a work segment spent travelling to the station. The remaining
+ * 84% the item sits STILL on the desk being worked on.
+ *
+ * This ratio is the whole fix for "it just looked like cargo being carried":
+ * an item now visibly stops, and the length of the stop is the story point
+ * cost. Continuous motion across the segment made every run look identical.
+ */
+const APPROACH_FRACTION = 0.16;
 
 export function SceneRoot({
   runtime,
   items,
   mode,
   reduced,
-  quality,
-  hoveredStep,
+  onAnchors,
   onModeSettled,
   onReady,
 }: {
   runtime: WorkItemRuntime;
-  /** Owned by ProcessScene as React state. Changes only on add/remove. */
   items: WorkItem[];
   mode: ProcessMode;
   reduced: boolean;
-  quality: "high" | "low";
-  hoveredStep: StepId | null;
+  /** Projected screen positions for the DOM label and drop-zone overlay. */
+  onAnchors?: (anchors: Anchor[]) => void;
   onModeSettled?: (m: ProcessMode) => void;
   onReady?: () => void;
 }) {
@@ -65,11 +70,9 @@ export function SceneRoot({
   const itemsRef = useRef<Map<string, THREE.Group>>(new Map());
   const pointer = useRef({ x: 0, y: 0 });
   const settled = useRef<ProcessMode | null>(null);
+  const lastAnchorPublish = useRef(0);
+  const lastAnchorKey = useRef("");
   const { size, invalidate } = useThree();
-
-  const curve = useMemo(() => buildLoopCurve(), []);
-  const beltSteps = quality === "low" ? BELT_STEPS_LOW : BELT_STEPS_HIGH;
-  const workerPhase = useWorkerPhase(!reduced);
 
   useEffect(() => {
     onReady?.();
@@ -78,17 +81,18 @@ export function SceneRoot({
   useEffect(() => {
     runtime.setMode(mode);
     settled.current = null;
+    lastAnchorKey.current = "";
     invalidate();
   }, [mode, runtime, invalidate]);
 
-  // Ortho zoom is resolution-dependent. Fit BOTH axes and take the tighter of
-  // the two, or a wide canvas crops the room vertically and a tall one crops it
-  // horizontally.
+  // Ortho zoom fits BOTH axes; the tighter one wins, or a wide canvas crops
+  // the room vertically and a tall one crops it horizontally.
   const zoom = useMemo(() => {
     const cfg = CAMERA[mode];
-    const byWidth = size.width / cfg.worldWidth;
-    const byHeight = size.height / cfg.worldHeight;
-    const raw = Math.min(byWidth, byHeight);
+    const raw = Math.min(
+      size.width / cfg.worldWidth,
+      size.height / cfg.worldHeight,
+    );
     return Math.min(ZOOM_CLAMP.max, Math.max(ZOOM_CLAMP.min, raw));
   }, [size.width, size.height, mode]);
 
@@ -101,73 +105,139 @@ export function SceneRoot({
     return () => window.removeEventListener("pointermove", onMove);
   }, []);
 
-  useFrame((state, dt) => {
+  useFrame((_, dt) => {
     const cam = camRef.current;
     const now = performance.now();
 
+    // Advance the state machine FIRST: it is what retires finished items,
+    // maintains the busy-station set the meshes read, grows the backlog, and
+    // emits progress to the 2D panel.
+    runtime.tick(dt, now, invalidate);
+
     if (cam) {
       const base = CAMERA[mode].position;
-      // Damped parallax, not OrbitControls. Free orbit would destroy the
-      // composition and void the "<10% crimson" guarantee.
-      const ax = reduced ? 0 : pointer.current.x * 0.18;
-      const ay = reduced ? 0 : -pointer.current.y * 0.06;
+      const t0 = CAMERA[mode].target;
+      // Damped parallax rather than OrbitControls: free orbit would destroy
+      // the composition and void the crimson budget.
+      const ax = reduced ? 0 : pointer.current.x * 0.14;
+      const ay = reduced ? 0 : -pointer.current.y * 0.05;
       const radius = Math.hypot(base[0], base[2]);
       const theta = Math.atan2(base[0], base[2]) + ax;
 
-      const t0 = CAMERA[mode].target;
       scratchPos.set(
         t0[0] + Math.sin(theta) * radius,
         base[1] * (1 + ay),
         t0[2] + Math.cos(theta) * radius,
       );
-      easing.damp3(cam.position, scratchPos, reduced ? 0 : 0.35, dt);
-      easing.damp(cam, "zoom", zoom, reduced ? 0 : 0.3, dt);
-      cam.updateProjectionMatrix();
+      easing.damp3(cam.position, scratchPos, reduced ? 0 : 0.3, dt);
+      easing.damp(cam, "zoom", zoom, reduced ? 0 : 0.28, dt);
 
-      const t = CAMERA[mode].target;
-      cam.lookAt(scratchTarget.set(t[0], t[1], t[2]));
+      // Set the frustum explicitly rather than trusting the size the camera
+      // was created with. The canvas is lazily mounted inside a subtree that
+      // is mid route-transition, so its first measured size can be the 300x150
+      // default — and an ortho camera that keeps that frustum points the
+      // projection at nothing.
+      cam.left = -size.width / 2;
+      cam.right = size.width / 2;
+      cam.top = size.height / 2;
+      cam.bottom = -size.height / 2;
+      cam.updateProjectionMatrix();
+      cam.lookAt(scratchTarget.set(t0[0], t0[1], t0[2]));
+      cam.updateMatrixWorld();
 
       if (settled.current !== mode) {
         settled.current = mode;
         onModeSettled?.(mode);
       }
+
+      // Publish the projected station positions so the DOM overlay can sit
+      // exactly on top of them. This is what makes the drop targets line up
+      // with the model instead of floating over a guessed grid.
+      if (onAnchors && now - lastAnchorPublish.current > 120) {
+        lastAnchorPublish.current = now;
+        const out: Anchor[] = [];
+        const half = { w: size.width / 2, h: size.height / 2 };
+
+        STEP_IDS.forEach((step, i) => {
+          const p =
+            mode === "traditional" ? workAnchor(i) : beltAnchor(i);
+          projectV.set(p[0], p[1] + 0.5, p[2]).project(cam);
+          out.push({
+            id: step,
+            x: (projectV.x + 1) * half.w,
+            y: (1 - projectV.y) * half.h,
+          });
+        });
+
+        if (mode === "traditional") {
+          for (let i = 0; i < 4; i += 1) {
+            const p = waitAnchor(i + 1);
+            projectV.set(p[0], p[1] + 0.45, p[2]).project(cam);
+            out.push({
+              id: `gap-${i}`,
+              x: (projectV.x + 1) * half.w,
+              y: (1 - projectV.y) * half.h,
+            });
+          }
+        }
+
+        const key = out.map((a) => `${a.id}:${a.x | 0}:${a.y | 0}`).join("|");
+        if (key !== lastAnchorKey.current) {
+          lastAnchorKey.current = key;
+          onAnchors(out);
+        }
+      }
     }
 
-    // Move every in-flight item. Direct mutation of object3D transforms —
-    // never setState in here.
+    // Move every in-flight item. Direct transform mutation — never setState.
     for (const item of runtime.items) {
       const group = itemsRef.current.get(item.id);
       if (!group) continue;
       const { seg, local } = runtime.locate(item, now);
+      const index = Math.max(0, STEP_IDS.indexOf(seg.stepId));
 
       if (item.mode === "ai-driven") {
-        // A single continuous parametric sweep. The motion vocabulary itself
-        // is the message: no stops, no hand-offs, no dead time.
-        const u = Math.min(0.999, runtime.locate(item, now).overall);
-        const p = curve.getPointAt(u);
-        group.position.set(p.x, p.y + 0.24, p.z);
-        const tan = curve.getTangentAt(u);
-        group.rotation.y = Math.atan2(tan.x, tan.z);
+        // Continuous travel along the belt: it slows under each gantry but
+        // never stops and never queues.
+        const from =
+          index === 0 ? [BELT.x0 + 1.2, BELT.y + 0.22, BELT.z] : beltAnchor(index - 1);
+        const to = beltAnchor(index);
+        scratchFrom.set(from[0], from[1], from[2]);
+        scratchTo.set(to[0], to[1], to[2]);
+        group.position.lerpVectors(scratchFrom, scratchTo, easeInOutCubic(local));
+        group.rotation.y = 0;
       } else if (seg.kind === "wait") {
-        // Parked in the queue. It sits, and the pile beside it grows.
-        queueAnchor(seg.stepId, scratchTo);
-        group.position.copy(scratchTo);
+        // Parked in the queue, dead still, on top of the pile.
+        const p = waitAnchor(index);
+        group.position.set(p[0], p[1] + 0.18, p[2]);
         group.rotation.y = 0.08;
-      } else {
-        // A hand-off: eased lerp plus a parabolic hop, so it reads as an
-        // intentional pass rather than a slide.
-        queueAnchor(seg.stepId, scratchFrom);
-        stationAnchor(seg.stepId, scratchTo);
-        const e = easeInOutCubic(local);
+      } else if (local < APPROACH_FRACTION) {
+        // A short hand-off hop from the pile onto the desk.
+        const from = waitAnchor(index);
+        const to = workAnchor(index);
+        scratchFrom.set(from[0], from[1] + 0.18, from[2]);
+        scratchTo.set(to[0], to[1], to[2]);
+        const e = easeInOutCubic(local / APPROACH_FRACTION);
         group.position.lerpVectors(scratchFrom, scratchTo, e);
-        group.position.y += 0.55 * 4 * e * (1 - e);
-        group.rotation.y = e * 0.4;
+        group.position.y += 0.5 * 4 * e * (1 - e);
+        group.rotation.y = e * 0.5;
+      } else {
+        // Being worked on: STILL, on the desk, while the worker's arms move.
+        const p = workAnchor(index);
+        group.position.set(p[0], p[1], p[2]);
+        group.rotation.y = 0.5;
       }
     }
 
-    if (runtime.items.length > 0) invalidate();
-    void state;
   });
+
+  // Read per frame by the meshes themselves. The runtime maintains the set in
+  // tick(), so nothing here is computed during render.
+  const isBusy = useCallback(
+    (step: StepId) => runtime.busyStations.has(step),
+    [runtime],
+  );
+  const anyBusy = useCallback(() => runtime.busyStations.size > 0, [runtime]);
 
   return (
     <>
@@ -185,15 +255,13 @@ export function SceneRoot({
       <TraditionalRoom
         visible={mode === "traditional"}
         backlog={runtime.backlog}
-        hoveredStep={hoveredStep}
-        workerPhase={workerPhase.current}
+        isBusy={isBusy}
       />
 
       <AIRoom
         visible={mode === "ai-driven"}
-        curve={curve}
-        beltSteps={beltSteps}
-        spinning={!reduced}
+        isBusy={isBusy}
+        anyBusy={anyBusy}
       />
 
       {items.map((item) => (
@@ -204,13 +272,11 @@ export function SceneRoot({
             else itemsRef.current.delete(item.id);
           }}
         >
-          <CardboardBox
-            position={[0, 0, 0]}
-            sp={item.sp as StoryPoint}
-            active
-          />
+          <CardboardBox position={[0, 0, 0]} sp={item.sp as StoryPoint} active />
         </group>
       ))}
     </>
   );
 }
+
+export { STATION_X };
