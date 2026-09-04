@@ -21,7 +21,9 @@ export const COMPONENT_ORDER: readonly ComponentId[] = [
 export const COMPONENT_CATALOG: Record<ComponentId, CatalogEntry> = {
   "web-portal": {
     id: "web-portal",
-    label: "Web Portal",
+    // Named for the node it is anchored to, so the index, the map and the card
+    // all say the same thing.
+    label: "Request Intake",
     nodeId: "request-intake",
     stage: "portal",
     what: "The customer-facing application. It renders quotation forms and rate comparisons on the server, hydrates only the interactive parts, and holds no business rules of its own — pricing and eligibility always come from the service layer so a browser can never be the source of truth.",

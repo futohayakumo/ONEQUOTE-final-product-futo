@@ -21,14 +21,14 @@ export function NodeBrief({
   );
 
   return (
-    <div className="animate-panel-enter flex flex-col gap-4 border border-border bg-studio p-6 rounded-sharp">
+    <div className="animate-panel-enter flex min-w-0 flex-col gap-4 border border-border bg-studio p-6 rounded-sharp">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <SectionTitle>{node.label}</SectionTitle>
         <span className="type-caption">
           Stage {stage?.no} {stage?.title}
         </span>
       </div>
-      <p className="max-w-[80ch] type-body">{node.role}</p>
+      <p className="max-w-[80ch] break-words type-body">{node.role}</p>
       {nearby ? (
         <button
           type="button"

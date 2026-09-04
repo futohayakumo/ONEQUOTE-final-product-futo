@@ -13,6 +13,7 @@ import {
   STATION_X,
   ZOOM_CLAMP,
   beltAnchor,
+  outboundAnchor,
   waitAnchor,
   workAnchor,
 } from "./layout";
@@ -117,15 +118,11 @@ export function SceneRoot({
 
       // The camera is fixed. An earlier pointer parallax slid every station
       // label horizontally with it, and continuously drifting body text costs
-      // more legibility than the effect is worth on a screen whose entire job
-      // is being read.
-      const radius = Math.hypot(base[0], base[2]);
-      const theta = Math.atan2(base[0], base[2]);
-      scratchPos.set(
-        t0[0] + Math.sin(theta) * radius,
-        base[1],
-        t0[2] + Math.cos(theta) * radius,
-      );
+      // more legibility than the effect is worth on a screen whose whole job is
+      // being read. Its trigonometry is gone too: it round-tripped back to
+      // `base` and then added the target on top, so the camera settled roughly
+      // 1.6 units from the position the prop declared.
+      scratchPos.set(base[0], base[1], base[2]);
       easing.damp3(cam.position, scratchPos, reduced ? 0 : 0.3, dt);
       easing.damp(cam, "zoom", zoom, reduced ? 0 : 0.28, dt);
 
@@ -190,10 +187,21 @@ export function SceneRoot({
     for (const item of runtime.items) {
       const group = itemsRef.current.get(item.id);
       if (!group) continue;
-      const { seg, local } = runtime.locate(item, now);
+      const { seg, local, outbound, outboundLocal } = runtime.locate(item, now);
       const index = Math.max(0, STEP_IDS.indexOf(seg.stepId));
 
-      if (item.mode === "ai-driven") {
+      if (outbound) {
+        // The visible ending: carried onto the pallet, or loaded into the truck.
+        const from =
+          item.mode === "ai-driven" ? beltAnchor(4) : workAnchor(4);
+        const to = outboundAnchor(item.mode);
+        scratchFrom.set(from[0], from[1], from[2]);
+        scratchTo.set(to[0], to[1], to[2]);
+        const e = easeInOutCubic(outboundLocal);
+        group.position.lerpVectors(scratchFrom, scratchTo, e);
+        group.position.y += 0.45 * 4 * e * (1 - e);
+        group.rotation.y = e * 0.8;
+      } else if (item.mode === "ai-driven") {
         const from =
           index === 0
             ? [BELT.x0 + 1.2, BELT.y + 0.22, BELT.z]

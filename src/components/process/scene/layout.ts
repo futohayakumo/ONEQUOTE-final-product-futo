@@ -72,6 +72,16 @@ export function waitAnchor(index: number): [number, number, number] {
   return [x, 0.42, GAP_Z];
 }
 
+/**
+ * Where a completed item ends up. The run needs a visible ending: previously
+ * the box simply disappeared in mid-air at the last station.
+ */
+export function outboundAnchor(mode: "traditional" | "ai-driven"): [number, number, number] {
+  return mode === "traditional"
+    ? [PALLET_X, 0.32, STATION_Z]
+    : [TRUCK.x - 1.1, 1.05, TRUCK.z];
+}
+
 /** Where an item rides in the AI room. */
 export function beltAnchor(index: number): [number, number, number] {
   return [STATION_X[index], BELT.y + 0.22, BELT.z];

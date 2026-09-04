@@ -33,7 +33,14 @@ export interface WorkItemProgress {
   itemId: string;
   sp: StoryPoint;
   mode: ProcessMode;
-  station: StationId;
+  /**
+   * ALWAYS the step. It previously carried "belt" in the AI-driven room, which
+   * matches no StepId, so every station label stayed inert there — the fast
+   * side ended up with less feedback than the slow one.
+   */
+  station: StepId;
+  /** Where the item physically is. Presentation only; never used for matching. */
+  place: StationId;
   /** 0..4 in traditional, 0..3 in ai-driven. */
   stepIndex: number;
   phase: ItemPhase;
@@ -52,6 +59,11 @@ export interface WorkItemProgress {
   segmentDays: number;
   /** Simulated days spent in this segment so far. */
   segmentElapsedDays: number;
+  /**
+   * Depth of every queue, every frame. Emitted whole so the number on a card
+   * and the pile it describes can never drift apart.
+   */
+  backlog: readonly number[];
 }
 
 export interface PerStepTiming {
@@ -98,6 +110,12 @@ export interface ProcessSceneProps {
    * keeps the 2D overlay aligned with the 3D model.
    */
   onAnchors?: (anchors: { id: string; x: number; y: number }[]) => void;
+  /**
+   * Queue depth, whenever it changes and regardless of whether work is in
+   * flight — so the number on a card and the pile it describes stay the same
+   * fact, including while the queue drains after a run.
+   */
+  onBacklogChanged?: (backlog: number[]) => void;
   reducedMotion?: "auto" | "force" | "off";
   quality?: "auto" | "high" | "low";
   maxConcurrentItems?: number;

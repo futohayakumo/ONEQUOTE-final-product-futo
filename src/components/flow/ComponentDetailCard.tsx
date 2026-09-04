@@ -13,24 +13,28 @@ export function ComponentDetailCard({ id }: { id: ComponentId }) {
   const entry = COMPONENT_CATALOG[id];
 
   return (
-    <div className="animate-panel-enter flex flex-col gap-6 border border-border bg-studio p-6 rounded-sharp">
+    <div className="animate-panel-enter flex min-w-0 flex-col gap-6 overflow-hidden border border-border bg-studio p-6 rounded-sharp">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <SectionTitle>{entry.label}</SectionTitle>
         <span className="type-caption">Stage {stageLabel(entry.stage)}</span>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)]">
-        <section className="flex flex-col gap-2 border-t-2 border-charcoal pt-4">
+      {/* min-w-0 on every track AND every section: a <pre> inside a grid item
+          establishes an intrinsic min-content width from its longest line, and
+          without this the card pushed the whole page into horizontal scroll on
+          a phone and clipped body text mid-word. */}
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)]">
+        <section className="flex min-w-0 flex-col gap-2 border-t-2 border-charcoal pt-4">
           <h4 className="type-label">What is this?</h4>
-          <p className="type-caption text-charcoal">{entry.what}</p>
+          <p className="type-caption break-words text-charcoal">{entry.what}</p>
         </section>
 
-        <section className="flex flex-col gap-2 border-t-2 border-charcoal pt-4">
+        <section className="flex min-w-0 flex-col gap-2 border-t-2 border-charcoal pt-4">
           <h4 className="type-label">When is it used?</h4>
-          <p className="type-caption text-charcoal">{entry.when}</p>
+          <p className="type-caption break-words text-charcoal">{entry.when}</p>
         </section>
 
-        <section className="flex flex-col gap-2 border-t-2 border-crimson pt-4">
+        <section className="flex min-w-0 flex-col gap-2 border-t-2 border-crimson pt-4">
           <h4 className="type-label">How does it operate?</h4>
           <CodeBlock lang={entry.how.lang} code={entry.how.code} />
         </section>

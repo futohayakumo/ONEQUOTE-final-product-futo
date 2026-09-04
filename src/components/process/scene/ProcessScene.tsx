@@ -35,6 +35,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
       onReady,
       onUnavailable,
       onAnchors,
+      onBacklogChanged,
       reducedMotion = "auto",
       quality = "auto",
       className,
@@ -60,8 +61,9 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
         onItemProgress,
         onItemComplete,
         onItemsChanged: setItems,
+        onBacklogChanged,
       };
-    }, [runtime, onItemProgress, onItemComplete]);
+    }, [runtime, onItemProgress, onItemComplete, onBacklogChanged]);
 
     useEffect(() => {
       if (reducedMotion !== "auto") {

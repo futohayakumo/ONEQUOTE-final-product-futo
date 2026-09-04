@@ -139,12 +139,14 @@ export const ProcessSceneFallback = forwardRef<
           sp: f.sp,
           mode,
           station: m.stepId,
+          place: mode === "traditional" ? m.stepId : "belt",
           stepIndex: STEP_IDS.indexOf(m.stepId),
           phase: waiting ? "waiting" : "working",
           overallProgress: t / f.totalWallMs,
           elapsedDays: s.totalDays * (t / f.totalWallMs),
           elapsedMs: t,
           queueDepth: 0,
+          backlog: [3, 3, 3, 5],
           segmentDays: segDays,
           segmentElapsedDays:
             segSpan > 0

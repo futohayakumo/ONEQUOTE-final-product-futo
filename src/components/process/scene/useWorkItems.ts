@@ -40,6 +40,8 @@ export interface WorkItem {
   flowEfficiency: number;
   perStep: { stepId: StepId; workDays: number; waitDays: number }[];
   segments: Segment[];
+  /** Wall-clock ms at which the outbound leg begins. */
+  outboundStartMs: number;
   cancelled: boolean;
   lastEmit: number;
 }
@@ -53,13 +55,20 @@ export interface RuntimeHandlers {
    * positions stay outside React entirely.
    */
   onItemsChanged?: (items: WorkItem[]) => void;
+  /**
+   * Fires whenever queue depth changes, INDEPENDENTLY of whether anything is
+   * in flight. Piggybacking this on progress events meant the decay after a
+   * run finished was never reported, so the number froze one above its resting
+   * depth while the pile it described had already drained.
+   */
+  onBacklogChanged?: (backlog: number[]) => void;
 }
 
 const EMIT_INTERVAL_MS = 150;
 /** A pile grows while you wait. That is the entire metaphor. */
-const BACKLOG_GROWTH_MS = 1800;
+const BACKLOG_GROWTH_MS = 1400;
 /** And drains back to its resting depth once the wait is over. */
-const BACKLOG_DECAY_MS = 900;
+const BACKLOG_DECAY_MS = 700;
 
 let seq = 0;
 
@@ -76,17 +85,29 @@ export class WorkItemRuntime {
    * costs a React render.
    */
   busyStations = new Set<StepId>();
-  private backlogTimer = 0;
+  /**
+   * Separate accumulators. A single shared one was reset by whichever branch
+   * ran last, so a work segment longer than the decay interval kept clearing
+   * the growth counter and the pile almost never grew.
+   */
+  private growthTimer = 0;
+  private decayTimer = 0;
 
   private publish() {
     this.handlers.onItemsChanged?.([...this.items]);
   }
 
+  private publishBacklog() {
+    this.handlers.onBacklogChanged?.([...this.backlog]);
+  }
+
   reset() {
     this.items = [];
     this.backlog = [...SEED_BACKLOG];
-    this.backlogTimer = 0;
+    this.growthTimer = 0;
+    this.decayTimer = 0;
     this.publish();
+    this.publishBacklog();
   }
 
   setMode(mode: ProcessMode) {
@@ -97,6 +118,7 @@ export class WorkItemRuntime {
     this.items = [];
     this.backlog = [...SEED_BACKLOG];
     this.publish();
+    this.publishBacklog();
   }
 
   spawn(sp: StoryPoint, step?: StepId): string {
@@ -128,6 +150,12 @@ export class WorkItemRuntime {
       acc += share;
     }
 
+    // A short outbound leg: the item is carried to the pallet or loaded into
+    // the truck. Without it the run ended by the box vanishing mid-air.
+    const outboundShare = 0.12;
+    const outboundStart = schedule.wallMs;
+    const totalWall = Math.round(schedule.wallMs * (1 + outboundShare));
+
     seq += 1;
     const id = `wi-${seq}`;
     this.items.push({
@@ -136,7 +164,8 @@ export class WorkItemRuntime {
       mode: this.mode,
       startStep,
       startedAt: performance.now(),
-      totalWallMs: schedule.wallMs,
+      totalWallMs: totalWall,
+      outboundStartMs: outboundStart,
       totalDays: schedule.totalDays,
       touchDays: schedule.touchDays,
       waitDays: schedule.waitDays,
@@ -155,20 +184,37 @@ export class WorkItemRuntime {
     this.publish();
   }
 
+  /**
+   * Fraction of a work segment spent travelling before the item lands. Mirrors
+   * the motion in SceneRoot; a station must not light up before arrival.
+   */
+  arrivalFraction(item: WorkItem): number {
+    return item.mode === "ai-driven" ? 0.58 : 0.16;
+  }
+
   /** Where an item is right now, and how far into that segment. */
   locate(item: WorkItem, now: number) {
     const t = now - item.startedAt;
+    const outbound = t >= item.outboundStartMs;
     const seg =
       item.segments.find((s) => t >= s.startMs && t < s.endMs) ??
       item.segments[item.segments.length - 1];
     const span = Math.max(1, seg.endMs - seg.startMs);
     const local = Math.min(1, Math.max(0, (t - seg.startMs) / span));
     const overall = Math.min(1, t / Math.max(1, item.totalWallMs));
-    return { seg, local, overall, t };
+    const outboundLocal = outbound
+      ? Math.min(
+          1,
+          (t - item.outboundStartMs) /
+            Math.max(1, item.totalWallMs - item.outboundStartMs),
+        )
+      : 0;
+    return { seg, local, overall, t, outbound, outboundLocal };
   }
 
-  tick(_dt: number, now: number, invalidate: () => void): boolean {
+  tick(dt: number, now: number, invalidate: () => void): boolean {
     let busy = false;
+    const dtMs = Math.min(100, dt * 1000);
 
     // Backlog grows while anything is waiting in the traditional room.
     if (this.mode === "traditional") {
@@ -176,9 +222,10 @@ export class WorkItemRuntime {
         (i) => this.locate(i, now).seg.kind === "wait",
       );
       if (anyWaiting) {
-        this.backlogTimer += 16;
-        if (this.backlogTimer >= BACKLOG_GROWTH_MS) {
-          this.backlogTimer = 0;
+        this.decayTimer = 0;
+        this.growthTimer += dtMs;
+        if (this.growthTimer >= BACKLOG_GROWTH_MS) {
+          this.growthTimer = 0;
           for (const i of this.items) {
             const { seg } = this.locate(i, now);
             if (seg.kind !== "wait") continue;
@@ -186,18 +233,28 @@ export class WorkItemRuntime {
             // Capped a little above the seed: the pile grows while you wait,
             // but it is illustrating a backlog, not racing to the ceiling.
             const cap = SEED_BACKLOG[gap] + 4;
-            this.backlog[gap] = Math.min(cap, this.backlog[gap] + 1);
+            const next = Math.min(cap, this.backlog[gap] + 1);
+            if (next !== this.backlog[gap]) {
+              this.backlog[gap] = next;
+              this.publishBacklog();
+            }
           }
         }
       } else {
         // Nothing is waiting, so the queue drains back to its resting depth.
         // Without this it ratcheted up across runs and looked like drift.
-        this.backlogTimer += 16;
-        if (this.backlogTimer >= BACKLOG_DECAY_MS) {
-          this.backlogTimer = 0;
+        this.growthTimer = 0;
+        this.decayTimer += dtMs;
+        if (this.decayTimer >= BACKLOG_DECAY_MS) {
+          this.decayTimer = 0;
+          let changed = false;
           for (let g = 0; g < this.backlog.length; g += 1) {
-            if (this.backlog[g] > SEED_BACKLOG[g]) this.backlog[g] -= 1;
+            if (this.backlog[g] > SEED_BACKLOG[g]) {
+              this.backlog[g] -= 1;
+              changed = true;
+            }
           }
+          if (changed) this.publishBacklog();
         }
       }
     }
@@ -215,13 +272,18 @@ export class WorkItemRuntime {
       }
 
       busy = true;
-      if (seg.kind === "work") this.busyStations.add(seg.stepId);
+      // A station is only busy once the item has actually ARRIVED. Marking it
+      // at segment start lit the next gantry while the box was still travelling
+      // towards it, which reads as the machine working on nothing.
+      if (seg.kind === "work" && local >= this.arrivalFraction(item)) {
+        this.busyStations.add(seg.stepId);
+      }
 
       if (now - item.lastEmit >= EMIT_INTERVAL_MS) {
         item.lastEmit = now;
         const stepIndex = Math.max(0, item.segments.indexOf(seg));
         const phase: ItemPhase = seg.kind === "wait" ? "waiting" : "working";
-        const station: StationId =
+        const place: StationId =
           item.mode === "traditional" ? seg.stepId : "belt";
         const gap = Math.max(0, STEP_IDS.indexOf(seg.stepId) - 1);
 
@@ -229,11 +291,14 @@ export class WorkItemRuntime {
           itemId: item.id,
           sp: item.sp,
           mode: item.mode,
-          station,
+          station: seg.stepId,
+          place,
           stepIndex,
           phase,
           overallProgress: overall,
-          elapsedDays: item.totalDays * overall,
+          elapsedDays:
+            item.totalDays *
+            Math.min(1, t / Math.max(1, item.outboundStartMs)),
           elapsedMs: t,
           queueDepth:
             item.mode === "traditional" && seg.kind === "wait"
@@ -241,6 +306,7 @@ export class WorkItemRuntime {
               : 0,
           segmentDays: seg.days,
           segmentElapsedDays: seg.days * local,
+          backlog: [...this.backlog],
         });
       }
 

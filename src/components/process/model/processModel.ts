@@ -162,10 +162,27 @@ export function buildSchedule(
       waitDays: i === 0 ? 0 : queueDays(offset + i - 1, sp),
     }));
   } else {
-    // Same five steps, but they happen on a moving belt with no queues.
-    // Distributing by the same weights keeps the readout comparable row for row.
-    const total = beltDays(sp) + checkpointDays() + consoleDays(sp);
+    /*
+     * Same steps, but on a moving belt with no queues.
+     *
+     * The belt and checkpoint costs scale with how much of the pipeline the
+     * item actually traverses. An earlier version computed one total for the
+     * whole line and merely redistributed it, so entering at Dev took exactly
+     * as long as entering at Intake — which is obviously wrong, and made the
+     * "faster by" ratio fall for a reason that had nothing to do with the
+     * argument.
+     */
+    const fullWeight = STEP_IDS.reduce((a, s) => a + MODEL.STEP_WEIGHT[s], 0);
     const weightSum = steps.reduce((a, s) => a + MODEL.STEP_WEIGHT[s], 0);
+    const share = weightSum / fullWeight;
+
+    const belt = beltDays(sp) * share;
+    const checkpoints =
+      MODEL.CHECKPOINT_DAYS * Math.max(1, Math.round(MODEL.CHECKPOINT_COUNT * share));
+    // The decision is made once per item, wherever it enters.
+    const decision = consoleDays(sp);
+    const total = belt + checkpoints + decision;
+
     perStep = steps.map((stepId) => ({
       stepId,
       workDays: (total * MODEL.STEP_WEIGHT[stepId]) / weightSum,

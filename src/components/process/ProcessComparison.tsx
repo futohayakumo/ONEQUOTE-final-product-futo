@@ -20,7 +20,7 @@ import { ModeToggle } from "./ModeToggle";
 import { ProcessSceneFallback } from "./ProcessSceneFallback";
 import { RunReadout, type RunRow } from "./RunReadout";
 import { StoryPointTray } from "./StoryPointTray";
-import { STEP_IDS, STEP_LABEL, compare } from "./model/processModel";
+import { STEP_LABEL, compare } from "./model/processModel";
 
 /**
  * `ssr: false` is only legal from a client component in the App Router, which
@@ -97,7 +97,18 @@ export function ProcessComparison() {
     (sp: StoryPoint, step: StepId) => {
       const itemId = sceneRef.current?.dropItem(sp, step) ?? `wi-${Date.now()}`;
       record(sp, step, itemId);
-      setLive((prev) => ({ ...prev, sp, startStep: step, elapsedDays: 0 }));
+      // phase must be set here too, or the first frame renders "Finished"
+      // (phase === null) before the first progress event arrives.
+      setLive((prev) => ({
+        ...prev,
+        sp,
+        startStep: step,
+        elapsedDays: 0,
+        waitDays: 0,
+        waitElapsedDays: 0,
+        step,
+        phase: "work",
+      }));
       setArmed(null);
       setHovered(null);
       sceneRef.current?.setHoveredStep(null);
@@ -212,15 +223,16 @@ export function ProcessComparison() {
             ref={sceneRef}
             mode={mode}
             onAnchors={setAnchors}
-            onItemProgress={(p) =>
+            onBacklogChanged={(backlog) =>
+              setLive((prev) => ({ ...prev, queues: [...backlog] }))
+            }
+            onItemProgress={(p) => {
+              // The runtime cancels in-flight work inside a passive effect, so
+              // frames for the room we just LEFT can still arrive after the
+              // reset and freeze a stale readout there. Effect ordering is not
+              // something to depend on; the frame says which room it is from.
+              if (p.mode !== mode) return;
               setLive((prev) => {
-                // The pile the item is sitting in is the gap BEFORE its step,
-                // so its live depth belongs to that index.
-                const gap = STEP_IDS.indexOf(p.station as StepId) - 1;
-                const queues =
-                  p.phase === "waiting" && gap >= 0 && gap < prev.queues.length
-                    ? prev.queues.map((n, i) => (i === gap ? p.queueDepth : n))
-                    : prev.queues;
                 return {
                   ...prev,
                   step: p.station as StepId,
@@ -234,11 +246,15 @@ export function ProcessComparison() {
                     p.phase === "waiting" ? p.segmentElapsedDays : 0,
                   elapsedDays: p.elapsedDays,
                   sp: p.sp,
-                  queues,
+                  // Mirror the whole array. Copying only the waiting gap meant
+                  // the runtime's decay was never emitted, so a card and the
+                  // pile it describes drifted apart permanently.
+                  queues: [...p.backlog],
                 };
-              })
-            }
+              });
+            }}
             onItemComplete={(r: WorkItemResult) => {
+              if (r.mode !== mode) return;
               setLive((prev) => ({
                 ...prev,
                 step: null,

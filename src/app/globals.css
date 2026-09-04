@@ -315,6 +315,10 @@
 
 @utility route-enter {
   animation: route-in-forward 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* The entrance translates 14px sideways, which is 14px of transient
+     horizontal overflow on a phone — enough to flash a scrollbar. `clip`
+     rather than `hidden` so no scroll container is created. */
+  overflow-x: clip;
 }
 
 @utility animate-route-pulse {
