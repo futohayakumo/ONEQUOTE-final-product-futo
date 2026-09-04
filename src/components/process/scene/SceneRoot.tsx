@@ -248,8 +248,6 @@ export function SceneRoot({
     (step: StepId) => runtime.busyStations.has(step),
     [runtime],
   );
-  const anyBusy = useCallback(() => runtime.busyStations.size > 0, [runtime]);
-
   return (
     <>
       <OrthographicCamera
@@ -269,11 +267,7 @@ export function SceneRoot({
         isBusy={isBusy}
       />
 
-      <AIRoom
-        visible={mode === "ai-driven"}
-        isBusy={isBusy}
-        anyBusy={anyBusy}
-      />
+      <AIRoom visible={mode === "ai-driven"} isBusy={isBusy} />
 
       {items.map((item) => (
         <group

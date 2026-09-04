@@ -61,11 +61,18 @@ export const BELT = {
 
 export const TRUCK = { x: 11.3, z: 0.35, rotY: -1.15, scale: 0.6 } as const;
 /**
- * The single human console in the AI room. Pushed left and forward: at the
- * centre it sat directly behind the "No queue" cards, so the one beat that
- * says the people did not vanish was the one thing you could not see.
+ * Where a person sits in the AI room.
+ *
+ * There is no single "human console" any more. A console appears at exactly
+ * the stations whose agency is AI-ASSISTED, and nowhere else — so the presence
+ * or absence of a person reads as the same fact the label above it states. An
+ * automated station with somebody sitting at it was contradicting its own
+ * caption.
+ *
+ * Set behind the belt so the line stays unobstructed from the camera, and well
+ * clear of the queue cards, which sit in front of it.
  */
-export const AI_CONSOLE = { x: -7.4, z: 1.9 } as const;
+export const AI_CONSOLE_Z = -2.0;
 
 /** Where an item rests while a station works on it. */
 export function workAnchor(index: number): [number, number, number] {

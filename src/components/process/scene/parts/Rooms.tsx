@@ -3,7 +3,7 @@
 import type { StepId } from "@/types/process-scene";
 import { STEP_IDS } from "../../model/processModel";
 import {
-  AI_CONSOLE,
+  AI_CONSOLE_Z,
   BELT,
   GAP_X,
   GAP_Z,
@@ -89,11 +89,9 @@ export function TraditionalRoom({
 
 export function AIRoom({
   isBusy,
-  anyBusy,
   visible,
 }: {
   isBusy: (step: StepId) => boolean;
-  anyBusy: () => boolean;
   visible: boolean;
 }) {
   return (
@@ -112,17 +110,38 @@ export function AIRoom({
         />
       ))}
 
-      {/* A single console, set back from the line. The people did not vanish —
-          there is one of them, and the decision is the job. */}
-      <group
-        position={[AI_CONSOLE.x, 0, AI_CONSOLE.z]}
-        rotation={[0, Math.PI, 0]}
-      >
-        <Desk position={[0, 0, 0]} />
-        <Monitor position={[0, 0.78, -0.15]} kind="cloud" />
-        <Chair position={[0, 0, -0.85]} />
-        <Worker position={[0, 0, -0.85]} isBusy={anyBusy} />
-      </group>
+      {/*
+        A person at the AI-ASSISTED stations, and only there.
+
+        Derived from the same agency data the labels are, so the two can never
+        disagree: where the caption says AI automation the seat is empty, and
+        where it says AI-assisted somebody is sitting at it. A single console
+        parked at the far left was contradicting every caption above it.
+
+        The people did not vanish — they moved to the two steps that still need
+        a decision.
+      */}
+      {STEP_IDS.map((step, i) =>
+        STATIONS[step].agency["ai-driven"] === "assisted" ? (
+          <group
+            key={`console-${step}`}
+            position={[STATION_X[i], 0, AI_CONSOLE_Z]}
+          >
+            <Desk position={[0, 0, 0]} />
+            {/* Monitor pushed to one side of the desk. Centred, it sat directly
+                between the camera and the person, so the one thing this
+                console exists to show — that somebody is still here — was
+                hidden behind a screen. */}
+            <Monitor position={[-0.46, 0.78, -0.12]} kind="chart" />
+            <Chair position={[0.2, 0, -0.85]} />
+            <Worker
+              position={[0.2, 0, -0.85]}
+              seed={i * 1.3}
+              isBusy={() => isBusy(step)}
+            />
+          </group>
+        ) : null,
+      )}
 
       <ContainerTruck
         position={[TRUCK.x, 0, TRUCK.z]}
