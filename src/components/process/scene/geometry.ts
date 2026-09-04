@@ -46,7 +46,6 @@ export const G = {
 
   beltLeg: new THREE.BoxGeometry(0.08, 0.5, 0.08),
 
-
   truckBody: new THREE.BoxGeometry(4.0, 1.3, 1.2),
   truckCab: new THREE.BoxGeometry(1.3, 1.1, 1.2),
   wheel: new THREE.CylinderGeometry(0.32, 0.32, 0.2, 10),

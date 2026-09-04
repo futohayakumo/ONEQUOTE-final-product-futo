@@ -36,7 +36,11 @@ export function LightRig() {
         shadow-normalBias={0.02}
       />
       {/* Fill. No shadow — a second shadow would break the single-lamp read. */}
-      <directionalLight position={[-8, 5, -4]} intensity={0.3} color="#FFFFFF" />
+      <directionalLight
+        position={[-8, 5, -4]}
+        intensity={0.3}
+        color="#FFFFFF"
+      />
     </>
   );
 }

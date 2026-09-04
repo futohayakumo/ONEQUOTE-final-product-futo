@@ -48,15 +48,19 @@ export function ProcessComparison() {
     step: StepId | null;
     phase: "work" | "wait" | null;
     waitDays: number;
+    waitElapsedDays: number;
     elapsedDays: number;
     sp: StoryPoint | null;
+    startStep: StepId;
     queues: number[];
   }>({
     step: null,
     phase: null,
     waitDays: 0,
+    waitElapsedDays: 0,
     elapsedDays: 0,
     sp: null,
+    startStep: "intake",
     queues: [3, 3, 3, 5],
   });
   const [announcement, setAnnouncement] = useState("");
@@ -70,18 +74,30 @@ export function ProcessComparison() {
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const pointerDrag = useRef<StoryPoint | null>(null);
 
-  const record = useCallback((sp: StoryPoint, startStep: StepId, itemId: string) => {
-    setRuns((prev) => [{ itemId, sp, startStep }, ...prev].slice(0, 8));
-    const c = compare(sp, startStep);
-    setAnnouncement(
-      `${sp} story point item entered at ${STEP_LABEL[startStep]}. Traditional Agile ${c.traditional.totalDays.toFixed(1)} days, AI-driven delivery ${c.aiDriven.totalDays.toFixed(1)} days. ${c.ratio.toFixed(1)} times faster.`,
-    );
-  }, []);
+  const record = useCallback(
+    (sp: StoryPoint, startStep: StepId, itemId: string) => {
+      // The model is deterministic, so the same size entering at the same step
+      // can only ever produce the same row. Repeating it would read as click
+      // logging rather than analysis.
+      setRuns((prev) =>
+        [
+          { itemId, sp, startStep },
+          ...prev.filter((r) => !(r.sp === sp && r.startStep === startStep)),
+        ].slice(0, 8),
+      );
+      const c = compare(sp, startStep);
+      setAnnouncement(
+        `${sp} story point item entered at ${STEP_LABEL[startStep]}. Traditional Agile ${c.traditional.totalDays.toFixed(1)} days, AI-driven delivery ${c.aiDriven.totalDays.toFixed(1)} days. ${c.ratio.toFixed(1)} times faster.`,
+      );
+    },
+    [],
+  );
 
   const place = useCallback(
     (sp: StoryPoint, step: StepId) => {
       const itemId = sceneRef.current?.dropItem(sp, step) ?? `wi-${Date.now()}`;
       record(sp, step, itemId);
+      setLive((prev) => ({ ...prev, sp, startStep: step, elapsedDays: 0 }));
       setArmed(null);
       setHovered(null);
       sceneRef.current?.setHoveredStep(null);
@@ -150,13 +166,34 @@ export function ProcessComparison() {
 
   return (
     <div className="flex flex-col gap-8">
-      <ModeToggle mode={mode} onChange={setMode} />
+      <ModeToggle
+        mode={mode}
+        onChange={(next) => {
+          setMode(next);
+          // In-flight work is cancelled by a room change, so the clock must
+          // stop describing it. Leaving it showed a run measured against the
+          // other room's total, e.g. "35.5 d elapsed of 2.5 d total".
+          setArmed(null);
+          setHovered(null);
+          setLive({
+            step: null,
+            phase: null,
+            waitDays: 0,
+            waitElapsedDays: 0,
+            elapsedDays: 0,
+            sp: null,
+            startStep: "intake",
+            queues: [3, 3, 3, 5],
+          });
+        }}
+      />
 
       <ModeBadgeRow mode={mode} />
 
       <ElapsedClock
         mode={mode}
         sp={live.sp}
+        startStep={live.startStep}
         elapsedDays={live.elapsedDays}
         phase={live.phase}
       />
@@ -185,10 +222,16 @@ export function ProcessComparison() {
                     ? prev.queues.map((n, i) => (i === gap ? p.queueDepth : n))
                     : prev.queues;
                 return {
+                  ...prev,
                   step: p.station as StepId,
                   phase: p.phase === "waiting" ? "wait" : "work",
+                  // The wait at THIS gap, not the whole run so far. Showing
+                  // the run total here made two different labels display the
+                  // same number, which reads as decoration.
                   waitDays:
-                    p.phase === "waiting" ? p.elapsedDays : prev.waitDays,
+                    p.phase === "waiting" ? p.segmentDays : prev.waitDays,
+                  waitElapsedDays:
+                    p.phase === "waiting" ? p.segmentElapsedDays : 0,
                   elapsedDays: p.elapsedDays,
                   sp: p.sp,
                   queues,
@@ -223,6 +266,7 @@ export function ProcessComparison() {
           activeStep={live.step}
           activePhase={live.phase}
           activeWaitDays={live.waitDays}
+          activeWaitElapsedDays={live.waitElapsedDays}
           queueDepths={live.queues}
           onHover={(step) => {
             setHovered(step);
@@ -240,6 +284,7 @@ export function ProcessComparison() {
         activeStep={live.step}
         activePhase={live.phase}
         activeWaitDays={live.waitDays}
+        activeWaitElapsedDays={live.waitElapsedDays}
         queueDepths={live.queues}
         onDrop={(step, sp) => place(sp, step)}
       />

@@ -58,6 +58,8 @@ export interface RuntimeHandlers {
 const EMIT_INTERVAL_MS = 150;
 /** A pile grows while you wait. That is the entire metaphor. */
 const BACKLOG_GROWTH_MS = 1800;
+/** And drains back to its resting depth once the wait is over. */
+const BACKLOG_DECAY_MS = 900;
 
 let seq = 0;
 
@@ -181,7 +183,20 @@ export class WorkItemRuntime {
             const { seg } = this.locate(i, now);
             if (seg.kind !== "wait") continue;
             const gap = Math.max(0, STEP_IDS.indexOf(seg.stepId) - 1);
-            this.backlog[gap] = Math.min(16, this.backlog[gap] + 1);
+            // Capped a little above the seed: the pile grows while you wait,
+            // but it is illustrating a backlog, not racing to the ceiling.
+            const cap = SEED_BACKLOG[gap] + 4;
+            this.backlog[gap] = Math.min(cap, this.backlog[gap] + 1);
+          }
+        }
+      } else {
+        // Nothing is waiting, so the queue drains back to its resting depth.
+        // Without this it ratcheted up across runs and looked like drift.
+        this.backlogTimer += 16;
+        if (this.backlogTimer >= BACKLOG_DECAY_MS) {
+          this.backlogTimer = 0;
+          for (let g = 0; g < this.backlog.length; g += 1) {
+            if (this.backlog[g] > SEED_BACKLOG[g]) this.backlog[g] -= 1;
           }
         }
       }
@@ -224,6 +239,8 @@ export class WorkItemRuntime {
             item.mode === "traditional" && seg.kind === "wait"
               ? this.backlog[gap]
               : 0,
+          segmentDays: seg.days,
+          segmentElapsedDays: seg.days * local,
         });
       }
 
@@ -234,12 +251,6 @@ export class WorkItemRuntime {
       this.items = this.items.filter((i) => !finished.includes(i));
       this.publish();
       for (const item of finished) {
-        // A pile shrinks by one when its item is finally released.
-        if (item.mode === "traditional") {
-          for (let g = 0; g < this.backlog.length; g += 1) {
-            this.backlog[g] = Math.max(0, this.backlog[g] - (g === 3 ? 1 : 0));
-          }
-        }
         this.handlers.onItemComplete?.({
           itemId: item.id,
           sp: item.sp,

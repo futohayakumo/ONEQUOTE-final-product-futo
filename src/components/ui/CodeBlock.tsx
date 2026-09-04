@@ -15,7 +15,12 @@ export function CodeBlock({
   className?: string;
 }) {
   return (
-    <div className={cn("overflow-hidden border border-charcoal rounded-sharp", className)}>
+    <div
+      className={cn(
+        "overflow-hidden border border-charcoal rounded-sharp",
+        className,
+      )}
+    >
       {lang ? (
         <div className="flex items-center justify-between border-b border-muted bg-console px-4 py-2">
           <span className="type-console text-muted">{lang}</span>

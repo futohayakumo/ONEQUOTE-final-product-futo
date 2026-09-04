@@ -35,6 +35,7 @@ export function StationOverlay({
   activeStep,
   activePhase,
   activeWaitDays,
+  activeWaitElapsedDays,
   queueDepths,
   onHover,
   onDrop,
@@ -45,7 +46,10 @@ export function StationOverlay({
   armed: StoryPoint | null;
   activeStep: StepId | null;
   activePhase: "work" | "wait" | null;
+  /** How long this gap holds the item in total. */
   activeWaitDays: number;
+  /** How much of that has elapsed. */
+  activeWaitElapsedDays: number;
   queueDepths: number[];
   onHover: (step: StepId | null) => void;
   onDrop: (step: StepId, sp: StoryPoint) => void;
@@ -217,7 +221,8 @@ export function StationOverlay({
               <p className="mt-0.5 type-caption">{reason}</p>
               {waitingHere ? (
                 <p className="mt-1 type-caption tnum text-crimson">
-                  Waiting {activeWaitDays.toFixed(1)} d
+                  Waiting {activeWaitElapsedDays.toFixed(1)} of{" "}
+                  {activeWaitDays.toFixed(1)} d
                 </p>
               ) : null}
             </div>

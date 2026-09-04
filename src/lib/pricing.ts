@@ -13,7 +13,10 @@ import type {
  * identical result, which is what lets the console replay be reproducible.
  */
 
-export const PORTS: Record<PortCode, { code: PortCode; city: string; country: string }> = {
+export const PORTS: Record<
+  PortCode,
+  { code: PortCode; city: string; country: string }
+> = {
   JPTYO: { code: "JPTYO", city: "Tokyo", country: "JP" },
   JPYOK: { code: "JPYOK", city: "Yokohama", country: "JP" },
   SGSIN: { code: "SGSIN", city: "Singapore", country: "SG" },
@@ -41,8 +44,18 @@ export const CONTAINERS: Record<
   ContainerType,
   { label: string; capacityCbm: number; multiplier: number; teu: number }
 > = {
-  "20GP": { label: "20' Standard GP", capacityCbm: 33, multiplier: 1.0, teu: 1 },
-  "40HC": { label: "40' High Cube HC", capacityCbm: 76, multiplier: 1.75, teu: 2 },
+  "20GP": {
+    label: "20' Standard GP",
+    capacityCbm: 33,
+    multiplier: 1.0,
+    teu: 1,
+  },
+  "40HC": {
+    label: "40' High Cube HC",
+    capacityCbm: 76,
+    multiplier: 1.75,
+    teu: 2,
+  },
   "40RF": { label: "40' Reefer RF", capacityCbm: 67, multiplier: 2.6, teu: 2 },
 };
 
@@ -63,7 +76,11 @@ export const LOYALTY_TIERS: Record<
   BLUE_WAVE: { label: "Blue Wave", discountRate: 0.0, milestoneTeu: 5 },
   SILVER_SAIL: { label: "Silver Sail", discountRate: 0.03, milestoneTeu: 10 },
   GOLDEN_SEA: { label: "Golden Sea", discountRate: 0.06, milestoneTeu: 20 },
-  MILLION_MAGENTA: { label: "Million Magenta", discountRate: 0.1, milestoneTeu: 50 },
+  MILLION_MAGENTA: {
+    label: "Million Magenta",
+    discountRate: 0.1,
+    milestoneTeu: 50,
+  },
 };
 
 export const TIER_ORDER: readonly LoyaltyTier[] = [

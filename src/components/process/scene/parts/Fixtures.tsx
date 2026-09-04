@@ -24,9 +24,24 @@ export function SecurityGate({
 }) {
   return (
     <group position={position}>
-      <mesh geometry={G.gatePost} material={M.structure} position={[-0.9, 1.1, 0]} castShadow />
-      <mesh geometry={G.gatePost} material={M.structure} position={[0.9, 1.1, 0]} castShadow />
-      <mesh geometry={G.gateLintel} material={M.structure} position={[0, 2.2, 0]} castShadow />
+      <mesh
+        geometry={G.gatePost}
+        material={M.structure}
+        position={[-0.9, 1.1, 0]}
+        castShadow
+      />
+      <mesh
+        geometry={G.gatePost}
+        material={M.structure}
+        position={[0.9, 1.1, 0]}
+        castShadow
+      />
+      <mesh
+        geometry={G.gateLintel}
+        material={M.structure}
+        position={[0, 2.2, 0]}
+        castShadow
+      />
       <mesh
         geometry={G.gateDoor}
         material={M.surface}
@@ -39,17 +54,35 @@ export function SecurityGate({
       {/* Two approvals are required, so two people have to actually turn up. */}
       {Array.from({ length: approvers }).map((_, i) => (
         <group key={i} position={[1.9 + i * 0.75, 0, -0.5 + i * 1.0]}>
-          <mesh geometry={G.torso} material={M.person} position={[0, 1.05, 0]} castShadow />
-          <mesh geometry={G.head} material={M.personHead} position={[0, 1.38, 0]} />
+          <mesh
+            geometry={G.torso}
+            material={M.person}
+            position={[0, 1.05, 0]}
+            castShadow
+          />
+          <mesh
+            geometry={G.head}
+            material={M.personHead}
+            position={[0, 1.38, 0]}
+          />
         </group>
       ))}
     </group>
   );
 }
 
-export function OutboundPallet({ position }: { position: [number, number, number] }) {
+export function OutboundPallet({
+  position,
+}: {
+  position: [number, number, number];
+}) {
   return (
-    <mesh geometry={G.pallet} material={M.secondary} position={position} receiveShadow>
+    <mesh
+      geometry={G.pallet}
+      material={M.secondary}
+      position={position}
+      receiveShadow
+    >
       <Hairline />
     </mesh>
   );
@@ -88,9 +121,23 @@ export function BoxStack({
   return (
     <group>
       {slots.map((s, i) => (
-        <group key={i} position={s.pos} rotation={[0, s.rot, 0]} scale={STACK.scale}>
-          <mesh geometry={G.boxBody} material={M.surface} castShadow receiveShadow />
-          <mesh geometry={G.boxSeam} material={M.secondary} position={[0, 0.152, 0]} />
+        <group
+          key={i}
+          position={s.pos}
+          rotation={[0, s.rot, 0]}
+          scale={STACK.scale}
+        >
+          <mesh
+            geometry={G.boxBody}
+            material={M.surface}
+            castShadow
+            receiveShadow
+          />
+          <mesh
+            geometry={G.boxSeam}
+            material={M.secondary}
+            position={[0, 0.152, 0]}
+          />
         </group>
       ))}
     </group>
@@ -103,7 +150,11 @@ export function BoxStack({
  * decorative and made the five steps impossible to line up against the other
  * room, which is the only comparison this screen exists to make.
  */
-export function StraightConveyor({ drawFraction = 1 }: { drawFraction?: number }) {
+export function StraightConveyor({
+  drawFraction = 1,
+}: {
+  drawFraction?: number;
+}) {
   const length = BELT.x1 - BELT.x0;
   const legs = useMemo(() => {
     const out: number[] = [];
@@ -187,9 +238,24 @@ export function AIGantry({
 
   return (
     <group position={[x, 0, z]}>
-      <mesh geometry={G.cpPost} material={M.structure} position={[-0.72, 0.8, 0]} castShadow />
-      <mesh geometry={G.cpPost} material={M.structure} position={[0.72, 0.8, 0]} castShadow />
-      <mesh geometry={G.cpLintel} material={M.structure} position={[0, 1.6, 0]} castShadow>
+      <mesh
+        geometry={G.cpPost}
+        material={M.structure}
+        position={[-0.72, 0.8, 0]}
+        castShadow
+      />
+      <mesh
+        geometry={G.cpPost}
+        material={M.structure}
+        position={[0.72, 0.8, 0]}
+        castShadow
+      />
+      <mesh
+        geometry={G.cpLintel}
+        material={M.structure}
+        position={[0, 1.6, 0]}
+        castShadow
+      >
         <Hairline />
       </mesh>
       {/* Automated stations carry a solid head; assisted ones a hollow one, so
@@ -200,9 +266,17 @@ export function AIGantry({
         position={[0, 1.42, 0]}
         castShadow
       >
-        <Edges threshold={1} color={agency === "automated" ? "#E1127A" : EDGE_COLOR} />
+        <Edges
+          threshold={1}
+          color={agency === "automated" ? "#E1127A" : EDGE_COLOR}
+        />
       </mesh>
-      <mesh ref={bar} geometry={G.scanBar} material={M.accent} position={[0, 1.5, 0]} />
+      <mesh
+        ref={bar}
+        geometry={G.scanBar}
+        material={M.accent}
+        position={[0, 1.5, 0]}
+      />
     </group>
   );
 }
@@ -220,10 +294,20 @@ export function ContainerTruck({
 }) {
   return (
     <group position={position} rotation={[0, rotationY, 0]} scale={scale}>
-      <mesh geometry={G.truckBody} material={M.surface} position={[0, 1.35, 0]} castShadow>
+      <mesh
+        geometry={G.truckBody}
+        material={M.surface}
+        position={[0, 1.35, 0]}
+        castShadow
+      >
         <Hairline />
       </mesh>
-      <mesh geometry={G.truckCab} material={M.structure} position={[2.65, 1.25, 0]} castShadow>
+      <mesh
+        geometry={G.truckCab}
+        material={M.structure}
+        position={[2.65, 1.25, 0]}
+        castShadow
+      >
         <Hairline />
       </mesh>
       {[-1.4, 0, 1.4, 2.6].map((x) =>
@@ -238,7 +322,11 @@ export function ContainerTruck({
         )),
       )}
       <group position={[-2.0, 1.35, 0]} rotation={[0, doorOpen * 1.9, 0]}>
-        <mesh geometry={G.gateDoor} material={M.surface} scale={[0.03, 0.72, 1.0]}>
+        <mesh
+          geometry={G.gateDoor}
+          material={M.surface}
+          scale={[0.03, 0.72, 1.0]}
+        >
           <Hairline />
         </mesh>
       </group>

@@ -73,16 +73,17 @@ export function edgePoints(from: Rect, to: Rect): Pt[] | null {
 
 export function polylineD(points: readonly Pt[]): string {
   if (points.length === 0) return "";
-  return points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
+  return points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 }
 
 /** Analytic length — never reads the DOM, so it is safe during render. */
 export function polylineLength(points: readonly Pt[]): number {
   let total = 0;
   for (let i = 1; i < points.length; i += 1) {
-    total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    total += Math.hypot(
+      points[i].x - points[i - 1].x,
+      points[i].y - points[i - 1].y,
+    );
   }
   return total;
 }

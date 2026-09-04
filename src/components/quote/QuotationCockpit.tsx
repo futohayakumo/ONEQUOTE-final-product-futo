@@ -13,7 +13,12 @@ import {
 } from "@/lib/pricing";
 import { buildTransactionLog } from "@/lib/simulate-log";
 import type { QuoteErrors, QuoteInput, QuoteResult } from "@/types/quote";
-import { ContainerIcon, ShipIcon, CubeOutlineIcon, UserIcon } from "../icons/flow";
+import {
+  ContainerIcon,
+  ShipIcon,
+  CubeOutlineIcon,
+  UserIcon,
+} from "../icons/flow";
 import { Button } from "../ui/Button";
 import { Field } from "../ui/Field";
 import { NumberField } from "../ui/NumberField";
@@ -41,7 +46,8 @@ export function QuotationCockpit() {
   const [submittedAt, setSubmittedAt] = useState<number | null>(null);
 
   const log = useMemo(
-    () => (result && submittedAt ? buildTransactionLog(result, submittedAt) : []),
+    () =>
+      result && submittedAt ? buildTransactionLog(result, submittedAt) : [],
     [result, submittedAt],
   );
 
@@ -63,7 +69,10 @@ export function QuotationCockpit() {
       pol: input.pol as Exclude<QuoteInput["pol"], "">,
       pod: input.pod as Exclude<QuoteInput["pod"], "">,
       cbm: Number(input.cbm),
-      containerType: input.containerType as Exclude<QuoteInput["containerType"], "">,
+      containerType: input.containerType as Exclude<
+        QuoteInput["containerType"],
+        ""
+      >,
       tier: input.tier as Exclude<QuoteInput["tier"], "">,
     });
     setSubmittedAt(Date.now());
@@ -160,7 +169,10 @@ export function QuotationCockpit() {
               invalid={Boolean(errors.containerType)}
               leading={<ContainerIcon size={18} />}
               onChange={(e) =>
-                set("containerType", e.target.value as QuoteInput["containerType"])
+                set(
+                  "containerType",
+                  e.target.value as QuoteInput["containerType"],
+                )
               }
             >
               <option value="">Select container type</option>
@@ -178,7 +190,9 @@ export function QuotationCockpit() {
               value={input.tier}
               invalid={Boolean(errors.tier)}
               leading={<UserIcon size={18} />}
-              onChange={(e) => set("tier", e.target.value as QuoteInput["tier"])}
+              onChange={(e) =>
+                set("tier", e.target.value as QuoteInput["tier"])
+              }
             >
               <option value="">Select loyalty tier</option>
               {TIER_ORDER.map((code) => (

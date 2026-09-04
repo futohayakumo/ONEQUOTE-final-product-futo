@@ -31,7 +31,10 @@ export function DeepDiveIndex({
               onClick={() => onSelect(entry.nodeId)}
               className="type-caption text-charcoal transition-colors duration-150 hover:text-crimson"
             >
-              {entry.label}
+              {/* The node label, not the component label: this is what the
+                  click selects, and one catalogue entry is anchored to a node
+                  with a different name. */}
+              {NODES[entry.nodeId].label}
             </button>
             {i < entries.length - 1 ? (
               <span aria-hidden className="type-caption">

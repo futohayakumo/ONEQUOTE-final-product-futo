@@ -202,7 +202,12 @@ export const ROUTE_BY_NODE: RouteMap = {
     "routing-gateway",
     "erp-system",
   ],
-  validation: ["new-request", "request-intake", "validation", "request-tracker"],
+  validation: [
+    "new-request",
+    "request-intake",
+    "validation",
+    "request-tracker",
+  ],
   "request-tracker": [
     "new-request",
     "request-intake",

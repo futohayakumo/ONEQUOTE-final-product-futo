@@ -114,7 +114,10 @@ export function AIRoom({
 
       {/* A single console, set back from the line. The people did not vanish —
           there is one of them, and the decision is the job. */}
-      <group position={[AI_CONSOLE.x, 0, AI_CONSOLE.z]} rotation={[0, Math.PI, 0]}>
+      <group
+        position={[AI_CONSOLE.x, 0, AI_CONSOLE.z]}
+        rotation={[0, Math.PI, 0]}
+      >
         <Desk position={[0, 0, 0]} />
         <Monitor position={[0, 0.78, -0.15]} kind="cloud" />
         <Chair position={[0, 0, -0.85]} />
@@ -129,4 +132,3 @@ export function AIRoom({
     </group>
   );
 }
-

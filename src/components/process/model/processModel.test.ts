@@ -12,16 +12,30 @@ const near = (a: number, b: number, tol: number) =>
 
 test("traditional totals match the published table", () => {
   const expected: Record<string, number> = {
-    "0.5": 3.8, "1": 5.4, "2": 9.0, "3": 12.9, "5": 21.5, "8": 35.5,
+    "0.5": 3.8,
+    "1": 5.4,
+    "2": 9.0,
+    "3": 12.9,
+    "5": 21.5,
+    "8": 35.5,
   };
   for (const sp of STORY_POINTS) {
-    near(buildSchedule("traditional", sp).totalDays, expected[String(sp)], 0.06);
+    near(
+      buildSchedule("traditional", sp).totalDays,
+      expected[String(sp)],
+      0.06,
+    );
   }
 });
 
 test("ai-driven totals match the published table", () => {
   const expected: Record<string, number> = {
-    "0.5": 0.78, "1": 0.89, "2": 1.12, "3": 1.35, "5": 1.81, "8": 2.5,
+    "0.5": 0.78,
+    "1": 0.89,
+    "2": 1.12,
+    "3": 1.35,
+    "5": 1.81,
+    "8": 2.5,
   };
   for (const sp of STORY_POINTS) {
     near(buildSchedule("ai-driven", sp).totalDays, expected[String(sp)], 0.02);
@@ -42,12 +56,35 @@ test("wall clock spreads in traditional and stays flat in ai-driven", () => {
   const aSmall = buildSchedule("ai-driven", 0.5).wallMs;
   const aLarge = buildSchedule("ai-driven", 8).wallMs;
 
-  assert.ok(tLarge / tSmall >= 2.8, `traditional spread ${tLarge / tSmall} < 2.8`);
-  assert.ok(aLarge / aSmall <= 1.7, `ai-driven spread ${aLarge / aSmall} > 1.7`);
-  // Every ai-driven run stays inside the watchable window.
+  assert.ok(
+    tLarge / tSmall >= 2.8,
+    `traditional spread ${tLarge / tSmall} < 2.8`,
+  );
+  assert.ok(
+    aLarge / aSmall <= 1.2,
+    `ai-driven spread ${aLarge / aSmall} > 1.2`,
+  );
+
+  // Every ai-driven run must last long enough for five station beats to be
+  // separately visible, and short enough to stay watchable.
   for (const sp of STORY_POINTS) {
     const ms = buildSchedule("ai-driven", sp).wallMs;
-    assert.ok(ms >= 1600 && ms <= 2900, `ai-driven ${sp}SP wall ${ms}ms out of range`);
+    assert.ok(
+      ms >= 3600 && ms <= 4200,
+      `ai-driven ${sp}SP wall ${ms}ms out of range`,
+    );
+  }
+
+  // The traditional room must still take visibly longer at every size.
+  for (const sp of STORY_POINTS) {
+    const t = buildSchedule("traditional", sp).wallMs;
+    const a = buildSchedule("ai-driven", sp).wallMs;
+    if (sp >= 2) {
+      assert.ok(
+        t > a,
+        `traditional ${sp}SP (${t}ms) should outlast ai (${a}ms)`,
+      );
+    }
   }
 });
 

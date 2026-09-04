@@ -48,6 +48,13 @@ const easeInOutCubic = (t: number) =>
  */
 const APPROACH_FRACTION = 0.16;
 
+/**
+ * Fraction of an AI-driven segment spent moving to the next gantry; the rest
+ * is spent held under it while the scan runs. Nothing queues, but the work is
+ * still visibly happening somewhere specific.
+ */
+const AI_TRAVEL_FRACTION = 0.58;
+
 export function SceneRoot({
   runtime,
   items,
@@ -68,7 +75,6 @@ export function SceneRoot({
 }) {
   const camRef = useRef<THREE.OrthographicCamera>(null);
   const itemsRef = useRef<Map<string, THREE.Group>>(new Map());
-  const pointer = useRef({ x: 0, y: 0 });
   const settled = useRef<ProcessMode | null>(null);
   const lastAnchorPublish = useRef(0);
   const lastAnchorKey = useRef("");
@@ -96,15 +102,6 @@ export function SceneRoot({
     return Math.min(ZOOM_CLAMP.max, Math.max(ZOOM_CLAMP.min, raw));
   }, [size.width, size.height, mode]);
 
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.current.y = (e.clientY / window.innerHeight) * 2 - 1;
-    };
-    window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
-  }, []);
-
   useFrame((_, dt) => {
     const cam = camRef.current;
     const now = performance.now();
@@ -117,16 +114,16 @@ export function SceneRoot({
     if (cam) {
       const base = CAMERA[mode].position;
       const t0 = CAMERA[mode].target;
-      // Damped parallax rather than OrbitControls: free orbit would destroy
-      // the composition and void the crimson budget.
-      const ax = reduced ? 0 : pointer.current.x * 0.14;
-      const ay = reduced ? 0 : -pointer.current.y * 0.05;
-      const radius = Math.hypot(base[0], base[2]);
-      const theta = Math.atan2(base[0], base[2]) + ax;
 
+      // The camera is fixed. An earlier pointer parallax slid every station
+      // label horizontally with it, and continuously drifting body text costs
+      // more legibility than the effect is worth on a screen whose entire job
+      // is being read.
+      const radius = Math.hypot(base[0], base[2]);
+      const theta = Math.atan2(base[0], base[2]);
       scratchPos.set(
         t0[0] + Math.sin(theta) * radius,
-        base[1] * (1 + ay),
+        base[1],
         t0[2] + Math.cos(theta) * radius,
       );
       easing.damp3(cam.position, scratchPos, reduced ? 0 : 0.3, dt);
@@ -197,8 +194,6 @@ export function SceneRoot({
       const index = Math.max(0, STEP_IDS.indexOf(seg.stepId));
 
       if (item.mode === "ai-driven") {
-        // Continuous travel along the belt: it slows under each gantry but
-        // never stops and never queues.
         const from =
           index === 0
             ? [BELT.x0 + 1.2, BELT.y + 0.22, BELT.z]
@@ -206,10 +201,14 @@ export function SceneRoot({
         const to = beltAnchor(index);
         scratchFrom.set(from[0], from[1], from[2]);
         scratchTo.set(to[0], to[1], to[2]);
+        // Travel, then HOLD under the gantry while it works. The hold is what
+        // makes five separate stations readable; without it the run is one
+        // continuous slide and the fast side says nothing at all.
+        const travel = Math.min(1, local / AI_TRAVEL_FRACTION);
         group.position.lerpVectors(
           scratchFrom,
           scratchTo,
-          easeInOutCubic(local),
+          easeInOutCubic(travel),
         );
         group.rotation.y = 0;
       } else if (seg.kind === "wait") {

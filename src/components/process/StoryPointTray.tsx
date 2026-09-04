@@ -25,7 +25,11 @@ export function StoryPointTray({
         <span className="type-label text-crimson">Drag &amp; drop</span>
         <span className="type-caption">{hint}</span>
       </div>
-      <div className="flex flex-wrap gap-3" role="group" aria-label="Story point sizes">
+      <div
+        className="flex flex-wrap gap-3"
+        role="group"
+        aria-label="Story point sizes"
+      >
         {STORY_POINTS.map((sp) => (
           <StoryPointChip
             key={sp}

@@ -71,18 +71,34 @@ export function Monitor({
 }) {
   const screenMat = useMemo(() => {
     const map = screenTexture(kind);
-    return new THREE.MeshBasicMaterial({ map: map ?? undefined, toneMapped: false });
+    return new THREE.MeshBasicMaterial({
+      map: map ?? undefined,
+      toneMapped: false,
+    });
   }, [kind]);
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh geometry={G.monBase} material={M.structure} position={[0, 0.01, 0]} />
-      <mesh geometry={G.monStem} material={M.structure} position={[0, 0.12, 0]} />
+      <mesh
+        geometry={G.monBase}
+        material={M.structure}
+        position={[0, 0.01, 0]}
+      />
+      <mesh
+        geometry={G.monStem}
+        material={M.structure}
+        position={[0, 0.12, 0]}
+      />
       <group position={[0, 0.4, 0]} rotation={[-0.14, 0, 0]}>
         <mesh geometry={G.monPanel} material={M.structure} castShadow>
           <Hairline />
         </mesh>
-        <mesh geometry={G.plane} material={screenMat} position={[0, 0, 0.017]} scale={[0.52, 0.3, 1]} />
+        <mesh
+          geometry={G.plane}
+          material={screenMat}
+          position={[0, 0, 0.017]}
+          scale={[0.52, 0.3, 1]}
+        />
       </group>
     </group>
   );
@@ -97,9 +113,22 @@ export function Chair({
 }) {
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh geometry={G.chairFoot} material={M.secondary} position={[0, 0.02, 0]} />
-      <mesh geometry={G.chairCol} material={M.secondary} position={[0, 0.24, 0]} />
-      <mesh geometry={G.chairSeat} material={M.secondary} position={[0, 0.45, 0]} castShadow />
+      <mesh
+        geometry={G.chairFoot}
+        material={M.secondary}
+        position={[0, 0.02, 0]}
+      />
+      <mesh
+        geometry={G.chairCol}
+        material={M.secondary}
+        position={[0, 0.24, 0]}
+      />
+      <mesh
+        geometry={G.chairSeat}
+        material={M.secondary}
+        position={[0, 0.45, 0]}
+        castShadow
+      />
       <mesh
         geometry={G.chairBack}
         material={M.secondary}
@@ -152,22 +181,48 @@ export function Worker({
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh geometry={G.torso} material={M.person} position={[0, 0.95, 0]} castShadow>
+      <mesh
+        geometry={G.torso}
+        material={M.person}
+        position={[0, 0.95, 0]}
+        castShadow
+      >
         <Hairline />
       </mesh>
-      <mesh geometry={G.head} material={M.personHead} position={[0, 1.28, 0]} castShadow />
+      <mesh
+        geometry={G.head}
+        material={M.personHead}
+        position={[0, 1.28, 0]}
+        castShadow
+      />
 
       <group ref={left} position={[-0.2, 1.1, 0]}>
-        <mesh geometry={G.upperArm} material={M.person} position={[0, 0, 0.13]} />
+        <mesh
+          geometry={G.upperArm}
+          material={M.person}
+          position={[0, 0, 0.13]}
+        />
         <group ref={leftFore} position={[0, 0, 0.26]}>
-          <mesh geometry={G.foreArm} material={M.person} position={[0, 0, 0.12]} />
+          <mesh
+            geometry={G.foreArm}
+            material={M.person}
+            position={[0, 0, 0.12]}
+          />
         </group>
       </group>
 
       <group ref={right} position={[0.2, 1.1, 0]}>
-        <mesh geometry={G.upperArm} material={M.person} position={[0, 0, 0.13]} />
+        <mesh
+          geometry={G.upperArm}
+          material={M.person}
+          position={[0, 0, 0.13]}
+        />
         <group ref={rightFore} position={[0, 0, 0.26]}>
-          <mesh geometry={G.foreArm} material={M.person} position={[0, 0, 0.12]} />
+          <mesh
+            geometry={G.foreArm}
+            material={M.person}
+            position={[0, 0, 0.12]}
+          />
         </group>
       </group>
     </group>
@@ -193,7 +248,10 @@ export function CardboardBox({
   scale?: number;
 }) {
   const s = sp !== undefined ? boxScale(sp) * scale : scale;
-  const label = useMemo(() => (sp !== undefined ? spLabelTexture(sp) : null), [sp]);
+  const label = useMemo(
+    () => (sp !== undefined ? spLabelTexture(sp) : null),
+    [sp],
+  );
 
   const labelMat = useMemo(() => {
     if (!label) return null;
@@ -217,10 +275,18 @@ export function CardboardBox({
       >
         <Hairline />
       </mesh>
-      <mesh geometry={G.boxSeam} material={M.secondary} position={[0, 0.152, 0]} />
+      <mesh
+        geometry={G.boxSeam}
+        material={M.secondary}
+        position={[0, 0.152, 0]}
+      />
       {labelMat ? (
         <>
-          <mesh geometry={G.labelQuad} material={labelMat} position={[0, 0, 0.181]} />
+          <mesh
+            geometry={G.labelQuad}
+            material={labelMat}
+            position={[0, 0, 0.181]}
+          />
           <mesh
             geometry={G.labelQuad}
             material={labelMat}

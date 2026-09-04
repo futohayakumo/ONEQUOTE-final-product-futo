@@ -121,13 +121,27 @@ export function stepsFrom(startStep: StepId): StepId[] {
 }
 
 /**
- * Wall-clock compression. Playing 35.5 days linearly would make the AI-driven
- * run unwatchably short or the traditional one tediously long, so the mapping
- * is compressed — but the PROPORTIONS inside a single run stay faithful,
- * because every segment is scaled by the same factor.
+ * Wall-clock compression, a PRESENTATION concern only. It never touches the
+ * simulated day figures, which are what the screen actually argues with.
+ *
+ * Playing 35.5 days linearly would make the AI-driven run unwatchably short or
+ * the traditional one tediously long, so the mapping is compressed while the
+ * proportions inside a single run stay faithful.
+ *
+ * The AI-driven room gets a floor. Its whole point is five stations passing in
+ * quick succession, and at 2.6s each beat lasted about half a second — too
+ * fast to see a station light up at all, which made the fast side look like a
+ * box sliding along a rail. The contrast is carried by the day counts, not by
+ * how briefly the animation plays.
  */
-export function wallSeconds(days: number): number {
-  return 0.9 + Math.pow(days, 0.62);
+const AI_MIN_PLAYBACK_SECONDS = 3.6;
+
+export function wallSeconds(
+  days: number,
+  mode: ProcessMode = "traditional",
+): number {
+  const raw = 0.9 + Math.pow(days, 0.62);
+  return mode === "ai-driven" ? Math.max(AI_MIN_PLAYBACK_SECONDS, raw) : raw;
 }
 
 export function buildSchedule(
@@ -173,7 +187,7 @@ export function buildSchedule(
     waitDays: round2(wait),
     totalDays: round2(totalDays),
     flowEfficiency: totalDays === 0 ? 1 : touch / totalDays,
-    wallMs: Math.round(wallSeconds(totalDays) * 1000),
+    wallMs: Math.round(wallSeconds(totalDays, mode) * 1000),
   };
 }
 
@@ -184,7 +198,8 @@ export function compare(sp: StoryPoint, startStep: StepId = "intake") {
   return {
     traditional,
     aiDriven,
-    ratio: aiDriven.totalDays === 0 ? 0 : traditional.totalDays / aiDriven.totalDays,
+    ratio:
+      aiDriven.totalDays === 0 ? 0 : traditional.totalDays / aiDriven.totalDays,
   };
 }
 

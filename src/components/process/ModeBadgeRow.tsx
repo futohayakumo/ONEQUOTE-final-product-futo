@@ -22,7 +22,9 @@ export function ModeBadgeRow({ mode }: { mode: ProcessMode }) {
           key={b.label}
           className={cn(
             "inline-flex items-center gap-2 border px-3 py-1.5 type-caption rounded-sharp",
-            b.ai ? "border-crimson bg-tint text-charcoal" : "border-border bg-studio",
+            b.ai
+              ? "border-crimson bg-tint text-charcoal"
+              : "border-border bg-studio",
           )}
         >
           <span className={b.ai ? "text-crimson" : "text-muted"}>

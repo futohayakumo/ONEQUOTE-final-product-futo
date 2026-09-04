@@ -64,8 +64,14 @@ export function RunReadout({ runs }: { runs: RunRow[] }) {
             {runs.map((run) => {
               const c = compare(run.sp, run.startStep);
               return (
-                <tr key={run.itemId} className="border-b border-border last:border-b-0">
-                  <th scope="row" className="py-3 pr-4 text-left type-label tnum">
+                <tr
+                  key={run.itemId}
+                  className="border-b border-border last:border-b-0"
+                >
+                  <th
+                    scope="row"
+                    className="py-3 pr-4 text-left type-label tnum"
+                  >
                     {run.sp} SP
                   </th>
                   <td className="py-3 pr-4 type-caption">
@@ -91,11 +97,21 @@ export function RunReadout({ runs }: { runs: RunRow[] }) {
         </table>
       </div>
 
-      <p className="type-caption">
-        Flow efficiency under Traditional Agile is the share of elapsed time
-        that is actual work. It falls as batch size grows, because queue wait is
-        superlinear in story points while hands-on effort is linear.
-      </p>
+      <div className="flex flex-col gap-2 border-t border-border pt-4">
+        <p className="max-w-[86ch] type-caption">
+          Flow efficiency under Traditional Agile is the share of elapsed time
+          that is actual work. It falls as batch size grows, because queue wait
+          is superlinear in story points while hands-on effort is linear.
+        </p>
+        <p className="max-w-[86ch] type-caption">
+          These are modelled figures, not measurements. The assumption doing
+          most of the work is that AI-driven delivery carries no approval queue:
+          hands-on effort is comparable, and almost the entire difference is
+          wait time that never accrues. If your review gate stays human, the gap
+          narrows sharply — which is the argument for removing the gate, not for
+          the tooling alone.
+        </p>
+      </div>
     </div>
   );
 }

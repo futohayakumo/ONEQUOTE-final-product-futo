@@ -1,7 +1,13 @@
 import { ArrowLeft } from "../icons/ArrowLeft";
 import { TransitionLink } from "./TransitionLink";
 
-export function BackBar({ href, label = "Back" }: { href: string; label?: string }) {
+export function BackBar({
+  href,
+  label = "Back",
+}: {
+  href: string;
+  label?: string;
+}) {
   return (
     <TransitionLink
       href={href}

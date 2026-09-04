@@ -34,7 +34,12 @@ export const WALL = { w: 0.05, h: 1.35, d: 2.4 } as const;
 
 /** Slightly oversized: the pile is evidence, and it has to read from the
  *  camera distance without a label. */
-export const STACK = { rise: 0.34, base: 0.17, capacity: 8, scale: 1.0 } as const;
+export const STACK = {
+  rise: 0.34,
+  base: 0.17,
+  capacity: 8,
+  scale: 1.0,
+} as const;
 /** Seeded backlog: the bottleneck is visible before the user touches anything. */
 export const SEED_BACKLOG = [3, 3, 3, 5] as const;
 

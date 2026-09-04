@@ -49,7 +49,11 @@ export function FlowExplorer() {
     const n = params.get("n");
     const c = params.get("c");
     const resolved =
-      n && isNodeId(n) ? n : c && LEGACY_C_TO_NODE[c] ? LEGACY_C_TO_NODE[c] : null;
+      n && isNodeId(n)
+        ? n
+        : c && LEGACY_C_TO_NODE[c]
+          ? LEGACY_C_TO_NODE[c]
+          : null;
     if (!resolved) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected(resolved);
@@ -73,10 +77,7 @@ export function FlowExplorer() {
     [selected],
   );
 
-  const peekEdges = useMemo(
-    () => (peek ? NEIGHBOUR_EDGES[peek] : []),
-    [peek],
-  );
+  const peekEdges = useMemo(() => (peek ? NEIGHBOUR_EDGES[peek] : []), [peek]);
 
   /**
    * Roving tabindex: one tab stop for the whole map, arrows to move, Enter or
@@ -86,9 +87,14 @@ export function FlowExplorer() {
   const onKeyDown = (event: React.KeyboardEvent) => {
     const key = event.key;
     if (
-      !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(
-        key,
-      )
+      ![
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Home",
+        "End",
+      ].includes(key)
     ) {
       return;
     }
@@ -102,13 +108,15 @@ export function FlowExplorer() {
     const rowIndex = column.indexOf(focusNode);
 
     let next: NodeId = focusNode;
-    if (key === "ArrowDown") next = column[Math.min(rowIndex + 1, column.length - 1)];
+    if (key === "ArrowDown")
+      next = column[Math.min(rowIndex + 1, column.length - 1)];
     else if (key === "ArrowUp") next = column[Math.max(rowIndex - 1, 0)];
     else if (key === "Home") next = column[0];
     else if (key === "End") next = column[column.length - 1];
     else {
       const dir = key === "ArrowRight" ? 1 : -1;
-      const target = STAGES[Math.min(Math.max(colIndex + dir, 0), STAGES.length - 1)];
+      const target =
+        STAGES[Math.min(Math.max(colIndex + dir, 0), STAGES.length - 1)];
       const targetCol = target.nodes as NodeId[];
       // Columns hold 3/3/6/3 nodes, so clamp to the nearest row rather than wrap.
       next = targetCol[Math.min(rowIndex, targetCol.length - 1)];

@@ -17,8 +17,8 @@ export function QuoteSummary({ quote }: { quote: QuoteResult }) {
 
       <p className="type-caption">
         {PORTS[quote.pol].city} ({quote.pol}) to {PORTS[quote.pod].city} (
-        {quote.pod}) &middot; {quote.cbm} CBM &middot; {container.label} &middot;{" "}
-        {quote.units} unit{quote.units === 1 ? "" : "s"}
+        {quote.pod}) &middot; {quote.cbm} CBM &middot; {container.label}{" "}
+        &middot; {quote.units} unit{quote.units === 1 ? "" : "s"}
       </p>
 
       <div className="flex flex-col">
@@ -46,11 +46,14 @@ export function QuoteSummary({ quote }: { quote: QuoteResult }) {
 
       <div className="flex flex-wrap gap-x-8 gap-y-2 border-t border-border pt-4">
         <span className="type-caption">
-          TEU accrued <span className="tnum text-charcoal">{quote.teuAccrued}</span>
+          TEU accrued{" "}
+          <span className="tnum text-charcoal">{quote.teuAccrued}</span>
         </span>
         <span className="type-caption">
           Next {loyalty.label} milestone{" "}
-          <span className="tnum text-charcoal">{quote.nextMilestoneTeu} TEU</span>
+          <span className="tnum text-charcoal">
+            {quote.nextMilestoneTeu} TEU
+          </span>
         </span>
         <span className="type-caption">
           Rate held by Quotation Flex Cart for{" "}

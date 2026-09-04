@@ -18,9 +18,16 @@ export function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-type StartViewTransition = (cb: () => void | Promise<void>) => {
+interface ViewTransition {
   finished: Promise<void>;
-};
+  updateCallbackDone: Promise<void>;
+  ready: Promise<void>;
+  skipTransition(): void;
+}
+
+type StartViewTransition = (cb: () => void | Promise<void>) => ViewTransition;
+
+let active: ViewTransition | null = null;
 
 /**
  * Wraps a client navigation in a View Transition where the browser supports it,
@@ -38,12 +45,37 @@ export function runWithViewTransition(navigate: () => void) {
     return;
   }
 
-  doc.startViewTransition(() => {
+  // A transition still running when the next one starts throws
+  // InvalidStateError. Skipping it first is cheaper than queueing.
+  active?.skipTransition();
+
+  const transition = doc.startViewTransition(() => {
     navigate();
-    // Give React a paint to commit the new route before the browser captures
-    // the "after" snapshot. Two frames is the reliable minimum.
+    // Give React one paint to commit the new route before the browser
+    // captures the "after" snapshot. Resolving on the next frame stays well
+    // inside the update budget; waiting for a heavy subtree (the WebGL scene)
+    // to finish mounting does not, and blows the 4s timeout.
     return new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      requestAnimationFrame(() => resolve()),
     );
   });
+
+  active = transition;
+
+  /*
+   * A View Transition exposes three promises and skipTransition() rejects
+   * `ready` as well as the others. Any of them left unhandled surfaces as an
+   * uncaught rejection and puts the dev overlay's error badge on screen during
+   * a demo.
+   *
+   * All three failures are cosmetic: the navigation itself already happened
+   * inside the callback. So every one is swallowed deliberately.
+   */
+  transition.ready.catch(() => {});
+  transition.updateCallbackDone.catch(() => {});
+  transition.finished
+    .catch(() => {})
+    .finally(() => {
+      if (active === transition) active = null;
+    });
 }

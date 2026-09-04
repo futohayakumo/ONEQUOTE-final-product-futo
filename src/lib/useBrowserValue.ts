@@ -13,11 +13,7 @@ const noopSubscribe = () => () => {};
  * State the user can change belongs in ordinary useState.
  */
 export function useBrowserValue<T>(read: () => T): T | null {
-  return useSyncExternalStore(
-    noopSubscribe,
-    read,
-    () => null,
-  );
+  return useSyncExternalStore(noopSubscribe, read, () => null);
 }
 
 let webglSupport: boolean | null = null;

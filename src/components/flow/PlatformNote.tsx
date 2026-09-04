@@ -9,7 +9,10 @@ export function PlatformNote() {
         <SectionTitle as="h3">{PLATFORM_NOTE.title}</SectionTitle>
         <p className="type-caption text-charcoal">{PLATFORM_NOTE.body}</p>
       </div>
-      <CodeBlock lang={PLATFORM_NOTE.code.lang} code={PLATFORM_NOTE.code.code} />
+      <CodeBlock
+        lang={PLATFORM_NOTE.code.lang}
+        code={PLATFORM_NOTE.code.code}
+      />
     </div>
   );
 }

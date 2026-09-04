@@ -47,7 +47,9 @@ export function OptionRow({
         chosenAndWrong && "border-2 border-crimson bg-tint",
         revealedAnswer && "border-2 border-charcoal bg-studio",
         !revealed && checked && "border-2 border-crimson bg-tint",
-        !revealed && !checked && "border border-border bg-studio hover:border-crimson",
+        !revealed &&
+          !checked &&
+          "border border-border bg-studio hover:border-crimson",
         revealed && !checked && !isCorrect && "border border-border bg-studio",
       )}
     >
@@ -90,7 +92,9 @@ export function OptionRow({
       ) : chosenAndWrong ? (
         <span className="type-eyebrow shrink-0">Not quite</span>
       ) : revealedAnswer ? (
-        <span className="type-eyebrow shrink-0 text-charcoal">Correct answer</span>
+        <span className="type-eyebrow shrink-0 text-charcoal">
+          Correct answer
+        </span>
       ) : null}
     </label>
   );

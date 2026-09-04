@@ -11,7 +11,9 @@ import type { QuoteResult } from "@/types/quote";
  * is baseEpoch + a fixed offset.
  */
 
-export const FIXED_OFFSETS = [0, 12, 48, 91, 134, 176, 203, 241, 268, 268] as const;
+export const FIXED_OFFSETS = [
+  0, 12, 48, 91, 134, 176, 203, 241, 268, 268,
+] as const;
 
 export type LogTone = "meta" | "key" | "value" | "success";
 

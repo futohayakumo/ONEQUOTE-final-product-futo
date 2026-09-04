@@ -18,12 +18,7 @@ export type StepId = "intake" | "analysis" | "dev" | "test" | "deploy";
 
 /** Where a work item can physically be. Traditional uses the five steps; the
  *  AI-driven room uses the belt / checkpoint / console / truck stations. */
-export type StationId =
-  | StepId
-  | "belt"
-  | "checkpoint"
-  | "console"
-  | "truck";
+export type StationId = StepId | "belt" | "checkpoint" | "console" | "truck";
 
 export type ItemPhase =
   | "spawning"
@@ -50,6 +45,13 @@ export interface WorkItemProgress {
   elapsedMs: number;
   /** Items queued ahead of this one. Always 0 in ai-driven. */
   queueDepth: number;
+  /**
+   * Simulated days this SEGMENT lasts — the wait at this gap, or the work at
+   * this station. Distinct from elapsedDays, which is the whole run so far.
+   */
+  segmentDays: number;
+  /** Simulated days spent in this segment so far. */
+  segmentElapsedDays: number;
 }
 
 export interface PerStepTiming {

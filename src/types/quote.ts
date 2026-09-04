@@ -1,10 +1,7 @@
 export type PortCode = "JPTYO" | "JPYOK" | "SGSIN" | "NLRTM";
 export type ContainerType = "20GP" | "40HC" | "40RF";
 export type LoyaltyTier =
-  | "BLUE_WAVE"
-  | "SILVER_SAIL"
-  | "GOLDEN_SEA"
-  | "MILLION_MAGENTA";
+  "BLUE_WAVE" | "SILVER_SAIL" | "GOLDEN_SEA" | "MILLION_MAGENTA";
 
 export interface QuoteInput {
   pol: PortCode | "";

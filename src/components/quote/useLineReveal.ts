@@ -47,10 +47,13 @@ export function useLineReveal(
 
     for (let i = 0; i < lines.length; i += 1) {
       timers.current.push(
-        setTimeout(() => {
-          setVisibleCount(i + 1);
-          if (i === lines.length - 1) setDone(true);
-        }, msPerLine * (i + 1)),
+        setTimeout(
+          () => {
+            setVisibleCount(i + 1);
+            if (i === lines.length - 1) setDone(true);
+          },
+          msPerLine * (i + 1),
+        ),
       );
     }
 

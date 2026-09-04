@@ -89,7 +89,10 @@ test("lane lookup is symmetric", () => {
 test("quote reference is stable and input-derived", () => {
   const args = ["JPTYO", "NLRTM", 120, "40HC", "GOLDEN_SEA"] as const;
   assert.equal(quoteRef(...args), quoteRef(...args));
-  assert.notEqual(quoteRef(...args), quoteRef("JPTYO", "NLRTM", 121, "40HC", "GOLDEN_SEA"));
+  assert.notEqual(
+    quoteRef(...args),
+    quoteRef("JPTYO", "NLRTM", 121, "40HC", "GOLDEN_SEA"),
+  );
   assert.match(quoteRef(...args), /^[0-9A-F]{6}$/);
 });
 

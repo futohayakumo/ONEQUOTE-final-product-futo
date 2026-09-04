@@ -128,17 +128,28 @@ export const ProcessSceneFallback = forwardRef<
         const t = now - f.startedAt;
         const m = f.marks.find((mm) => t >= mm.startMs && t < mm.endMs);
         if (!m) continue;
+        const s = buildSchedule(mode, f.sp, f.startStep);
+        const step = s.perStep.find((p) => p.stepId === m.stepId);
+        const waiting = t < m.startMs + m.wait;
+        const segDays = waiting ? (step?.waitDays ?? 0) : (step?.workDays ?? 0);
+        const segSpan = waiting ? m.wait : m.endMs - m.startMs - m.wait;
+        const segInto = waiting ? t - m.startMs : t - m.startMs - m.wait;
         onItemProgress?.({
           itemId: f.itemId,
           sp: f.sp,
           mode,
           station: m.stepId,
           stepIndex: STEP_IDS.indexOf(m.stepId),
-          phase: t < m.startMs + m.wait ? "waiting" : "working",
+          phase: waiting ? "waiting" : "working",
           overallProgress: t / f.totalWallMs,
-          elapsedDays: 0,
+          elapsedDays: s.totalDays * (t / f.totalWallMs),
           elapsedMs: t,
           queueDepth: 0,
+          segmentDays: segDays,
+          segmentElapsedDays:
+            segSpan > 0
+              ? segDays * Math.min(1, Math.max(0, segInto / segSpan))
+              : segDays,
         });
       }
 
@@ -215,7 +226,10 @@ export const ProcessSceneFallback = forwardRef<
       ref={host}
       role="img"
       aria-label={ariaLabel}
-      className={cn("relative flex h-full w-full items-end px-6 pb-24 pt-40", className)}
+      className={cn(
+        "relative flex h-full w-full items-end px-6 pb-24 pt-40",
+        className,
+      )}
     >
       <div className="relative flex w-full items-end">
         {/* The line the work runs along. Solid in the AI room, broken by the
@@ -244,15 +258,23 @@ export const ProcessSceneFallback = forwardRef<
               : [];
 
           return (
-            <div key={step} className="relative flex flex-1 items-end justify-center">
-              {mode === "traditional" && i > 0 ? (
+            <div
+              key={step}
+              className="relative flex flex-1 items-end justify-center"
+            >
+              {i > 0 ? (
                 <div
                   ref={register(`gap-${i - 1}`)}
                   className="absolute bottom-6 left-0 flex -translate-x-1/2 flex-col-reverse items-center gap-0.5"
                 >
-                  {Array.from({ length: 3 + waiting.length }).map((_, k) => (
-                    <span key={k} className="h-2 w-8 border border-border bg-studio" />
-                  ))}
+                  {mode === "traditional"
+                    ? Array.from({ length: 3 + waiting.length }).map((_, k) => (
+                        <span
+                          key={k}
+                          className="h-2 w-8 border border-border bg-studio"
+                        />
+                      ))
+                    : null}
                   {waiting.length > 0 ? (
                     <span className="h-3 w-9 border-2 border-crimson bg-crimson" />
                   ) : null}

@@ -85,6 +85,17 @@ export function QuizRunner() {
             label={`Question ${i + 1} of ${QUIZ.length}`}
           />
         </div>
+        {/* Progress is restored from the session, so landing mid-quiz needs an
+            obvious way back to the start. */}
+        {i > 0 || revealed ? (
+          <button
+            type="button"
+            onClick={() => persist(blank())}
+            className="shrink-0 type-caption text-muted transition-colors duration-150 hover:text-crimson"
+          >
+            Start over
+          </button>
+        ) : null}
       </div>
 
       <QuestionCard

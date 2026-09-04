@@ -51,7 +51,9 @@ export function QuizResult({
               <div className="flex flex-col gap-1">
                 <p className="type-label">{q.prompt}</p>
                 <p className="type-caption">
-                  <span className="sr-only">{right ? "Correct. " : "Incorrect. "}</span>
+                  <span className="sr-only">
+                    {right ? "Correct. " : "Incorrect. "}
+                  </span>
                   Answer: {correct?.text}
                 </p>
               </div>

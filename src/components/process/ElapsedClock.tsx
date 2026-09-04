@@ -1,7 +1,7 @@
 "use client";
 
 import cn from "clsx";
-import type { ProcessMode, StoryPoint } from "@/types/process-scene";
+import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
 import { compare } from "./model/processModel";
 
 /**
@@ -15,11 +15,14 @@ import { compare } from "./model/processModel";
 export function ElapsedClock({
   mode,
   sp,
+  startStep,
   elapsedDays,
   phase,
 }: {
   mode: ProcessMode;
   sp: StoryPoint | null;
+  /** Entering later in the pipeline shortens the run, so the total depends on it. */
+  startStep: StepId;
   elapsedDays: number;
   phase: "work" | "wait" | null;
 }) {
@@ -33,7 +36,7 @@ export function ElapsedClock({
     );
   }
 
-  const c = compare(sp);
+  const c = compare(sp, startStep);
   const total = mode === "traditional" ? c.traditional : c.aiDriven;
   const pct = Math.min(100, (elapsedDays / total.totalDays) * 100);
   const efficiency = Math.round(total.flowEfficiency * 100);

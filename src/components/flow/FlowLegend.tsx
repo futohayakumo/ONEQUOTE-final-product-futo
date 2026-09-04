@@ -19,7 +19,12 @@ export function FlowLegend() {
         </span>
         <span className="flex items-center gap-3 type-caption">
           <svg width="34" height="6" aria-hidden>
-            <path d="M0 3h34" stroke="#CBD5E1" strokeWidth={1} strokeDasharray="4 4" />
+            <path
+              d="M0 3h34"
+              stroke="#CBD5E1"
+              strokeWidth={1}
+              strokeDasharray="4 4"
+            />
           </svg>
           Direct connections, while a node is focused
         </span>

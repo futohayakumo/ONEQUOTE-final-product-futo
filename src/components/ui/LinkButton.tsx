@@ -7,7 +7,8 @@ import { ArrowRight } from "../icons/ArrowRight";
 type Variant = "primary" | "secondary" | "quiet";
 
 const VARIANT: Record<Variant, string> = {
-  primary: "bg-crimson text-studio border border-crimson hover:bg-charcoal hover:border-charcoal",
+  primary:
+    "bg-crimson text-studio border border-crimson hover:bg-charcoal hover:border-charcoal",
   secondary:
     "bg-studio text-charcoal border border-border hover:border-crimson hover:text-crimson hover:bg-tint",
   quiet:
