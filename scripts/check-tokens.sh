@@ -33,9 +33,61 @@ report "no off-scale type utilities" \
 report "no serif display faces anywhere" \
   "$(grep -rnE 'Playfair|Georgia|Times New Roman' src/ 2>/dev/null | grep -v 'NOT defined')"
 
-# Zero-leakage. Must return nothing, in copy AND in code.
-report "no real organisation, vendor or person names" \
-  "$(grep -rniE 'ocean network express|\bONE QUOTE\b|\bOPUS\b|launchdarkly|lokalise|\bjira\b|\blinh\b|\bdenis\b' src/ 2>/dev/null)"
+# ── ZERO LEAKAGE ────────────────────────────────────────────────────────────
+# The pattern is base64 so this script does not itself publish the list of
+# masked names. A guard that spells out the answer key is not a guard.
+#
+# Scope is every TRACKED file, not just src/: the spec, the README, commit
+# messages and asset filenames are all part of a public repository, and an
+# earlier version of this script missed a full mapping table sitting in the
+# repo root.
+LEAK_PATTERN=$(printf '%s' 'b2NlYW4gbmV0d29yayBleHByZXNzfFxiT05FIFFVT1RFXGJ8XGJPUFVTXGJ8bGF1bmNoZGFya2x5fGxva2FsaXNlfFxiamlyYVxifFxibGluaFxifFxiZGVuaXNcYg==' | base64 --decode)
+
+tracked_hits=""
+while IFS= read -r f; do
+  [ "$f" = "scripts/check-tokens.sh" ] && continue
+  if grep -liE "$LEAK_PATTERN" "$f" >/dev/null 2>&1; then
+    tracked_hits="${tracked_hits}${f}"$'\n'
+  fi
+done < <(git ls-files 2>/dev/null)
+
+report "no real organisation, vendor or person names in tracked files" "$tracked_hits"
+
+# Filenames are published too.
+report "no real names in tracked filenames" \
+  "$(git ls-files 2>/dev/null | grep -iE "$LEAK_PATTERN" || true)"
+
+# The deploy subdomain is derived from this. It must not name the client.
+report "deployable project name is neutral" \
+  "$(grep -E '"name"[[:space:]]*:' package.json | grep -iE "$LEAK_PATTERN" || true)"
+
+# A public repository publishes its HISTORY, not just its tip. Removing a file
+# from the working tree leaves every earlier commit intact and recoverable.
+history_hits=""
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  while IFS= read -r blob; do
+    [ -z "$blob" ] && continue
+    if git cat-file -p "$blob" 2>/dev/null | grep -qiE "$LEAK_PATTERN"; then
+      history_hits="${history_hits}${blob}"$'\n'
+    fi
+  done < <(git rev-list --objects --all 2>/dev/null \
+             | grep -E '\.(md|ts|tsx|css|json|txt)$' \
+             | awk '{print $1}' | sort -u)
+fi
+
+if [ -n "$history_hits" ]; then
+  printf 'FAIL: real names are recoverable from git history\n'
+  printf '      Removing the file from the working tree does not remove it from\n'
+  printf '      earlier commits. Nothing has been pushed yet, so this is still\n'
+  printf '      fixable. To rebuild history as one clean commit:\n\n'
+  printf '        git checkout --orphan clean && git add -A \\\n'
+  printf '          && git commit -m "feat: interactive delivery portfolio" \\\n'
+  printf '          && git branch -D main && git branch -m main\n\n'
+  printf '      DO NOT add a remote or push until this passes.\n'
+  fail=1
+else
+  printf '  ok: no real names recoverable from git history\n'
+fi
 
 # Terminal Green measures 1.75:1 on white — console surfaces only.
 report "Terminal Green confined to the console" \

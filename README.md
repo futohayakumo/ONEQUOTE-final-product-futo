@@ -72,8 +72,25 @@ selected route, and the hovered node's direct connections. A numbered text
 readout carries the same route for screen readers, and is the whole flow story
 below 1024px where the connectors are not drawn at all.
 
+## Publishing safety
+
+The spec this was built from (`intro.md`) and the design mockups (`examples/`)
+are deliberately gitignored: the spec contains the mapping between real names
+and the abstractions used throughout the app, so publishing it would undo all
+of them. `pnpm check:tokens` enforces this across every tracked file, tracked
+filenames, the deployable project name and git history.
+
 ## Stack
 
 Next.js 16 (App Router, Turbopack), Tailwind CSS v4 with a CSS-first token
-theme, TypeScript, and react-three-fiber for the one 3D screen. The only
-runtime dependency outside that set is `clsx`.
+theme, TypeScript, and `clsx`. Everything else is hand-rolled: the flow diagram
+is measured DOM plus plain SVG, the drag and drop is native, the animations are
+CSS keyframes and one `requestAnimationFrame` loop. No animation library, no
+component library, no diagram library.
+
+The exception is the Process Comparison screen, which uses three.js through
+react-three-fiber. That is a deliberate trade: an animated model was worth
+roughly 250 kB gzipped, so the cost is fenced in. ESLint forbids importing the
+renderer outside `src/components/process/scene/**`, it loads as one lazy chunk
+on one route, and the other five screens never pay for it. A no-WebGL fallback
+implements the same contract and computes the same numbers.

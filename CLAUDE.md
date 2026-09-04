@@ -39,6 +39,22 @@ Crimson is allowed on: primary CTA fills, the eyebrow label and its 2px rule,
 an active node's 2px border, the selected connector, numbered badges, link
 arrows, and the focus ring. Nothing else.
 
+## Publishing safety
+
+This repository is written to be published. Three things follow from that:
+
+- **`intro.md` and `examples/` are gitignored, not deleted.** The spec carries
+  the real-name mapping table in full, so shipping it would defeat every
+  abstraction in the app. They stay on disk as local design inputs.
+- **`pnpm check:tokens` scans every tracked file, tracked filenames, the
+  deployable project name, AND git history** — not just `src/`. A public repo
+  publishes its history, so removing a file from the working tree is not enough.
+- **The guard's own pattern is base64.** A script that spells out the list of
+  masked names is an answer key, not a guard.
+
+The `name` in `package.json` determines the deploy subdomain. It must never
+identify the client.
+
 ## Zero-leakage naming
 
 Never use a real organisation, client, vessel, vendor or internal project name
@@ -47,7 +63,10 @@ payloads. Only these mapped names:
 
 `Core Quotation Module`, `Quotation Flex Cart`, `Volume Loyalty Framework`,
 `Campaign Cohort Hub`, `Legacy ERP Engine`, `Global Liner Alliance`,
-`Technical Lead (TA)`, `Product Lead (PO)`, `Agile Delivery Protocol`.
+`Technical Advisor (TA)`, `Lead Product Owner (LPO)`, `Agile Delivery Protocol`.
+
+This applies to code, copy, comments, class names, test fixtures, environment
+variable names, simulated payloads, commit messages, filenames and assets.
 
 ## Architecture notes
 

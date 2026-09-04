@@ -9,3 +9,9 @@ build/
 next-env.d.ts
 .vercel
 *.tsbuildinfo
+
+# Local design inputs — NOT shipped.
+# intro.md carries the real-name mapping table in full, so publishing it would
+# defeat every abstraction in the app. The mockups are design reference only.
+/intro.md
+/examples/

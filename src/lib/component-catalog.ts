@@ -192,7 +192,7 @@ export async function loadMessages(locale: Locale) {
     nodeId: "data-platform",
     stage: "platform",
     what: "The relational analytics store. Booking and quotation events land here from the Legacy ERP Engine on a read replica, separated from the transactional primary so reporting load can never contend with booking writes.",
-    when: "The Product Lead (PO) needs monthly TEU accrual per customer to check that Volume Loyalty Framework milestones are firing correctly. That query scans a quarter of history — running it against the transactional primary would put booking latency at risk, so it runs here instead.",
+    when: "The Lead Product Owner (LPO) needs monthly TEU accrual per customer to check that Volume Loyalty Framework milestones are firing correctly. That query scans a quarter of history — running it against the transactional primary would put booking latency at risk, so it runs here instead.",
     how: {
       lang: "sql — read replica",
       code: `-- TEU accrual this month, with the next Blue Wave milestone.

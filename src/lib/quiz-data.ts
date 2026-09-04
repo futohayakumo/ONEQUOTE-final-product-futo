@@ -37,7 +37,7 @@ export const QUIZ: readonly QuizQuestion[] = [
       { id: "a", text: "One approval" },
       { id: "b", text: "Two or more approvals" },
       { id: "c", text: "None — a green build is sufficient" },
-      { id: "d", text: "Only the Technical Lead (TA)'s approval" },
+      { id: "d", text: "Only the Technical Advisor (TA)'s approval" },
     ],
     correctId: "b",
     whyItMatters:
