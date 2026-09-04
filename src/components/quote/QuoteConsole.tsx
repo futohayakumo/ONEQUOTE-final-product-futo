@@ -73,7 +73,9 @@ export function QuoteConsole({ lines }: { lines: LogLine[] }) {
 
           {!done ? (
             <span
-              className="animate-caret inline-block w-[1ch] bg-crimson align-text-bottom"
+              /* Studio White, 17.9:1. Crimson on #0F172A measures ~2.6:1,
+                 below the contrast table documented above. */
+              className="animate-caret inline-block w-[1ch] bg-studio align-text-bottom"
               style={{ height: "1em" }}
               aria-hidden
             >

@@ -26,7 +26,11 @@ export function PersonaPanel({
         <span className="block h-0.5 w-6 bg-crimson" aria-hidden />
       </div>
 
-      <span className="text-crimson">{icon}</span>
+      {/* Charcoal, not crimson. Three 52px accent glyphs were the largest
+          crimson mass in the app, and a decorative icon is none of the three
+          things the accent is reserved for. The eyebrow and the arrow carry
+          the accent on this panel. */}
+      <span className="text-charcoal">{icon}</span>
 
       <h2 className="type-display">{persona.title}</h2>
 

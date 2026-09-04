@@ -26,8 +26,10 @@ export function StepCallout({
     >
       <span
         aria-hidden
-        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-crimson text-studio"
-        style={{ borderRadius: 9999, fontSize: 13, fontWeight: 600 }}
+        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-crimson type-console tnum text-studio"
+        /* A numeral badge is a mark, not a container, so it sits outside the
+           4px rule. The type still comes from the scale. */
+        style={{ borderRadius: 9999 }}
       >
         {step}
       </span>

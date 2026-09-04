@@ -27,7 +27,7 @@ export function StationList({
   mode: ProcessMode;
   armed: StoryPoint | null;
   activeStep: StepId | null;
-  activePhase: "work" | "wait" | null;
+  activePhase: "work" | "wait" | "transit" | null;
   /** How long this gap holds the item in total. */
   activeWaitDays: number;
   /** How much of that has elapsed. */

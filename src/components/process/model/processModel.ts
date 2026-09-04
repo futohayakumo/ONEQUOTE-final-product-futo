@@ -102,6 +102,32 @@ export function consoleDays(sp: number): number {
   return MODEL.CONSOLE_BASE + MODEL.CONSOLE_K * sp;
 }
 
+/**
+ * Fraction of a work segment spent travelling to the station before the item
+ * lands. Mirrored by the scene's motion, so a station never lights up, and no
+ * label ever claims work is underway, before the item has arrived.
+ */
+export const ARRIVAL_FRACTION: Record<ProcessMode, number> = {
+  traditional: 0.16,
+  "ai-driven": 0.58,
+};
+
+export type SegmentKind = "work" | "wait";
+
+/**
+ * The phase an item is in. Extracted and made pure because folding transit in
+ * with "no phase" once made the readout announce "Finished" for well over half
+ * of every AI-driven segment, while the counter was still climbing.
+ */
+export function phaseFor(
+  kind: SegmentKind,
+  localProgress: number,
+  mode: ProcessMode,
+): "waiting" | "transit" | "working" {
+  if (kind === "wait") return "waiting";
+  return localProgress >= ARRIVAL_FRACTION[mode] ? "working" : "transit";
+}
+
 export interface Schedule {
   mode: ProcessMode;
   sp: StoryPoint;

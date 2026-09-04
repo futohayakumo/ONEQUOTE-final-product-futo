@@ -13,7 +13,9 @@ import type { ProcessMode, StepId } from "@/types/process-scene";
  * orbiting the result; see design/. Nothing from there ships.
  */
 
-export const GROUND = { w: 22.5, d: 5.6 } as const;
+/** Deep enough to hold the seated worker at the AI console, who sits 0.85
+ *  BEHIND the desk — and the desk group is rotated, so that is +z. */
+export const GROUND = { w: 22.5, d: 6.6 } as const;
 
 export const STEP_ORDER: readonly StepId[] = [
   "intake",
@@ -63,7 +65,7 @@ export const TRUCK = { x: 11.3, z: 0.35, rotY: -1.15, scale: 0.6 } as const;
  * centre it sat directly behind the "No queue" cards, so the one beat that
  * says the people did not vanish was the one thing you could not see.
  */
-export const AI_CONSOLE = { x: -7.4, z: 2.5 } as const;
+export const AI_CONSOLE = { x: -7.4, z: 1.9 } as const;
 
 /** Where an item rests while a station works on it. */
 export function workAnchor(index: number): [number, number, number] {

@@ -46,7 +46,7 @@ export function ProcessComparison() {
   const [anchors, setAnchors] = useState<Anchor[]>([]);
   const [live, setLive] = useState<{
     step: StepId | null;
-    phase: "work" | "wait" | null;
+    phase: "work" | "wait" | "transit" | null;
     waitDays: number;
     waitElapsedDays: number;
     elapsedDays: number;
@@ -236,12 +236,14 @@ export function ProcessComparison() {
                 return {
                   ...prev,
                   step: p.station as StepId,
+                  // transit is its own state. Folding it into null made the
+                  // readout say "Finished" while the box was still moving.
                   phase:
                     p.phase === "waiting"
                       ? "wait"
                       : p.phase === "working"
                         ? "work"
-                        : null,
+                        : "transit",
                   // The wait at THIS gap, not the whole run so far. Showing
                   // the run total here made two different labels display the
                   // same number, which reads as decoration.

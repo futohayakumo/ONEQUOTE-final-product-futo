@@ -24,7 +24,7 @@ export function ElapsedClock({
   /** Entering later in the pipeline shortens the run, so the total depends on it. */
   startStep: StepId;
   elapsedDays: number;
-  phase: "work" | "wait" | null;
+  phase: "work" | "wait" | "transit" | null;
 }) {
   if (sp === null) {
     return (
@@ -60,7 +60,9 @@ export function ElapsedClock({
             ? "Waiting in a queue — nobody is touching it"
             : phase === "work"
               ? "Being worked on"
-              : "Finished"}
+              : phase === "transit"
+                ? "Moving to the next station"
+                : "Finished"}
         </span>
         <span className="ml-auto type-caption tnum">
           Flow efficiency {efficiency}%

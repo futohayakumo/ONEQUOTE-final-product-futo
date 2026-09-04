@@ -60,6 +60,7 @@ export const ProcessSceneFallback = forwardRef<
   // One source of truth for depth here too, so the number and the drawn pile
   // are the same fact rather than two independent guesses.
   const backlog = useRef<number[]>([3, 3, 3, 5]);
+  const pausedAt = useRef<number | null>(null);
   const [hovered, setHovered] = useState<StepId | null>(null);
   const [, force] = useState(0);
   const host = useRef<HTMLDivElement>(null);
@@ -71,6 +72,22 @@ export const ProcessSceneFallback = forwardRef<
   useEffect(() => {
     onReady?.();
   }, [onReady]);
+
+  // Same rule as the WebGL path: time on another tab is not cycle time.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        pausedAt.current = performance.now();
+        return;
+      }
+      if (pausedAt.current === null) return;
+      const away = performance.now() - pausedAt.current;
+      pausedAt.current = null;
+      for (const f of flightsRef.current) f.startedAt += away;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   // Publish the same anchor shape the renderer does, measured from the DOM.
   useEffect(() => {
@@ -102,6 +119,10 @@ export const ProcessSceneFallback = forwardRef<
     if (flights.length === 0) return;
 
     const tick = () => {
+      if (pausedAt.current !== null) {
+        raf.current = requestAnimationFrame(tick);
+        return;
+      }
       const now = performance.now();
       const done = flightsRef.current.filter(
         (f) => now - f.startedAt >= f.totalWallMs,
@@ -155,6 +176,10 @@ export const ProcessSceneFallback = forwardRef<
         const s = buildSchedule(mode, f.sp, f.startStep);
         const step = s.perStep.find((p) => p.stepId === m.stepId);
         const waiting = t < m.startMs + m.wait;
+        // Mirrors SceneRoot's approach fraction: an item is "working" only
+        // once it has arrived, not from the instant the segment opens.
+        const workSpan = Math.max(1, m.endMs - m.startMs - m.wait);
+        const arrived = t - m.startMs - m.wait >= workSpan * 0.16;
         const segDays = waiting ? (step?.waitDays ?? 0) : (step?.workDays ?? 0);
         const segSpan = waiting ? m.wait : m.endMs - m.startMs - m.wait;
         const segInto = waiting ? t - m.startMs : t - m.startMs - m.wait;
@@ -165,7 +190,7 @@ export const ProcessSceneFallback = forwardRef<
           station: m.stepId,
           place: mode === "traditional" ? m.stepId : "belt",
           stepIndex: STEP_IDS.indexOf(m.stepId),
-          phase: waiting ? "waiting" : "working",
+          phase: waiting ? "waiting" : arrived ? "working" : "transit",
           overallProgress: t / f.totalWallMs,
           elapsedDays: s.totalDays * (t / f.totalWallMs),
           elapsedMs: t,
@@ -304,7 +329,7 @@ export const ProcessSceneFallback = forwardRef<
                       )
                     : null}
                   {waiting.length > 0 ? (
-                    <span className="h-3 w-9 border-2 border-crimson bg-crimson" />
+                    <span className="h-3 w-9 border-2 border-crimson bg-tint" />
                   ) : null}
                 </div>
               ) : null}

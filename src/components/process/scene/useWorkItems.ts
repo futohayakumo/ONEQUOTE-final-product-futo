@@ -7,7 +7,12 @@ import type {
   WorkItemProgress,
   WorkItemResult,
 } from "@/types/process-scene";
-import { STEP_IDS, buildSchedule } from "../model/processModel";
+import {
+  ARRIVAL_FRACTION,
+  STEP_IDS,
+  buildSchedule,
+  phaseFor,
+} from "../model/processModel";
 import { SEED_BACKLOG } from "./layout";
 
 /**
@@ -107,6 +112,7 @@ export class WorkItemRuntime {
     this.backlog = [...SEED_BACKLOG];
     this.growthTimer = 0;
     this.decayTimer = 0;
+    this.pausedAt = null;
     this.publish();
     this.publishBacklog();
   }
@@ -205,7 +211,7 @@ export class WorkItemRuntime {
    * the motion in SceneRoot; a station must not light up before arrival.
    */
   arrivalFraction(item: WorkItem): number {
-    return item.mode === "ai-driven" ? 0.58 : 0.16;
+    return ARRIVAL_FRACTION[item.mode];
   }
 
   /** Where an item is right now, and how far into that segment. */
@@ -301,10 +307,9 @@ export class WorkItemRuntime {
         const stepIndex = Math.max(0, item.segments.indexOf(seg));
         // "working" only once the item has actually landed. Reporting it at
         // segment start made the card claim work was happening while the box
-        // was still in transit and the machine above it was dark.
-        const arrived = local >= this.arrivalFraction(item);
-        const phase: ItemPhase =
-          seg.kind === "wait" ? "waiting" : arrived ? "working" : "transit";
+        // was still in transit and the machine above it was dark. The decision
+        // lives in the model, where it is unit tested.
+        const phase: ItemPhase = phaseFor(seg.kind, local, item.mode);
         const place: StationId =
           item.mode === "traditional" ? seg.stepId : "belt";
         const gap = Math.max(0, STEP_IDS.indexOf(seg.stepId) - 1);

@@ -29,8 +29,24 @@ persona titles only), `type-page`, `type-section`, `type-body`, `type-label`,
 
 Geometry: `rounded-sharp` (4px) is the only legal radius. Borders are 1px;
 active states may use 2px crimson. No shadows, no gradients, no glow, no pills.
-The two sanctioned circles are the step-number badge and the radio mark — both
-are marks, not containers.
+
+**One exception, stated as a rule rather than a list.** A small circular
+*mark* — a numeral badge, a radio dot, a status glyph — is typographic
+punctuation, not a container, a button or a card, and takes an inline
+`borderRadius: 9999`. Anything that holds content, receives a click as a
+surface, or has a background you would call a panel is a container and takes
+4px. If you find yourself arguing the exemption in a comment, it is a
+container.
+
+**Crimson means "look here".** That covers both the active state and the
+invalid state, which is deliberate: an error needs the eye exactly as much as
+an active selection does. Errors are never signalled by colour alone — they
+always carry a message. Charcoal at 2px is the opposite register: resolved,
+confirmed, factual. That is why the quiz marks a correct answer in charcoal and
+a wrong one in crimson.
+
+Decorative glyphs do not get the accent. It is reserved for primary calls to
+action, active state, and the highlighted route.
 
 Off-token utilities emit **nothing** rather than erroring, so a mistake fails
 silently. `pnpm check:tokens` is what catches it.

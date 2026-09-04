@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  ARRIVAL_FRACTION,
   STORY_POINTS,
   buildSchedule,
   compare,
+  phaseFor,
   wallSeconds,
 } from "./processModel.ts";
 
@@ -113,4 +115,32 @@ test("entering later in the pipeline shortens the run, in BOTH rooms", () => {
 test("wallSeconds is monotonic", () => {
   assert.ok(wallSeconds(1) < wallSeconds(5));
   assert.ok(wallSeconds(5) < wallSeconds(35));
+});
+
+test("a work segment reports transit before arrival and working after", () => {
+  for (const mode of ["traditional", "ai-driven"] as const) {
+    const arrive = ARRIVAL_FRACTION[mode];
+    assert.equal(phaseFor("work", 0, mode), "transit");
+    assert.equal(phaseFor("work", arrive - 0.01, mode), "transit");
+    assert.equal(phaseFor("work", arrive, mode), "working");
+    assert.equal(phaseFor("work", 1, mode), "working");
+    assert.equal(phaseFor("wait", 0, mode), "waiting");
+    assert.equal(phaseFor("wait", 1, mode), "waiting");
+  }
+});
+
+test("phase is never absent mid-run", () => {
+  // Folding transit in with "no phase" made the panel announce "Finished"
+  // while the item was still moving — for 58% of every AI-driven segment.
+  for (const mode of ["traditional", "ai-driven"] as const) {
+    for (let p = 0; p <= 1.0001; p += 0.02) {
+      for (const kind of ["work", "wait"] as const) {
+        const phase = phaseFor(kind, p, mode);
+        assert.ok(
+          phase === "waiting" || phase === "transit" || phase === "working",
+          `${mode} ${kind} at ${p.toFixed(2)} produced ${phase}`,
+        );
+      }
+    }
+  }
 });

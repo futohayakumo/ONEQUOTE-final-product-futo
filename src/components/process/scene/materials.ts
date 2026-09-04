@@ -19,8 +19,14 @@ export const P = {
   slate: "#64748B",
   crimson: "#E1127A",
   tint: "#FDF2F8",
-  green: "#34D399",
 } as const;
+
+/*
+ * Terminal Green is deliberately absent from this palette. It is a console
+ * token — 1.75:1 on white — and the guard that keeps it confined greps CSS
+ * class names, which cannot see a colour set on a three.js material. Leaving
+ * it defined here as unused "just in case" is how that guard gets bypassed.
+ */
 
 const lambert = (color: string, flatShading = false) =>
   new THREE.MeshLambertMaterial({ color, flatShading });
@@ -42,8 +48,6 @@ export const M = {
    */
   accent: lambert(P.crimson),
   accentTint: lambert(P.tint),
-  /** Unlit, so a completion flash holds its value regardless of lighting. */
-  success: new THREE.MeshBasicMaterial({ color: P.green }),
   /** Invisible but raycastable. `visible={false}` would be skipped by the ray. */
   pad: new THREE.MeshBasicMaterial({
     color: P.tint,

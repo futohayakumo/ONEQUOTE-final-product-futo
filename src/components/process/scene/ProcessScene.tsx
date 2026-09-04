@@ -1,5 +1,6 @@
 "use client";
 
+import cn from "clsx";
 import { Canvas } from "@react-three/fiber";
 import {
   forwardRef,
@@ -52,6 +53,9 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
     const [, setHovered] = useState<StepId | null>(null);
     const [items, setItems] = useState<WorkItem[]>([]);
     const [box, setBox] = useState<{ w: number; h: number } | null>(null);
+    // The canvas is transparent until it paints, so the placeholder has to
+    // survive past mount — not just until the element exists.
+    const [painted, setPainted] = useState(false);
     const [reduced, setReduced] = useState(reducedMotion === "force");
 
     // Callbacks are written onto the runtime rather than closed over, so
@@ -161,12 +165,12 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
     return (
       <div
         ref={wrapper}
-        className={className ?? "h-full w-full"}
+        className={cn("relative h-full w-full", className)}
         role="img"
         aria-label={ariaLabel}
       >
-        {box ? null : (
-          <div className="flex h-full w-full items-center justify-center">
+        {painted ? null : (
+          <div className="absolute inset-0 flex items-center justify-center">
             <span className="type-caption">Preparing the floor plan…</span>
           </div>
         )}
@@ -180,12 +184,14 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
              */
             flat
             /*
-             * Plain `shadows`, not "soft". three deprecated PCFSoftShadowMap,
-             * warns about it roughly sixty times a second, and downgrades to
-             * PCFShadowMap anyway — so asking for soft bought nothing but 2,500
-             * console messages a minute.
+             * "percentage" maps to PCFShadowMap. Both "soft" AND the bare boolean
+             * map to PCFSoftShadowMap, which three deprecated: it warns (not
+             * warnOnce) and resets the field each time, and R3F re-applies it on
+             * every Canvas render — so either spelling produces a steady stream
+             * of console noise for a shadow type that gets downgraded anyway.
+             * Naming the type we actually get is the honest version.
              */
-            shadows
+            shadows="percentage"
             dpr={[1, quality === "low" ? 1 : 1.75]}
             /*
              * The scene is never static: workers keep their hands moving, the
@@ -221,7 +227,10 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
               reduced={reduced}
               onAnchors={onAnchors}
               onModeSettled={onModeSettled}
-              onReady={onReady}
+              onReady={() => {
+                setPainted(true);
+                onReady?.();
+              }}
             />
           </Canvas>
         ) : null}
