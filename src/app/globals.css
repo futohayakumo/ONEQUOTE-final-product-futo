@@ -77,7 +77,7 @@
    * overflow on the body propagates to the viewport rather than clipping. So
    * the clip lives on an ordinary wrapper between them.
    *
-   * This is not only about the 260ms the animation runs: any time it is paused
+   * This is not only about the 320ms the animation runs: any time it is paused
    * or slow — a backgrounded tab, a locked screen, a struggling device — the
    * page sits on its first keyframe and shows a horizontal scrollbar the whole
    * while. `clip` rather than `hidden` so no scroll container is created.
@@ -236,7 +236,7 @@
 @keyframes route-in-forward {
   from {
     opacity: 0;
-    transform: translate3d(14px, 0, 0);
+    transform: translate3d(26px, 0, 0);
   }
   to {
     opacity: 1;
@@ -247,33 +247,11 @@
 @keyframes route-in-back {
   from {
     opacity: 0;
-    transform: translate3d(-14px, 0, 0);
+    transform: translate3d(-26px, 0, 0);
   }
   to {
     opacity: 1;
     transform: none;
-  }
-}
-
-@keyframes route-out-forward {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translate3d(-10px, 0, 0);
-  }
-}
-
-@keyframes route-out-back {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translate3d(10px, 0, 0);
   }
 }
 
@@ -311,7 +289,7 @@
 }
 
 @utility route-enter {
-  animation: route-in-forward 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: route-in-forward 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
   /* The entrance translates 14px sideways, which is 14px of transient
      horizontal overflow on a phone — enough to flash a scrollbar. `clip`
      rather than `hidden` so no scroll container is created. */
