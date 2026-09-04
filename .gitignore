@@ -15,3 +15,8 @@ next-env.d.ts
 # defeat every abstraction in the app. The mockups are design reference only.
 /intro.md
 /examples/
+
+# The real-name substitution script. It holds the mapping itself, so committing
+# it would publish exactly what every abstraction in this app exists to hide.
+/main.py
+/replace_names*.py
