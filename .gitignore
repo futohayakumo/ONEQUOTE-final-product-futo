@@ -20,3 +20,9 @@ next-env.d.ts
 # it would publish exactly what every abstraction in this app exists to hide.
 /main.py
 /replace_names*.py
+
+# Backups the substitution script leaves behind. They hold the ORIGINAL
+# abstract names, so their contents are safe — but `git checkout -f` does not
+# remove untracked files, so without this they survive the demo teardown and
+# the next `git add .` sweeps them in.
+*.bak

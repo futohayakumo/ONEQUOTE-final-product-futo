@@ -92,6 +92,31 @@ git checkout --orphan clean && git add -A   && git commit -m "feat: interactive 
 
 Until `pnpm check:tokens` passes, do not add a remote.
 
+### Running a real-name demo locally
+
+Substituting the real names back in, to show the app to people who know them,
+is safe only if the teardown is complete. It is easy to get wrong:
+
+- `git checkout main` alone cleans nothing. A demo branch with no commit points
+  at the same commit as main, so the checkout is a no-op for file contents and
+  the substituted working tree follows you onto the safe branch.
+- `git checkout -f` discards tracked changes but leaves untracked files, so the
+  substitution script's `.bak` backups survive.
+- `.next` is not in git at all, and it was compiled from the substituted
+  source. Verified: 22 files in the build output carried real names.
+
+```bash
+git add . && git commit -m "safe state"
+git checkout -b demo/real-name-verification
+python main.py && pnpm build && pnpm dev
+pnpm demo:end          # discards, deletes, cleans, then runs the guard
+```
+
+`pnpm demo:end` refuses to report success unless the working tree is clean, and
+finishes by running the leakage guard. The substitution script itself is
+gitignored: it contains the mapping, so committing it would publish in one file
+exactly what the abstractions exist to hide.
+
 ## Stack
 
 Next.js 16 (App Router, Turbopack), Tailwind CSS v4 with a CSS-first token
