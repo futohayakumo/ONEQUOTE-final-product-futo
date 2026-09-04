@@ -60,3 +60,11 @@ payloads. Only these mapped names:
 - Never call `new Date()` or read `sessionStorage` during render.
 - `<Canvas flat>` is required. R3F's default ACESFilmic tone mapping shifts
   `#E1127A` toward salmon and would break the palette silently.
+- The scene's camera fit lives in `useFrame`, so the frame loop must stay
+  `always` while motion is on. On `demand` the fit never runs and the canvas
+  renders nothing.
+- The canvas mounts only after its wrapper has been measured. It is lazily
+  imported into a subtree that is mid route-transition, and R3F's own first
+  measurement can land before layout settles.
+- Station labels are DOM, positioned from projected 3D coordinates. Never add
+  text meshes; the type scale has to hold.

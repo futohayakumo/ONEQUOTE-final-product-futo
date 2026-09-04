@@ -65,7 +65,7 @@ export function StationOverlay({
       .reduce((max, a) => Math.max(max, a.y), 0) + 18;
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
       {STEP_IDS.map((step) => {
         const a = byId.get(step);
         if (!a) return null;
@@ -153,16 +153,22 @@ export function StationOverlay({
         );
       })}
 
-      {/* Queue markers exist ONLY in the traditional room. Their absence on the
-          other side is the argument, so nothing stands in for them there. */}
-      {mode === "traditional" &&
-        GAP_REASON.map((reason, i) => {
-          const a = byId.get(`gap-${i}`);
-          if (!a) return null;
-          const depth = queueDepths[i] ?? 0;
-          const waitingHere =
-            activePhase === "wait" && activeStep === STEP_IDS[i + 1];
+      {/*
+        The same four positions in both rooms. One says what the item is
+        waiting for and how deep the pile is; the other says there is nothing
+        to wait for. Leaving the AI side blank made the difference invisible,
+        which was the whole complaint.
+      */}
+      {GAP_REASON.map((reason, i) => {
+        const a = byId.get(`gap-${i}`);
+        if (!a) return null;
+        const depth = queueDepths[i] ?? 0;
+        const waitingHere =
+          mode === "traditional" &&
+          activePhase === "wait" &&
+          activeStep === STEP_IDS[i + 1];
 
+        if (mode === "ai-driven") {
           return (
             <div
               key={i}
@@ -173,30 +179,51 @@ export function StationOverlay({
                 transform: "translateX(-50%)",
               }}
             >
-              <div
-                className={cn(
-                  "w-full border bg-studio px-3 py-2 rounded-sharp",
-                  waitingHere
-                    ? "border-2 border-crimson bg-tint"
-                    : "border-border",
-                )}
-              >
+              <div className="w-full border border-border bg-studio px-3 py-2 rounded-sharp">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="type-caption">Queue</span>
-                  <span className="type-caption tnum text-charcoal">
-                    {depth}
-                  </span>
+                  <span className="type-caption">No queue</span>
+                  <span className="type-caption tnum text-charcoal">0</span>
                 </div>
-                <p className="mt-0.5 type-caption">{reason}</p>
-                {waitingHere ? (
-                  <p className="mt-1 type-caption tnum text-crimson">
-                    Waiting {activeWaitDays.toFixed(1)} d
-                  </p>
-                ) : null}
+                <p className="mt-0.5 type-caption">
+                  Nothing waits here. Work carries straight on.
+                </p>
               </div>
             </div>
           );
-        })}
+        }
+
+        return (
+          <div
+            key={i}
+            className="absolute flex w-[10.5rem] flex-col items-center"
+            style={{
+              left: a.x,
+              top: queueBaseline,
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div
+              className={cn(
+                "w-full border bg-studio px-3 py-2 rounded-sharp",
+                waitingHere
+                  ? "border-2 border-crimson bg-tint"
+                  : "border-border",
+              )}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="type-caption">Queue</span>
+                <span className="type-caption tnum text-charcoal">{depth}</span>
+              </div>
+              <p className="mt-0.5 type-caption">{reason}</p>
+              {waitingHere ? (
+                <p className="mt-1 type-caption tnum text-crimson">
+                  Waiting {activeWaitDays.toFixed(1)} d
+                </p>
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

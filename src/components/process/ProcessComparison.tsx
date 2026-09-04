@@ -13,7 +13,9 @@ import { detectWebGL, useBrowserValue } from "@/lib/useBrowserValue";
 import { ArrowRight } from "../icons/ArrowRight";
 import { TransitionLink } from "../ui/TransitionLink";
 import { StationOverlay, type Anchor } from "./StationOverlay";
+import { ElapsedClock } from "./ElapsedClock";
 import { ModeBadgeRow } from "./ModeBadgeRow";
+import { StationList } from "./StationList";
 import { ModeToggle } from "./ModeToggle";
 import { ProcessSceneFallback } from "./ProcessSceneFallback";
 import { RunReadout, type RunRow } from "./RunReadout";
@@ -46,8 +48,17 @@ export function ProcessComparison() {
     step: StepId | null;
     phase: "work" | "wait" | null;
     waitDays: number;
+    elapsedDays: number;
+    sp: StoryPoint | null;
     queues: number[];
-  }>({ step: null, phase: null, waitDays: 0, queues: [3, 3, 3, 5] });
+  }>({
+    step: null,
+    phase: null,
+    waitDays: 0,
+    elapsedDays: 0,
+    sp: null,
+    queues: [3, 3, 3, 5],
+  });
   const [announcement, setAnnouncement] = useState("");
   // null until hydration, so the server HTML and the first client paint agree.
   const detected = useBrowserValue(detectWebGL);
@@ -143,9 +154,16 @@ export function ProcessComparison() {
 
       <ModeBadgeRow mode={mode} />
 
+      <ElapsedClock
+        mode={mode}
+        sp={live.sp}
+        elapsedDays={live.elapsedDays}
+        phase={live.phase}
+      />
+
       <div
         ref={surfaceRef}
-        className="relative aspect-[5/2] w-full overflow-hidden border border-border bg-studio rounded-sharp"
+        className="relative aspect-[3/2] w-full overflow-hidden border border-border bg-studio rounded-sharp lg:aspect-[5/2]"
         onDragOver={(e) => e.preventDefault()}
       >
         {use3d === null ? (
@@ -171,12 +189,19 @@ export function ProcessComparison() {
                   phase: p.phase === "waiting" ? "wait" : "work",
                   waitDays:
                     p.phase === "waiting" ? p.elapsedDays : prev.waitDays,
+                  elapsedDays: p.elapsedDays,
+                  sp: p.sp,
                   queues,
                 };
               })
             }
             onItemComplete={(r: WorkItemResult) => {
-              setLive((prev) => ({ ...prev, step: null, phase: null }));
+              setLive((prev) => ({
+                ...prev,
+                step: null,
+                phase: null,
+                elapsedDays: r.totalDays,
+              }));
               setAnnouncement(
                 `${r.sp} story point item completed in ${r.totalDays.toFixed(1)} simulated days.`,
               );
@@ -206,6 +231,18 @@ export function ProcessComparison() {
           onDrop={(step, sp) => place(sp, step)}
         />
       </div>
+
+      {/* Below lg the five cards cannot sit over the model without colliding,
+          so the same content becomes a vertical list under it. */}
+      <StationList
+        mode={mode}
+        armed={armed}
+        activeStep={live.step}
+        activePhase={live.phase}
+        activeWaitDays={live.waitDays}
+        queueDepths={live.queues}
+        onDrop={(step, sp) => place(sp, step)}
+      />
 
       <StoryPointTray
         armed={armed}

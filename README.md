@@ -23,8 +23,8 @@ pnpm verify         # token guards, types, lint, unit tests, production build
 | `/` | Entrance, and the case for the AI-driven development lifecycle behind the build |
 | `/journeys` | Three persona gateways: business, engineering, process |
 | `/journeys/business` | Quotation simulator, with a replayed transaction trace |
-| `/journeys/engineering` | Request flow across four platform stages, with a what/when/how card per component |
-| `/journeys/process` | An animated 3D comparison of two delivery approaches |
+| `/journeys/engineering` | Request flow across four platform stages. Select any node to re-route the request and read what that component does |
+| `/journeys/process` | An animated 3D comparison of two delivery approaches, with live queue and cycle-time readouts |
 | `/journeys/process/quiz` | Five-question knowledge check on the team's rules |
 
 All six are statically rendered.
@@ -59,6 +59,18 @@ widens from about 5x at 0.5 story points to about 14x at 8.
 It loads as one lazy chunk on the process route and nowhere else. The 3D
 geometry is authored procedurally; `design/*.scad` are proportion sketches kept
 as a record of intent, not build inputs.
+
+**Both delivery rooms share one layout on purpose.** The five station slots,
+the spacing and the camera are identical, so the only visible differences
+between them are real ones: partition walls and queue piles on one side, a
+moving belt and AI gantries on the other. Labels are DOM elements positioned on
+the scene's projected station coordinates, which is what keeps the drop targets
+aligned with the model and the typography inside the design system.
+
+**The flow map draws three layers, never seventeen.** The always-on spine, the
+selected route, and the hovered node's direct connections. A numbered text
+readout carries the same route for screen readers, and is the whole flow story
+below 1024px where the connectors are not drawn at all.
 
 ## Stack
 

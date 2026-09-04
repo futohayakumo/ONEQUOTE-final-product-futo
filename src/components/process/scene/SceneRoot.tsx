@@ -159,8 +159,7 @@ export function SceneRoot({
         const half = { w: size.width / 2, h: size.height / 2 };
 
         STEP_IDS.forEach((step, i) => {
-          const p =
-            mode === "traditional" ? workAnchor(i) : beltAnchor(i);
+          const p = mode === "traditional" ? workAnchor(i) : beltAnchor(i);
           projectV.set(p[0], p[1] + 0.5, p[2]).project(cam);
           out.push({
             id: step,
@@ -169,16 +168,17 @@ export function SceneRoot({
           });
         });
 
-        if (mode === "traditional") {
-          for (let i = 0; i < 4; i += 1) {
-            const p = waitAnchor(i + 1);
-            projectV.set(p[0], p[1] + 0.45, p[2]).project(cam);
-            out.push({
-              id: `gap-${i}`,
-              x: (projectV.x + 1) * half.w,
-              y: (1 - projectV.y) * half.h,
-            });
-          }
+        // Published in BOTH rooms. The AI room needs the same four positions
+        // so it can state, at the exact spot the other room has a pile, that
+        // there is no queue here. An empty space says nothing.
+        for (let i = 0; i < 4; i += 1) {
+          const p = waitAnchor(i + 1);
+          projectV.set(p[0], p[1] + 0.45, p[2]).project(cam);
+          out.push({
+            id: `gap-${i}`,
+            x: (projectV.x + 1) * half.w,
+            y: (1 - projectV.y) * half.h,
+          });
         }
 
         const key = out.map((a) => `${a.id}:${a.x | 0}:${a.y | 0}`).join("|");
@@ -200,11 +200,17 @@ export function SceneRoot({
         // Continuous travel along the belt: it slows under each gantry but
         // never stops and never queues.
         const from =
-          index === 0 ? [BELT.x0 + 1.2, BELT.y + 0.22, BELT.z] : beltAnchor(index - 1);
+          index === 0
+            ? [BELT.x0 + 1.2, BELT.y + 0.22, BELT.z]
+            : beltAnchor(index - 1);
         const to = beltAnchor(index);
         scratchFrom.set(from[0], from[1], from[2]);
         scratchTo.set(to[0], to[1], to[2]);
-        group.position.lerpVectors(scratchFrom, scratchTo, easeInOutCubic(local));
+        group.position.lerpVectors(
+          scratchFrom,
+          scratchTo,
+          easeInOutCubic(local),
+        );
         group.rotation.y = 0;
       } else if (seg.kind === "wait") {
         // Parked in the queue, dead still, on top of the pile.
@@ -228,7 +234,6 @@ export function SceneRoot({
         group.rotation.y = 0.5;
       }
     }
-
   });
 
   // Read per frame by the meshes themselves. The runtime maintains the set in
@@ -272,7 +277,11 @@ export function SceneRoot({
             else itemsRef.current.delete(item.id);
           }}
         >
-          <CardboardBox position={[0, 0, 0]} sp={item.sp as StoryPoint} active />
+          <CardboardBox
+            position={[0, 0, 0]}
+            sp={item.sp as StoryPoint}
+            active
+          />
         </group>
       ))}
     </>
