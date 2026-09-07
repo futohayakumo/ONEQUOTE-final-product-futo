@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────
-   Design System v2 — intro.md §3 is canonical.
+   Design System v3 — the refreshed comps are canonical.
+   The nine colours survive from v2 unchanged. What changed is the
+   geometry: v2 allowed exactly one radius (4px) and no elevation at
+   all, and the comps use neither. Measured off the comps: card corners
+   arc over about 10px, and a card edge is a 1px rule with a ~12px
+   luminance ramp beneath it, not a hard line on flat white.
    Do NOT colour-pick from examples/*.png (warm cream + serif).
    ───────────────────────────────────────────────────────────── */
 
@@ -32,11 +37,21 @@
   --color-console: #0f172a; /* Dark Slate      — terminal background       */
   --color-terminal: #34d399; /* Terminal Green  — CONSOLE ONLY (1.75:1 on white) */
 
-  /* 3. GEOMETRY — exactly one legal radius */
-  --radius-sharp: 4px;
+  --color-mist: #e2e8f0; /* Mist            — inert fills, progress tracks  */
 
-  /* 4. ELEVATION — one legal value, and it is "none" */
+  /* 3. GEOMETRY — three legal radii, each with one job.
+        Still a closed set: anything else emits nothing. */
+  --radius-sharp: 4px; /* small chips, tags, inline marks   */
+  --radius-card: 10px; /* anything with a surface           */
+  --radius-full: 9999px; /* badges, avatars, radio dots       */
+
+  /* 4. ELEVATION — two legal values plus none.
+        Measured off the comps: a card is a 1px rule with a short, very
+        low-contrast ramp beneath it. Anything you can point at and call
+        a shadow is already too much. */
   --shadow-none: 0 0 #0000;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(15 23 42 / 0.05), 0 4px 12px rgb(15 23 42 / 0.08);
 }
 
 /* `inline` so next/font's runtime vars resolve in one hop */
@@ -95,13 +110,14 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Nothing in this system is rounder than 4px, ever. */
+  /* Controls carry a surface, so they take the card radius. 4px is for
+     chips and inline marks, not for anything you click into. */
   input,
   select,
   textarea,
   button,
   fieldset {
-    border-radius: var(--radius-sharp);
+    border-radius: var(--radius-card);
   }
 
   /* outline, NOT box-shadow — the shadow reset must never kill focus. */
@@ -339,4 +355,43 @@
   clip-path: inset(50%);
   white-space: nowrap;
   border-width: 0;
+}
+
+
+/* ── PHOTO SCRIMS ──────────────────────────────────────────────
+   v2 banned gradients outright. The comps are photography-led and put
+   type over full-bleed images, which needs a scrim to stay legible --
+   there is no flat overlay that both darkens the type side enough and
+   leaves the picture side alone.
+
+   So gradients are legal in exactly one place: over a photograph, in
+   charcoal, at a fixed set of directions. Never as a fill, never as a
+   button, never between two hues. If a gradient is not sitting on an
+   <img>, it is a mistake.
+   ───────────────────────────────────────────────────────────── */
+
+@utility scrim-l {
+  background-image: linear-gradient(
+    90deg,
+    rgb(15 23 42 / 0.82) 0%,
+    rgb(15 23 42 / 0.55) 38%,
+    rgb(15 23 42 / 0) 72%
+  );
+}
+
+@utility scrim-b {
+  background-image: linear-gradient(
+    180deg,
+    rgb(15 23 42 / 0) 40%,
+    rgb(15 23 42 / 0.72) 100%
+  );
+}
+
+@utility scrim-full {
+  background-image: linear-gradient(
+    90deg,
+    rgb(15 23 42 / 0.88) 0%,
+    rgb(15 23 42 / 0.62) 55%,
+    rgb(15 23 42 / 0.45) 100%
+  );
 }

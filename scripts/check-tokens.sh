@@ -20,10 +20,28 @@ report() {
 
 CLASS_LINES=$(grep -rn 'className' src/ --include='*.tsx' --include='*.ts' 2>/dev/null)
 
-# Geometry and elevation. rounded-full survives the --radius-* reset because
-# Tailwind hardcodes it to calc(infinity * 1px), so it has to be caught here.
-report "no off-token radius, shadow, gradient or blur" \
-  "$(printf '%s\n' "$CLASS_LINES" | grep -E 'rounded-(full|xs|sm|md|lg|xl|2xl|3xl|4xl)|(^|[ "'\''`])shadow-[a-z0-9]|drop-shadow|inset-shadow|bg-gradient|bg-linear|bg-radial|(^|[ "'\''`])blur-[a-z0-9]')"
+# Geometry and elevation.
+#
+# v3 opened up what v2 closed: three radii instead of one, two shadows instead
+# of none, and gradients over photographs. The set is still closed, so the
+# grep still has work to do -- it just guards a different fence.
+#
+# rounded-full is now legal (badges, avatars, radio dots) and is spelled with
+# Tailwind's own hardcoded calc(infinity * 1px), which is why it never obeyed
+# the --radius-* reset in the first place. Everything between 4px and 10px is
+# still off-token and still emits nothing, so it has to be caught here.
+# BSD grep has no -P, so the legal shadows are subtracted with a second pass
+# rather than expressed as a negative lookahead.
+report "no off-token radius or elevation" \
+  "$(printf '%s\n' "$CLASS_LINES" \
+     | grep -E 'rounded-(xs|sm|md|lg|xl|2xl|3xl|4xl)|(^|[ "'\''`])shadow-[a-z0-9]|drop-shadow|inset-shadow|(^|[ "'\''`])blur-[a-z0-9]' \
+     | grep -vE '(^|[ "'\''`])shadow-(card|raised|none)($|[ "'\''`])')"
+
+# Gradients are legal in exactly one place: a charcoal scrim over a photograph,
+# spelled with one of the three named scrim-* utilities. A raw gradient class in
+# a component is either a fill or a button, and both are still forbidden.
+report "gradients only via the named photo scrims" \
+  "$(printf '%s\n' "$CLASS_LINES" | grep -E 'bg-gradient|bg-linear|bg-radial')"
 
 # Off-scale type utilities compile to NOTHING and fail silently, so grep is the
 # only thing standing between a typo and 15px inherited text.
@@ -43,15 +61,30 @@ report "no serif display faces anywhere" \
 # repo root.
 LEAK_PATTERN=$(printf '%s' 'b2NlYW4gbmV0d29yayBleHByZXNzfFxiT05FIFFVT1RFXGJ8XGJPUFVTXGJ8bGF1bmNoZGFya2x5fGxva2FsaXNlfFxiamlyYVxifFxibGluaFxifFxiZGVuaXNcYg==' | base64 --decode)
 
+# -I skips binary files. Without it a PNG's compressed bytes match the pattern
+# by chance and the guard cries wolf on every run, which is worse than useless:
+# a check that always fails is a check nobody reads.
 tracked_hits=""
+binaries=0
 while IFS= read -r f; do
   [ "$f" = "scripts/check-tokens.sh" ] && continue
+  if ! grep -Iq . "$f" 2>/dev/null; then
+    binaries=$((binaries + 1))
+    continue
+  fi
   if grep -liE "$LEAK_PATTERN" "$f" >/dev/null 2>&1; then
     tracked_hits="${tracked_hits}${f}"$'\n'
   fi
 done < <(git ls-files 2>/dev/null)
 
 report "no real organisation, vendor or person names in tracked files" "$tracked_hits"
+
+# Say the quiet part out loud. Skipping binaries is correct for a text pattern
+# and it is also this repository's largest blind spot: a wordmark rendered into
+# a photograph passes every check above. The eleven assets known to carry one
+# are gitignored under public/assets/branded/, and nothing automated can tell
+# whether the twelfth exists.
+printf '  ..: %d tracked binary files were NOT scanned for names (images cannot be grepped)\n' "$binaries"
 
 # Filenames are published too.
 report "no real names in tracked filenames" \

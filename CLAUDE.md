@@ -27,16 +27,30 @@ Type scale, as bundled utilities: `type-display` (56px, hero H1 and the three
 persona titles only), `type-page`, `type-section`, `type-body`, `type-label`,
 `type-caption`, `type-console`, `type-eyebrow`.
 
-Geometry: `rounded-sharp` (4px) is the only legal radius. Borders are 1px;
-active states may use 2px crimson. No shadows, no gradients, no glow, no pills.
+Geometry, as of v3. The refreshed comps use rounder corners and a whisper of
+elevation, and they won that argument — but the set is still closed, and
+anything outside it emits nothing rather than erroring.
 
-**One exception, stated as a rule rather than a list.** A small circular
-*mark* — a numeral badge, a radio dot, a status glyph — is typographic
-punctuation, not a container, a button or a card, and takes an inline
-`borderRadius: 9999`. Anything that holds content, receives a click as a
-surface, or has a background you would call a panel is a container and takes
-4px. If you find yourself arguing the exemption in a comment, it is a
-container.
+| Token | Value | Use |
+| :--- | :--- | :--- |
+| `rounded-sharp` | 4px | chips, tags, inline marks |
+| `rounded-card` | 10px | anything with a surface: cards, panels, inputs, buttons |
+| `rounded-full` | pill | badges, avatars, radio dots |
+| `shadow-card` | 1px + 3px | resting cards |
+| `shadow-raised` | 4px + 12px | the one hovered or selected card |
+| `shadow-none` | — | everywhere else |
+
+Borders stay 1px; active states may use 2px crimson. Elevation is measured off
+the comps, where a card edge is a 1px rule with a short, very low-contrast ramp
+beneath it. **If you can point at it and call it a shadow, it is already too
+much.**
+
+**Gradients are legal in exactly one place**: a charcoal scrim over a
+photograph, spelled with `scrim-l`, `scrim-b` or `scrim-full`. Never as a fill,
+never on a button, never between two hues. If a gradient is not sitting on an
+`<img>`, it is a mistake. v2 banned them outright; the comps put type over
+full-bleed photography, and no flat overlay both darkens the type side enough
+and leaves the picture side alone.
 
 **Crimson means "look here".** That covers both the active state and the
 invalid state, which is deliberate: an error needs the eye exactly as much as
@@ -49,7 +63,9 @@ Decorative glyphs do not get the accent. It is reserved for primary calls to
 action, active state, and the highlighted route.
 
 Off-token utilities emit **nothing** rather than erroring, so a mistake fails
-silently. `pnpm check:tokens` is what catches it.
+silently. `pnpm check:tokens` is what catches it — and note that it skips
+binary files, so a real name rendered into a photograph passes every check in
+this repository. That is why `public/assets/branded/` is gitignored.
 
 Crimson is allowed on: primary CTA fills, the eyebrow label and its 2px rule,
 an active node's 2px border, the selected connector, numbered badges, link
