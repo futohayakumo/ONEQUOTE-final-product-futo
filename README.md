@@ -108,12 +108,17 @@ is safe only if the teardown is complete. It is easy to get wrong:
 ```bash
 git add . && git commit -m "safe state"
 git checkout -b demo/real-name-verification
-python main.py && pnpm build && pnpm dev
-pnpm demo:end          # discards, deletes, cleans, then runs the guard
+python main.py && pnpm build && PORT=3001 pnpm start
+pnpm demo:end          # discards, deletes, cleans, then reports
 ```
 
-`pnpm demo:end` refuses to report success unless the working tree is clean, and
-finishes by running the leakage guard. The substitution script itself is
+`pnpm demo:end` reports on the four things the demo could have left behind — a
+dirty tree, `.bak` backups, `.next`, real names in tracked files — and fails
+only on those. The outstanding git-history item predates any demo, so it is
+printed prominently but does not make a clean teardown read as a failure.
+
+Use a port other than 3000 if an editor is forwarding it; a held socket makes
+`next start` fail with `EADDRINUSE` before you see anything. The substitution script itself is
 gitignored: it contains the mapping, so committing it would publish in one file
 exactly what the abstractions exist to hide.
 
