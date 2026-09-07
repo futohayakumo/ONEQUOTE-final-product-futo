@@ -26,3 +26,8 @@ next-env.d.ts
 # remove untracked files, so without this they survive the demo teardown and
 # the next `git add .` sweeps them in.
 *.bak
+
+# The Cloudflare Pages URL, recorded so a real-name deploy can verify
+# the destination is gated before uploading. Local only.
+/.cf-pages-url
+/out/

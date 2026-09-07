@@ -10,7 +10,9 @@
     "check:tokens": "bash scripts/check-tokens.sh",
     "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
     "verify": "pnpm check:tokens && pnpm exec tsc --noEmit && pnpm lint && pnpm test && pnpm build",
-    "demo:end": "bash scripts/end-demo.sh"
+    "demo:end": "bash scripts/end-demo.sh",
+    "build:static": "STATIC_EXPORT=1 next build",
+    "deploy:cf": "bash scripts/deploy-cf.sh"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

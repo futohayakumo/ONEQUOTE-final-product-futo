@@ -122,6 +122,35 @@ Use a port other than 3000 if an editor is forwarding it; a held socket makes
 gitignored: it contains the mapping, so committing it would publish in one file
 exactly what the abstractions exist to hide.
 
+## Sharing it with a named reviewer
+
+The app exports to plain static files — no API routes, no server actions, no
+dynamic segments, no middleware — so it can sit behind Cloudflare Access with
+no runtime to work around.
+
+```bash
+pnpm build:static                      # -> out/
+pnpm deploy:cf                         # abstract build, safe to publish
+```
+
+`scripts/deploy-cf.sh` enforces one property: **a build carrying real names is
+only ever uploaded to a URL already proven to be gated.** So the order is fixed:
+
+1. Deploy the abstract build. This creates the Pages project and its URL.
+2. Add a Cloudflare Access policy for the reviewer's email address.
+3. `ALLOW_REAL_NAMES=1 pnpm deploy:cf` — the script re-checks the live URL
+   first and refuses to upload if an unauthenticated request still returns 200.
+
+The deployed pages also carry `noindex`. A link shared with a few people is not
+a private link: chat clients fetch it to build a preview, a click from anywhere
+else puts it in a `Referer` header, and browser telemetry has been enough to
+get unlinked URLs indexed.
+
+Note that `vercel deploy` and `wrangler pages deploy` upload the working
+directory directly. They do not go through git, so neither the pre-push hook
+nor `check:tokens` sees them. That is why the check lives inside the deploy
+script rather than beside it.
+
 ## Stack
 
 Next.js 16 (App Router, Turbopack), Tailwind CSS v4 with a CSS-first token
