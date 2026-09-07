@@ -27,7 +27,5 @@ next-env.d.ts
 # the next `git add .` sweeps them in.
 *.bak
 
-# The Cloudflare Pages URL, recorded so a real-name deploy can verify
-# the destination is gated before uploading. Local only.
-/.cf-pages-url
+# Static export output.
 /out/
