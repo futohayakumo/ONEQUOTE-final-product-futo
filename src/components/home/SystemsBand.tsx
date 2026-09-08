@@ -1,25 +1,30 @@
-import { Plate } from "../ui/Plate";
 import { SectionIntro } from "./SectionIntro";
 
 export function SystemsBand() {
   return (
-    <section className="relative isolate overflow-hidden border-t border-charcoal bg-canvas">
-      <div className="absolute inset-0 -z-20">
-        <Plate
-          label="Operations floor — analyst at a wall of dashboards"
-          spec="2400 × 620 · no wordmark on the jacket"
-          align="corner"
-          className="h-full w-full"
-        />
-      </div>
-      {/* White, not charcoal: the type here is charcoal over a bright office
-          floor. A charcoal scrim would need light type, which is not what the
-          comps do, and it would make this band a second dark slab directly
-          under the globe band. */}
-      <div aria-hidden className="absolute inset-0 -z-10 scrim-l-light" />
+    <section className="relative isolate overflow-hidden border-t border-charcoal bg-charcoal">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/banners/02-operations-floor.png"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 -z-20 h-full w-full object-cover"
+      />
+      {/*
+        Charcoal, full width, and light type over it.
+
+        This was built as charcoal type on a white scrim, on the reading that
+        the comps put dark type over a bright office. The photograph that
+        arrived is a dark operations floor whose right half is lit monitors, so
+        the white scrim lifted only the left and the statistics on the right sat
+        as charcoal on a busy dark image — unreadable. The scrim has to be
+        chosen for the picture, not for the plan.
+      */}
+      <div aria-hidden className="absolute inset-0 -z-10 scrim-full" />
 
       <div className="mx-auto grid max-w-[86rem] items-center gap-14 px-6 py-24 lg:grid-cols-[minmax(0,27rem)_minmax(0,1fr)]">
         <SectionIntro
+          tone="dark"
           no="03"
           title={
             <>
@@ -45,8 +50,8 @@ export function SystemsBand() {
             ["One traced request", "Timed hop by hop, with the log the trace produced."],
           ].map(([term, detail]) => (
             <div key={term} className="border-t border-muted pt-4">
-              <dt className="type-label text-charcoal">{term}</dt>
-              <dd className="mt-2 type-caption">{detail}</dd>
+              <dt className="type-label text-studio">{term}</dt>
+              <dd className="mt-2 type-caption text-border">{detail}</dd>
             </div>
           ))}
         </dl>

@@ -1,21 +1,20 @@
 import Link from "next/link";
 import { PERSONAS, type PersonaId } from "@/lib/personas";
 import { ArrowRight } from "../icons/ArrowRight";
-import { Plate } from "../ui/Plate";
 import { SectionIntro } from "./SectionIntro";
 
-const ART: Record<PersonaId, { label: string; spec: string }> = {
+const ART: Record<PersonaId, { src: string; alt: string }> = {
   business: {
-    label: "Executive above a container terminal",
-    spec: "available — spot/10",
+    src: "/assets/spot/10-perspective-business.png",
+    alt: "An executive on a walkway above a container terminal at dusk.",
   },
   engineering: {
-    label: "Service mesh, lit nodes on dark",
-    spec: "available — spot/11",
+    src: "/assets/spot/11-perspective-engineering.png",
+    alt: "A service mesh of lit nodes on a dark field.",
   },
   process: {
-    label: "Yard supervisor among stacks",
-    spec: "1024 · no wordmark on the vest",
+    src: "/assets/spot/12-perspective-process.png",
+    alt: "A yard supervisor among stacked containers.",
   },
 };
 
@@ -58,10 +57,11 @@ export function PerspectiveCards() {
                 className="group flex h-full flex-col overflow-hidden border border-border bg-studio rounded-card shadow-card transition-shadow duration-150 hover:shadow-raised"
               >
                 <div className="relative">
-                  <Plate
-                    label={ART[persona.id].label}
-                    spec={ART[persona.id].spec}
-                    ratio="4 / 3"
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ART[persona.id].src}
+                    alt={ART[persona.id].alt}
+                    className="aspect-[4/3] w-full object-cover"
                   />
                   <span aria-hidden className="absolute inset-0 scrim-b" />
                   <span className="absolute bottom-4 left-4 type-section text-studio">

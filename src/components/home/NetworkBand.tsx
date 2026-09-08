@@ -1,4 +1,3 @@
-import { Plate } from "../ui/Plate";
 import { SectionIntro } from "./SectionIntro";
 
 const STATS = [
@@ -10,15 +9,13 @@ const STATS = [
 export function NetworkBand() {
   return (
     <section className="relative isolate overflow-hidden border-y border-charcoal bg-charcoal">
-      <div className="absolute inset-0 -z-20">
-        <Plate
-          label="Dark globe with lit trade lanes"
-          spec="available — banners/03, needs 2400 wide"
-          tone="dark"
-          align="corner"
-          className="h-full w-full"
-        />
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/banners/03-banner-global-network.png"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 -z-20 h-full w-full object-cover"
+      />
       <div aria-hidden className="absolute inset-0 -z-10 scrim-l" />
 
       <div className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-24 lg:flex-row lg:items-center">

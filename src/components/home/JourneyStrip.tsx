@@ -1,25 +1,9 @@
-import { Plate } from "../ui/Plate";
 import { SectionIntro } from "./SectionIntro";
 
 const STEPS = [
-  {
-    label: "Quote",
-    blurb: "Search the lane, the sailing and the rate.",
-    plate: "Laptop showing the quotation screen",
-    spec: "1024 · no wordmark in the header",
-  },
-  {
-    label: "Booking",
-    blurb: "Arrangements, filings and confirmation.",
-    plate: "Container on a pallet",
-    spec: "available — spot/06",
-  },
-  {
-    label: "Delivery",
-    blurb: "Cargo creating value at the other end.",
-    plate: "Truck and trailer",
-    spec: "1024 · no wordmark on the trailer",
-  },
+  { label: "Quote", blurb: "Search the lane, the sailing and the rate." },
+  { label: "Booking", blurb: "Arrangements, filings and confirmation." },
+  { label: "Delivery", blurb: "Cargo creating value at the other end." },
 ] as const;
 
 export function JourneyStrip() {
@@ -42,42 +26,32 @@ export function JourneyStrip() {
           emphasis="accent"
         />
 
-        <ol className="grid flex-1 grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <li key={step.label} className="flex flex-col">
-              <div className="relative">
-                <Plate
-                  label={step.plate}
-                  spec={step.spec}
-                  ratio="4 / 3"
-                  className="rounded-card"
-                />
-                {/* The connector belongs between the tiles, so it hangs off the
-                    right edge of every tile but the last, and disappears when
-                    the grid stacks. */}
-                {i < STEPS.length - 1 ? (
-                  <span
-                    aria-hidden
-                    className="absolute top-1/2 -right-6 hidden w-6 -translate-y-1/2 items-center justify-center text-muted sm:flex"
-                  >
-                    <svg width="18" height="8" viewBox="0 0 18 8">
-                      <path
-                        d="M0 4h15M12 1l3 3-3 3"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1"
-                      />
-                    </svg>
-                  </span>
-                ) : null}
-              </div>
-              <span className="mt-5 type-overline text-charcoal">
-                {step.label}
-              </span>
-              <p className="mt-2 type-caption">{step.blurb}</p>
-            </li>
-          ))}
-        </ol>
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          {/*
+            One picture, not three tiles with connectors drawn between them.
+            The three stages and the arrows are in the artwork, so building the
+            same relationship a second time in CSS would only give it a chance
+            to disagree with the image at some viewport.
+          */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/spot/quote-to-delivery.png"
+            alt="A quotation screen, then a container, then a truck leaving the terminal."
+            className="w-full"
+          />
+
+          {/* The labels are DOM, not baked into the picture: they carry the
+              type scale, they translate, and they stay legible when the image
+              is scaled down on a phone. */}
+          <ol className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-3">
+            {STEPS.map((step) => (
+              <li key={step.label} className="flex flex-col border-t border-border pt-4">
+                <span className="type-overline text-charcoal">{step.label}</span>
+                <p className="mt-2 type-caption">{step.blurb}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

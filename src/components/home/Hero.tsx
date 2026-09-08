@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Plate } from "../ui/Plate";
 import { ArrowRight } from "../icons/ArrowRight";
 
 const RAIL = ["People", "Systems", "Logistics", "A brighter", "Tomorrow"];
@@ -7,17 +6,22 @@ const RAIL = ["People", "Systems", "Logistics", "A brighter", "Tomorrow"];
 export function Hero() {
   return (
     <section className="relative isolate overflow-hidden bg-charcoal">
-      {/* The photograph. Until it exists this is a plate at the same ratio, so
-          the type above it is being laid out against the real geometry. */}
-      <div className="absolute inset-0 -z-20">
-        <Plate
-          label="Hero — port at first light, vessel berthed under cranes"
-          spec="2400 × 900 · no wordmark on the hull"
-          tone="dark"
-          align="corner"
-          className="h-full w-full"
-        />
-      </div>
+      {/*
+        Plain <img>, not next/image: the app opts into a static export and has
+        no image optimiser at all, so the component would be a runtime this
+        build does not have.
+
+        1672px wide against the ~2880 a full-bleed hero wants at 1440 CSS on a
+        2x screen. It will soften on a retina laptop. Flagged rather than
+        hidden — the alternative was leaving a grey plate here.
+      */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/banners/01-port-vessel-berth.png"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 -z-20 h-full w-full object-cover"
+      />
       {/* Legible type over a photograph needs a ramp, not a flat wash: a flat
           overlay dark enough for the copy would also flatten the picture. */}
       <div aria-hidden className="absolute inset-0 -z-10 scrim-full" />
