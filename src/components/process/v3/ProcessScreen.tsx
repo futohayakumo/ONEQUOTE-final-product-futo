@@ -5,7 +5,6 @@ import Link from "next/link";
 import { STORY_POINTS, compare } from "../model/processModel";
 import type { StoryPoint } from "@/types/process-scene";
 import { ArrowRight } from "../../icons/ArrowRight";
-import { Plate } from "../../ui/Plate";
 import { GapChart } from "./GapChart";
 import { OutcomeCards } from "./OutcomeCards";
 import { SimulationPanel } from "./SimulationPanel";
@@ -86,11 +85,11 @@ export function ProcessScreen() {
         </div>
 
         <div className="flex flex-col gap-5">
-          <Plate
-            label="Isometric planning room — team at a board, work on the wall"
-            spec="available — scenes/01"
-            ratio="16 / 10"
-            className="rounded-card"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/scenes/01-team-planning-room.png"
+            alt="A team at a planning board, work on the wall behind them."
+            className="w-full rounded-card"
           />
           <p className="border-l-2 border-charcoal pl-5 type-label">
             Same work. Less waiting.
@@ -134,15 +133,15 @@ export function ProcessScreen() {
               {
                 title: "Traditional scrum (AI assisted)",
                 blurb: "People build. Work waits between steps.",
-                plate: "Isometric — five desks in a row, queues between them",
-                spec: "2400 × 700 · does not exist yet",
+                src: "/assets/scenes/traditional-desks.png",
+                alt: "Five desks in a row. A stack of work waits beside each one, and the fourth person is idle.",
                 foot: "Multiple handoffs. Queues between roles. Delays add up.",
               },
               {
                 title: "AI-driven agile (automated)",
                 blurb: "One agent, end to end. People decide.",
-                plate: "Isometric — conveyor with one console at the end",
-                spec: "scenes/05 · needs 2400 wide",
+                src: "/assets/scenes/ai-conveyor.png",
+                alt: "One conveyor carrying work past a single console, with nothing queued beside it.",
                 foot: "No handoffs. No queue. No approval gate.",
               },
             ].map((col) => (
@@ -151,13 +150,25 @@ export function ProcessScreen() {
                   <h3 className="type-section">{col.title}</h3>
                   <p className="mt-1 type-caption">{col.blurb}</p>
                 </div>
-                <Plate
-                  label={col.plate}
-                  spec={col.spec}
-                  ratio="16 / 9"
-                  className="rounded-card"
-                />
-                <p className="type-caption">{col.foot}</p>
+                {/*
+                  One box, one scale. The two strips arrived at 3:1 and 1.78:1,
+                  so laid out at their natural sizes the desks rendered small
+                  and the conveyor large — a comparison whose two halves are
+                  not to scale is not a comparison. `object-contain` in a
+                  shared box makes the queues on the left and their absence on
+                  the right the only difference between them.
+                */}
+                <div className="flex aspect-[16/7] w-full items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={col.src}
+                    alt={col.alt}
+                    className="max-h-full w-full object-contain"
+                  />
+                </div>
+                {/* mt-auto so the two captions share a baseline whatever
+                    padding each illustration carries inside its own box. */}
+                <p className="mt-auto type-caption">{col.foot}</p>
               </div>
             ))}
           </div>

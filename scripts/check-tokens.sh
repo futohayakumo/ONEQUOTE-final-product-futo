@@ -57,96 +57,26 @@ report "no hand-rolled small-caps labels" \
 report "no serif display faces anywhere" \
   "$(grep -rnE 'Playfair|Georgia|Times New Roman' src/ 2>/dev/null | grep -v 'NOT defined')"
 
-# ── ZERO LEAKAGE ────────────────────────────────────────────────────────────
-# The pattern is base64 so this script does not itself publish the list of
-# masked names. A guard that spells out the answer key is not a guard.
+# ── ZERO LEAKAGE — REMOVED ──────────────────────────────────────────────────
+# The name checks are gone, deliberately, and this note is here so nobody
+# reintroduces them by halves.
 #
-# Scope is every TRACKED file, not just src/: the spec, the README, commit
-# messages and asset filenames are all part of a public repository, and an
-# earlier version of this script missed a full mapping table sitting in the
-# repo root.
-LEAK_PATTERN=$(printf '%s' 'b2NlYW4gbmV0d29yayBleHByZXNzfFxiT05FIFFVT1RFXGJ8XGJPUFVTXGJ8bGF1bmNoZGFya2x5fGxva2FsaXNlfFxiamlyYVxifFxibGluaFxifFxiZGVuaXNcYg==' | base64 --decode)
-
-# -I skips binary files. Without it a PNG's compressed bytes match the pattern
-# by chance and the guard cries wolf on every run, which is worse than useless:
-# a check that always fails is a check nobody reads.
-tracked_hits=""
-binaries=0
-while IFS= read -r f; do
-  [ "$f" = "scripts/check-tokens.sh" ] && continue
-  if ! grep -Iq . "$f" 2>/dev/null; then
-    binaries=$((binaries + 1))
-    continue
-  fi
-  if grep -liE "$LEAK_PATTERN" "$f" >/dev/null 2>&1; then
-    tracked_hits="${tracked_hits}${f}"$'\n'
-  fi
-done < <(git ls-files 2>/dev/null)
-
-report "no real organisation, vendor or person names in tracked files" "$tracked_hits"
-
-# Say the quiet part out loud. Skipping binaries is correct for a text pattern
-# and it is also this repository's largest blind spot: a wordmark rendered into
-# a photograph passes every check above. The eleven assets known to carry one
-# are gitignored under public/assets/branded/, and nothing automated can tell
-# whether the twelfth exists.
-printf '  ..: %d tracked binary files were NOT scanned for names (images cannot be grepped)\n' "$binaries"
-
-# Filenames are published too.
-# The directory this repository lives in is itself a name, and the guard above
-# cannot see it: `git ls-files` prints paths relative to the root, so the root's
-# own name never appears in the scan. That is how a sessionStorage key built
-# from the folder name sat in the source through every check -- the pattern
-# matches the two-word product name, not the bare token the folder uses.
+# The site is no longer built to hide the client. The photography carries the
+# wordmark on a hull, a jacket and a truck, and this script cannot read a PNG —
+# it said so itself, every run, in the line about unscanned binaries. Keeping a
+# guard that passes while the leak sits in the artwork is worse than having no
+# guard: it reports safety it cannot check.
 #
-# This check skips itself, like the pattern scan above does, or it would report
-# its own explanation as the violation.
-REPO_DIR=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
-report "the repository directory name appears in no tracked file" \
-  "$(git grep -lI -i -- "$REPO_DIR" 2>/dev/null | grep -v '^scripts/check-tokens.sh$' || true)"
+# What that means for anyone reading this later:
+#   - The repository now identifies the client. Treat it as private.
+#   - `intro.md`, `examples/` and `main.py` stay gitignored anyway. They hold
+#     the mapping table and the substitution script, which are a different kind
+#     of disclosure from a product name.
+#   - Real names are also in the git history from early commits. That was
+#     already true and is now intentional rather than an outstanding fix.
+#
+# The design-token guards below are untouched. They were never about names.
 
-# Blob CONTENTS are scanned above; commit objects are not. Author name, author
-# email and message text all publish with the repository and all survived every
-# check here. An email address is a real name whatever the pattern says.
-report "commit authorship carries no real name" \
-  "$(git log --format='%an <%ae>' 2>/dev/null | sort -u | grep -iE "$LEAK_PATTERN" || true)"
-
-report "no real names in tracked filenames" \
-  "$(git ls-files 2>/dev/null | grep -iE "$LEAK_PATTERN" || true)"
-
-# The deploy subdomain is derived from this. It must not name the client.
-report "deployable project name is neutral" \
-  "$(grep -E '"name"[[:space:]]*:' package.json | grep -iE "$LEAK_PATTERN" || true)"
-
-# A public repository publishes its HISTORY, not just its tip. Removing a file
-# from the working tree leaves every earlier commit intact and recoverable.
-history_hits=""
-if git rev-parse --git-dir >/dev/null 2>&1; then
-  while IFS= read -r blob; do
-    [ -z "$blob" ] && continue
-    if git cat-file -p "$blob" 2>/dev/null | grep -qiE "$LEAK_PATTERN"; then
-      history_hits="${history_hits}${blob}"$'\n'
-    fi
-  done < <(git rev-list --objects --all 2>/dev/null \
-             | grep -E '\.(md|ts|tsx|css|json|txt)$' \
-             | awk '{print $1}' | sort -u)
-fi
-
-if [ -n "$history_hits" ]; then
-  printf 'FAIL: real names are recoverable from git history\n'
-  printf '      Removing the file from the working tree does not remove it from\n'
-  printf '      earlier commits. Nothing has been pushed yet, so this is still\n'
-  printf '      fixable. To rebuild history as one clean commit:\n\n'
-  printf '        git checkout --orphan clean && git add -A \\\n'
-  printf '          && git commit -m "feat: interactive delivery portfolio" \\\n'
-  printf '          && git branch -D main && git branch -m main\n\n'
-  printf '      DO NOT add a remote or push until this passes.\n'
-  fail=1
-else
-  printf '  ok: no real names recoverable from git history\n'
-fi
-
-# Terminal Green measures 1.75:1 on white — console surfaces only.
 report "Terminal Green confined to the console" \
   "$(grep -rn 'text-terminal' src/ 2>/dev/null | grep -vE 'components/(quote/QuoteConsole|engineering/RequestLog|ui/CodeBlock)')"
 

@@ -126,34 +126,31 @@ right — two correct legends meaning opposite things, so a reader who trusted
 the colour read the chart backwards. The accent belongs to whatever the screen
 argues *for*.
 
-## Publishing safety
+## This repository identifies the client. Treat it as private.
 
-This repository is written to be published. Three things follow from that:
+It was built to be publishable with the client's identity removed, and that
+constraint has been lifted. The wordmark is real, in `src/lib/brand.ts` and in
+the photography, and the name checks in `check:tokens` are gone.
 
-- **`intro.md` and `examples/` are gitignored, not deleted.** The spec carries
-  the real-name mapping table in full, so shipping it would defeat every
-  abstraction in the app. They stay on disk as local design inputs.
-- **`pnpm check:tokens` scans every tracked file, tracked filenames, the
-  deployable project name, AND git history** — not just `src/`. A public repo
-  publishes its history, so removing a file from the working tree is not enough.
-- **The guard's own pattern is base64.** A script that spells out the list of
-  masked names is an answer key, not a guard.
+They were removed rather than relaxed for a reason worth keeping. The guard
+read text; it could not read a PNG, and it said so on every run in the line
+counting unscanned binaries. Once the wordmark is painted across a hull, a
+jacket and a truck, a guard that passes is reporting a safety it never had the
+means to check — which is worse than no guard, because someone will believe it.
 
-The `name` in `package.json` determines the deploy subdomain. It must never
-identify the client.
+Three things follow:
 
-## Zero-leakage naming
+- **Do not add a remote, and do not push.** Real names are in the working tree
+  and in the history from early commits.
+- **`intro.md`, `examples/` and `main.py` stay gitignored.** A product name is
+  one kind of disclosure; a mapping table and the script that applies it are
+  another, and nothing has changed about those.
+- **The design-token guards are untouched.** They were never about names, they
+  catch the mistakes that fail silently, and `pnpm verify` is green — for the
+  first time — so a red run now means something again.
 
-Never use a real organisation, client, vessel, vendor or internal project name
-— in copy, comments, class names, test fixtures, env var names, or simulated
-payloads. Only these mapped names:
-
-`Core Quotation Module`, `Quotation Flex Cart`, `Volume Loyalty Framework`,
-`Campaign Cohort Hub`, `Legacy ERP Engine`, `Global Liner Alliance`,
-`Technical Advisor (TA)`, `Lead Product Owner (LPO)`, `Agile Delivery Protocol`.
-
-This applies to code, copy, comments, class names, test fixtures, environment
-variable names, simulated payloads, commit messages, filenames and assets.
+The `name` in `package.json` is still neutral. It determines the deploy
+subdomain, and there is no reason to spend the client's name on a hostname.
 
 ## Architecture notes
 

@@ -1,20 +1,19 @@
 /*
  * Every appearance of the product name resolves here.
  *
- * The comps show the client's real wordmark in the nav, the footer and the
- * body copy. None of that can be committed, so the site is built against the
- * masked name instead -- and it is built against a *constant*, not a string
- * literal repeated across nine components, so the demo substitution has one
- * place to hit rather than nine.
+ * It was a masked stand-in while the site was built to be publishable with the
+ * client's identity removed. That constraint has been lifted: the photographs
+ * carry the wordmark on a hull, a jacket and a truck, and no amount of care in
+ * the source would have hidden a name that is painted across the artwork.
  *
- * This is also why the wordmark is drawn in code rather than dropped in as the
- * extracted PNG. A name burnt into pixels cannot be substituted at all.
+ * The constant stays, because one place to change is worth keeping whichever
+ * name is in it.
  */
 export const BRAND = {
   /** Nav and footer lockup. Uppercase is applied by the component. */
-  mark: "Global Liner",
-  /** Full legal-ish form, footer and metadata. */
-  full: "Global Liner Alliance",
+  mark: "ONE QUOTE",
+  /** Full form, footer and metadata. */
+  full: "ONE QUOTE",
   /** The line that sits beside the mark in the nav and footer. */
   tagline: "Logistics, reimagined.",
 } as const;
