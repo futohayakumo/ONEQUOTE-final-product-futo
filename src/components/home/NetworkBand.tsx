@@ -11,7 +11,7 @@ export function NetworkBand() {
     <section className="relative isolate overflow-hidden border-y border-charcoal bg-charcoal">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/assets/banners/03-banner-global-network.png"
+        src="/assets/banners/03-global-network.png"
         alt=""
         aria-hidden
         className="absolute inset-0 -z-20 h-full w-full object-cover"

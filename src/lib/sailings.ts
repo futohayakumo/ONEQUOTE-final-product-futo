@@ -186,3 +186,63 @@ export function quoteForSailing(
   const discount = round(subtotal * quote.discountRate);
   return { lines, subtotal, discount, total: round(subtotal - discount) };
 }
+
+/**
+ * The dates a shipper actually plans against.
+ *
+ * A route panel that shows only ETD and ETA is missing the part that binds:
+ * the cut-offs. Miss the documentation cut-off and the booking rolls to the
+ * next sailing regardless of how much transit time was left, which is why
+ * these sit beside the ETD rather than in a footnote.
+ *
+ * Offsets are the ordinary liner pattern, counted back from departure.
+ */
+export interface CutOff {
+  label: string;
+  detail: string;
+  offsetDays: number;
+}
+
+export function cutOffsFor(sailing: Sailing): CutOff[] {
+  return [
+    {
+      label: "Documentation",
+      detail: "Shipping instructions and the draft bill of lading.",
+      offsetDays: sailing.departsInDays - 3,
+    },
+    {
+      label: "VGM",
+      detail: "Verified gross mass, per SOLAS. No VGM, no load.",
+      offsetDays: sailing.departsInDays - 2,
+    },
+    {
+      label: "Cargo / CY",
+      detail: "The box has to be inside the terminal gate.",
+      offsetDays: sailing.departsInDays - 1,
+    },
+  ];
+}
+
+/** Legs, so a transhipment sailing shows where the time actually goes. */
+export interface Leg {
+  from: string;
+  to: string;
+  days: number;
+}
+
+export function legsFor(sailing: Sailing, pol: string, pod: string): Leg[] {
+  if (!sailing.via) return [{ from: pol, to: pod, days: sailing.transitDays }];
+  // Transhipment splits roughly two-thirds of the way, plus the days the box
+  // spends on the quay waiting for the connecting vessel.
+  const first = Math.round(sailing.transitDays * 0.55);
+  return [
+    { from: pol, to: sailing.via, days: first },
+    { from: sailing.via, to: pod, days: sailing.transitDays - first },
+  ];
+}
+
+/** Voyage number. Deterministic, so the same sailing always reports the same. */
+export function voyageOf(sailing: Sailing): string {
+  const n = 100 + (hash(sailing.id) % 800);
+  return `${n}${sailing.via ? "S" : "E"}`;
+}
