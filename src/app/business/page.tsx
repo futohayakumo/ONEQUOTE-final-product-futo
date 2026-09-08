@@ -1,6 +1,5 @@
 import { QuotationScreen } from "@/components/business/QuotationScreen";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Plate } from "@/components/ui/Plate";
 
 export const metadata = { title: "Business — quotation simulator" };
 
@@ -26,15 +25,13 @@ export default function BusinessPage() {
       </div>
 
       <section className="relative isolate mt-8 overflow-hidden bg-charcoal">
-        <div className="absolute inset-0 -z-20">
-          <Plate
-            label="Terminal yard — supervisor among container stacks"
-            spec="2400 × 560 · no wordmark on the vest"
-            tone="dark"
-            align="corner"
-            className="h-full w-full"
-          />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/banners/07-terminal-yard.png"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+        />
         <div aria-hidden className="absolute inset-0 -z-10 scrim-l" />
         <div className="mx-auto max-w-[86rem] px-6 py-20">
           <h2 className="max-w-[20ch] type-page text-studio">
