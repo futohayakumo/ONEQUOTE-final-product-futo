@@ -165,10 +165,10 @@ return this.flexCart.holdSinglePort(dto);`,
 
   "translation-api": {
     id: "translation-api",
-    label: "Translation API",
+    label: "Lokalise",
     nodeId: "translation-api",
     stage: "service",
-    what: "A managed localisation platform. Translation keys live outside the application build, so copy can be corrected in any locale without shipping a release. The build pulls the current bundle; the runtime falls back to the base locale for any key not yet translated.",
+    what: "Lokalise, the managed localisation platform this site actually runs on. Translation keys live outside the application build, so copy is corrected in any locale without shipping a release. `scripts/pull-locales.mjs` writes the bundles before the build and the app imports them, so the running site has no runtime token and no network dependency on a translation vendor. Any key missing from a locale falls back to the base rather than rendering blank.",
     when: "A surcharge label reads ambiguously in one market and the local team wants it reworded before the next sailing. They edit the string in the platform, the next build picks it up, and no engineer touches the repository.",
     how: {
       lang: "typescript — locale bundle load",

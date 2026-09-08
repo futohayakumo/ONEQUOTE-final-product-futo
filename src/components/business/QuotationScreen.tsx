@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
 import { quoteForSailing, sailingsFor } from "@/lib/sailings";
-import { QuoteBreakdown } from "./QuoteBreakdown";
-import { RouteDetails } from "./RouteDetails";
+import { INCOTERM_ORDER, INCOTERMS, type Incoterm } from "@/lib/charges";
+import { LOCALES, type Locale } from "@/lib/i18n";
+import { QuoteTicket } from "./QuoteTicket";
 import { SailingList } from "./SailingList";
 import { SearchPanel, type SearchState } from "./SearchPanel";
 
@@ -20,6 +21,8 @@ export function QuotationScreen() {
   const [form, setForm] = useState<SearchState>(INITIAL);
   const [query, setQuery] = useState<SearchState>(INITIAL);
   const [sailingId, setSailingId] = useState<string>("");
+  const [incoterm, setIncoterm] = useState<Incoterm>("FOB");
+  const [locale, setLocale] = useState<Locale>("en");
 
   // pricing.ts owns the rules and the limit. The screen used to restate both,
   // so changing MAX_CBM moved the constant and the tested validator while the
@@ -81,19 +84,52 @@ export function QuotationScreen() {
         onSelect={setSailingId}
       />
 
-      <RouteDetails
-        sailing={selected}
-        pol={query.pol}
-        pod={query.pod}
-        containerType={query.containerType}
-        units={quote.units}
-      />
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <h2 className="type-section">Your quotation</h2>
 
-      <QuoteBreakdown
+        <div className="flex flex-wrap items-end gap-6">
+          <label className="flex flex-col gap-2">
+            <span className="type-caption">Incoterm</span>
+            <select
+              value={incoterm}
+              onChange={(e) => setIncoterm(e.target.value as Incoterm)}
+              className="w-72 border border-control bg-studio px-4 py-2.5 type-label rounded-card"
+            >
+              {INCOTERM_ORDER.map((term) => (
+                <option key={term} value={term}>
+                  {INCOTERMS[term].label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* The bundles are pulled from Lokalise at build time; this only
+              chooses which one resolves. See src/lib/i18n.ts. */}
+          <label className="flex flex-col gap-2">
+            <span className="type-caption">Language</span>
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+              className="w-32 border border-control bg-studio px-4 py-2.5 type-label rounded-card"
+            >
+              {LOCALES.map((l) => (
+                <option key={l} value={l}>
+                  {l === "en" ? "English" : "日本語"}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <QuoteTicket
         quote={quote}
         sailing={selected}
         pol={query.pol}
         pod={query.pod}
+        containerType={query.containerType}
+        incoterm={incoterm}
+        locale={locale}
       />
     </div>
   );
