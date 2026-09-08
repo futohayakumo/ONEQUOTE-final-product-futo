@@ -1,6 +1,7 @@
 "use client";
 
 import type { Schedule } from "../model/processModel";
+import { useT } from "../../shell/LocaleProvider";
 
 function Bar({
   touch,
@@ -47,6 +48,7 @@ export function OutcomeCards({
   traditional: Schedule;
   aiDriven: Schedule;
 }) {
+  const t = useT();
   const max = traditional.totalDays;
 
   // The model rounds touch, wait and total independently, so at 0.5 SP the
@@ -60,21 +62,25 @@ export function OutcomeCards({
 
   const cards = [
     {
-      title: "Traditional scrum (AI assisted)",
+      titleKey: "process.trad.title",
       schedule: traditional,
       tone: "bg-studio",
       split: [
-        { label: "Actual work", value: split(traditional).touch, ink: "" },
-        { label: "Waiting", value: split(traditional).wait, ink: "text-muted" },
+        { key: "process.outcome.work", value: split(traditional).touch, ink: "" },
+        {
+          key: "process.outcome.waiting",
+          value: split(traditional).wait,
+          ink: "text-muted",
+        },
       ],
     },
     {
-      title: "AI-driven agile (automated)",
+      titleKey: "process.ai.title",
       schedule: aiDriven,
       tone: "bg-tint",
       split: [
         {
-          label: "Work and decision",
+          key: "process.outcome.workDecision",
           value: aiDriven.touchDays + aiDriven.waitDays,
           ink: "",
         },
@@ -86,13 +92,13 @@ export function OutcomeCards({
     <div className="grid gap-6 sm:grid-cols-2">
       {cards.map((card) => (
         <div
-          key={card.title}
+          key={card.titleKey}
           className={`flex flex-col gap-5 border border-border p-6 rounded-card shadow-card ${card.tone}`}
         >
-          <h3 className="type-label">{card.title}</h3>
+          <h3 className="type-label">{t(card.titleKey)}</h3>
           <p className="type-page tnum">
             {card.schedule.totalDays.toFixed(2)}{" "}
-            <span className="type-body text-muted">days</span>
+            <span className="type-body text-muted">{t("process.outcome.days")}</span>
           </p>
 
           <Bar
@@ -103,8 +109,8 @@ export function OutcomeCards({
 
           <dl className="flex flex-wrap gap-x-10 gap-y-3">
             {card.split.map((s) => (
-              <div key={s.label}>
-                <dt className="type-caption">{s.label}</dt>
+              <div key={s.key}>
+                <dt className="type-caption">{t(s.key)}</dt>
                 <dd className={`type-label tnum ${s.ink}`}>
                   {s.value.toFixed(2)} d
                 </dd>
@@ -114,7 +120,7 @@ export function OutcomeCards({
 
           <p className="mt-auto border-t border-border pt-4 type-label tnum">
             ≈ {Math.round(card.schedule.flowEfficiency * 100)}%
-            <span className="type-caption"> flow efficiency</span>
+            <span className="type-caption"> {t("process.outcome.flowEfficiency")}</span>
           </p>
         </div>
       ))}

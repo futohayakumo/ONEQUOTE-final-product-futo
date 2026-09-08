@@ -11,6 +11,7 @@ import {
 } from "@/lib/pricing";
 import type { ContainerType, LoyaltyTier, PortCode } from "@/types/quote";
 import { ArrowRight } from "../icons/ArrowRight";
+import { useT } from "../shell/LocaleProvider";
 
 export interface SearchState {
   pol: PortCode;
@@ -40,6 +41,7 @@ export function SearchPanel({
   onChange: (next: SearchState) => void;
   onSearch: () => void;
 }) {
+  const t = useT();
   const set = <K extends keyof SearchState>(k: K, v: SearchState[K]) =>
     onChange({ ...value, [k]: v });
 
@@ -47,20 +49,21 @@ export function SearchPanel({
     <section className="border border-border bg-studio p-6 rounded-card shadow-card sm:p-8">
       <div className="flex gap-7 border-b border-border">
         <span className="relative pb-3 type-label text-crimson-ink">
-          Port to port
+          {t("business.search.portToPort")}
           <span
             aria-hidden
             className="absolute inset-x-0 bottom-0 h-0.5 bg-crimson"
           />
         </span>
         <span className="pb-3 type-label text-muted">
-          Multimodal <span className="type-caption">(not built)</span>
+          {t("business.search.multimodal")}{" "}
+          <span className="type-caption">{t("business.search.notBuilt")}</span>
         </span>
       </div>
 
       <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-2">
-          <span className="type-caption">From</span>
+          <span className="type-caption">{t("business.search.from")}</span>
           <select
             className={FIELD}
             value={value.pol}
@@ -75,7 +78,7 @@ export function SearchPanel({
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="type-caption">To</span>
+          <span className="type-caption">{t("business.search.to")}</span>
           <select
             className={FIELD}
             value={value.pod}
@@ -90,7 +93,7 @@ export function SearchPanel({
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="type-caption">Container</span>
+          <span className="type-caption">{t("business.search.container")}</span>
           <select
             className={FIELD}
             value={value.containerType}
@@ -107,7 +110,7 @@ export function SearchPanel({
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="type-caption">Loyalty tier</span>
+          <span className="type-caption">{t("business.search.tier")}</span>
           <select
             className={FIELD}
             value={value.tier}
@@ -124,7 +127,7 @@ export function SearchPanel({
 
       <div className="mt-5 flex flex-wrap items-end gap-5">
         <label className="flex w-56 flex-col gap-2">
-          <span className="type-caption">Volume (CBM)</span>
+          <span className="type-caption">{t("business.search.volume")}</span>
           <input
             type="number"
             inputMode="numeric"
@@ -147,7 +150,7 @@ export function SearchPanel({
           disabled={error !== null}
           className="ml-auto inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal disabled:cursor-not-allowed disabled:border-border disabled:bg-mist disabled:text-muted"
         >
-          Search sailings
+          {t("business.search.submit")}
           <ArrowRight size={18} />
         </button>
       </div>

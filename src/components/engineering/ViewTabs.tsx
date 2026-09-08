@@ -7,7 +7,10 @@
  * multimodal tab on the business screen. A tab that looks live and does
  * nothing is worse than one that says it is not ready.
  */
+import { useT } from "../shell/LocaleProvider";
+
 export function ViewTabs() {
+  const t = useT();
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border">
       {/* Not a tablist. One tab and no tabpanel announces "tab 1 of 1" over a
@@ -15,15 +18,15 @@ export function ViewTabs() {
           The business screen already does it this way. */}
       <div className="flex gap-7">
         <span className="relative pb-3 type-label text-crimson-ink">
-          System map
+          {t("eng.systemMap")}
           <span
             aria-hidden
             className="absolute inset-x-0 bottom-0 h-0.5 bg-crimson"
           />
         </span>
         <span className="pb-3 type-label text-muted">
-          C4 view{" "}
-          <span className="type-caption">(not built)</span>
+          {t("eng.c4")}{" "}
+          <span className="type-caption">{t("business.search.notBuilt")}</span>
         </span>
       </div>
     </div>

@@ -4,6 +4,7 @@ import cn from "clsx";
 import { COMPONENT_CATALOG, COMPONENT_ORDER } from "@/lib/component-catalog";
 import { NODES } from "@/lib/flow-data";
 import type { ComponentId, NodeId } from "@/types/flow";
+import { useT } from "../shell/LocaleProvider";
 
 /**
  * The left rail. The comps draw it as a category filter; it is built as an
@@ -18,6 +19,7 @@ export function CategoryRail({
   selected: NodeId | null;
   onSelect: (id: NodeId | null) => void;
 }) {
+  const t = useT();
   const activeComponent = COMPONENT_ORDER.find(
     (id: ComponentId) => COMPONENT_CATALOG[id].nodeId === selected,
   );
@@ -28,7 +30,7 @@ export function CategoryRail({
   const orphanSelection = selected !== null && activeComponent === undefined;
 
   return (
-    <nav aria-label="Services" className="flex flex-col gap-1">
+    <nav aria-label={t("eng.services")} className="flex flex-col gap-1">
       <button
         type="button"
         onClick={() => onSelect(null)}
@@ -40,13 +42,12 @@ export function CategoryRail({
             : "text-muted hover:text-charcoal",
         )}
       >
-        All services
+        {t("eng.allServices")}
       </button>
 
       {orphanSelection ? (
         <p className="px-4 py-2.5 type-caption">
-          {NODES[selected].label} is selected in the map. It has no deep dive,
-          so it is not listed here.
+          {t("eng.rail.orphan", { label: NODES[selected].label })}
         </p>
       ) : null}
 

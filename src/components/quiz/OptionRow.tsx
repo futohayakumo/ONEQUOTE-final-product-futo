@@ -101,12 +101,12 @@ export function OptionRow({
       <span className="type-body flex-1">{t(option.textKey)}</span>
 
       {chosenAndRight ? (
-        <span className="type-eyebrow shrink-0 text-charcoal">Correct</span>
+        <span className="type-eyebrow shrink-0 text-charcoal">{t("quiz.correct")}</span>
       ) : chosenAndWrong ? (
-        <span className="type-eyebrow shrink-0 text-crimson-ink">Not quite</span>
+        <span className="type-eyebrow shrink-0 text-crimson-ink">{t("quiz.notQuite")}</span>
       ) : revealedAnswer ? (
         <span className="type-eyebrow shrink-0 text-charcoal">
-          Correct answer
+          {t("quiz.correctAnswer")}
         </span>
       ) : null}
     </label>

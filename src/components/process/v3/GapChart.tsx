@@ -1,6 +1,7 @@
 "use client";
 
 import { STORY_POINTS, compare } from "../model/processModel";
+import { useT } from "../../shell/LocaleProvider";
 
 const W = 460;
 const H = 240;
@@ -15,6 +16,7 @@ const PAD = { top: 16, right: 20, bottom: 34, left: 42 };
  * point size cannot show that; this is the only mark that can.
  */
 export function GapChart() {
+  const t = useT();
   const rows = STORY_POINTS.map((sp) => {
     const c = compare(sp);
     return {
@@ -36,7 +38,7 @@ export function GapChart() {
   return (
     <figure className="flex flex-col gap-4">
       <figcaption className="type-label">
-        The bigger the batch, the wider the gap.
+        {t("process.chart.title")}
       </figcaption>
 
       <svg
@@ -126,10 +128,48 @@ export function GapChart() {
         ))}
       </svg>
 
-      <p className="type-caption">
-        Story points across the bottom, lead time in days up the side. Grey is
-        traditional, crimson is AI-driven.
-      </p>
+      <p className="type-caption">{t("process.chart.caption")}</p>
+
+      {/*
+        role="img" on the svg prunes its own axis labels from the accessibility
+        tree, and the label can only carry the endpoints, so the intermediate
+        values existed in no form at all. The table is the same data as text.
+      */}
+      <details className="mt-2">
+        <summary className="cursor-pointer type-caption underline underline-offset-4">
+          {t("process.chart.table")}
+        </summary>
+        <table className="mt-4 w-full type-caption tnum">
+          <thead>
+            <tr className="border-b border-border text-left">
+              <th scope="col" className="py-2 font-medium">
+                {t("process.chart.sp")}
+              </th>
+              <th scope="col" className="py-2 font-medium">
+                {t("process.chart.trad")}
+              </th>
+              <th scope="col" className="py-2 font-medium">
+                {t("process.chart.ai")}
+              </th>
+              <th scope="col" className="py-2 font-medium">
+                {t("process.chart.ratio")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.sp} className="border-b border-border">
+                <th scope="row" className="py-2 font-normal">
+                  {r.sp}
+                </th>
+                <td className="py-2">{r.trad.toFixed(2)} d</td>
+                <td className="py-2">{r.ai.toFixed(2)} d</td>
+                <td className="py-2">{r.ratio.toFixed(1)}×</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
     </figure>
   );
 }

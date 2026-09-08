@@ -23,12 +23,12 @@ export function QuizResult({
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
         <SectionTitle>
-          {score} of {QUIZ.length} correct
+          {t("quiz.score", { score, total: QUIZ.length })}
         </SectionTitle>
         <p className="type-caption">
           {score === QUIZ.length
-            ? "Full marks. Every rule above is enforced by tooling rather than by memory, which is the point."
-            : "Review the ones you missed below. Each explanation says why the rule exists, not just what it is."}
+            ? t("quiz.full")
+            : t("quiz.review")}
         </p>
       </div>
 
@@ -56,9 +56,9 @@ export function QuizResult({
                 <p className="type-label">{t(q.promptKey)}</p>
                 <p className="type-caption">
                   <span className="sr-only">
-                    {right ? "Correct. " : "Incorrect. "}
+                    {right ? t("quiz.correct") : t("quiz.notQuite")}. 
                   </span>
-                  Answer: {correct ? t(correct.textKey) : ""}
+                  {t("quiz.answer", { text: correct ? t(correct.textKey) : "" })}
                 </p>
               </div>
             </li>
@@ -72,14 +72,14 @@ export function QuizResult({
           onClick={onRetake}
           className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
         >
-          Retake
+          {t("quiz.retake")}
         </button>
         <TransitionLink
           href="/process"
           direction="back"
           className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
         >
-          Back to Process Comparison
+          {t("quiz.backToProcess")}
         </TransitionLink>
       </div>
     </div>

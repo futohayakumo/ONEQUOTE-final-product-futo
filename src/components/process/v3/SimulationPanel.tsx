@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ArrowRight } from "../../icons/ArrowRight";
+import { useT } from "../../shell/LocaleProvider";
 
 /**
  * The 3D comparison, behind a click.
@@ -30,6 +31,7 @@ const ProcessComparison = dynamic(
 );
 
 export function SimulationPanel() {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,12 +39,10 @@ export function SimulationPanel() {
       <div className="mx-auto flex max-w-[86rem] flex-col gap-8 px-6 py-20">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="type-eyebrow">Run it yourself</p>
-            <h2 className="mt-5 type-page">Drop work into either room.</h2>
+            <p className="type-eyebrow">{t("process.sim.eyebrow")}</p>
+            <h2 className="mt-5 type-page">{t("process.sim.title")}</h2>
             <p className="mt-3 max-w-[56ch] type-body text-muted">
-              The same five steps, laid out twice. Drag a story point onto a
-              desk and watch where it stops — the queues are the argument, and
-              they are there before you touch anything.
+              {t("process.sim.lede")}
             </p>
           </div>
 
@@ -52,7 +52,7 @@ export function SimulationPanel() {
               onClick={() => setOpen(true)}
               className="inline-flex shrink-0 items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
             >
-              Start the simulation
+              {t("process.sim.start")}
               <ArrowRight size={18} />
             </button>
           ) : null}
@@ -62,8 +62,7 @@ export function SimulationPanel() {
           <ProcessComparison />
         ) : (
           <p className="type-caption">
-            Loads about 250 kB of 3D on demand, so the rest of this page does
-            not pay for it.
+            {t("process.sim.cost")}
           </p>
         )}
       </div>

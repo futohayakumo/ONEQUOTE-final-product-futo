@@ -1,6 +1,7 @@
 "use client";
 
 import type { Trace } from "@/lib/trace";
+import { useT } from "../shell/LocaleProvider";
 
 /**
  * Terminal Green measures 1.75:1 on white, so it lives on a charcoal panel and
@@ -9,11 +10,14 @@ import type { Trace } from "@/lib/trace";
  * status, indistinguishable from the dozen that do not.
  */
 export function RequestLog({ trace }: { trace: Trace }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="type-label">Request log</h3>
-        <span className="type-caption tnum">{trace.log.length} lines</span>
+        <h3 className="type-label">{t("eng.log.title")}</h3>
+        <span className="type-caption tnum">
+          {t("eng.log.lines", { count: trace.log.length })}
+        </span>
       </div>
 
       {/* tabIndex 0 + a role, or the 40% of this log that overflows on a
@@ -26,7 +30,7 @@ export function RequestLog({ trace }: { trace: Trace }) {
       >
         <table className="w-full type-console">
           <caption className="sr-only">
-            Request log for the highlighted route
+            {t("eng.log.title")}
           </caption>
           <tbody>
             {trace.log.map((line, i) => (

@@ -3,6 +3,7 @@
 import { NODES } from "@/lib/flow-data";
 import type { Trace } from "@/lib/trace";
 import type { NodeId } from "@/types/flow";
+import { useT } from "../shell/LocaleProvider";
 
 /**
  * The horizontal timeline under the map. It reads the live route, so
@@ -10,18 +11,19 @@ import type { NodeId } from "@/types/flow";
  * changes would say the same thing about two different paths.
  */
 export function RequestTrace({ trace }: { trace: Trace }) {
+  const t = useT();
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h2 className="type-section">Request flow</h2>
+          <h2 className="type-section">{t("eng.trace.title")}</h2>
           <p className="mt-1 type-caption">
-            One quotation request, traced across the highlighted path.
+            {t("eng.trace.lede")}
           </p>
         </div>
         <p className="type-caption tnum">
-          <span className="type-label">{trace.totalMs} ms</span> from first
-          entry to response
+          <span className="type-label">{trace.totalMs} ms</span>{" "}
+          {t("eng.trace.total")}
         </p>
       </div>
 

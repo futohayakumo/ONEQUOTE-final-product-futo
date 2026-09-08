@@ -6,6 +6,7 @@ import { PORTS } from "@/lib/pricing";
 import { sailingDate, sailingWeekday, type Sailing } from "@/lib/sailings";
 import type { PortCode } from "@/types/quote";
 import { ArrowRight } from "../icons/ArrowRight";
+import { useT } from "../shell/LocaleProvider";
 
 export function SailingList({
   sailings,
@@ -22,18 +23,18 @@ export function SailingList({
   priceFor: (s: Sailing) => number;
   onSelect: (id: string) => void;
 }) {
+  const t = useT();
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="type-section">Available sailings</h2>
+        <h2 className="type-section">{t("business.sailings.title")}</h2>
         <p className="type-caption">
-          {sailings.length} options. All rates in USD and include ocean freight,
-          terminal handling, documentation and bunker adjustment.
+          {t("business.sailings.lede", { count: sailings.length })}
         </p>
       </div>
 
       <fieldset>
-        <legend className="sr-only">Choose a sailing</legend>
+        <legend className="sr-only">{t("business.sailings.choose")}</legend>
         <ul className="flex flex-col gap-4">
           {sailings.map((s) => {
             const active = s.id === selectedId;
@@ -69,7 +70,7 @@ export function SailingList({
                   <span className="flex min-w-[11rem] flex-col gap-1">
                     {s.recommended ? (
                       <span className="mb-1 self-start bg-tint px-2.5 py-1 type-caption text-crimson-ink rounded-full">
-                        Recommended
+                        {t("business.sailings.recommended")}
                       </span>
                     ) : null}
                     <span className="type-label">{s.vessel}</span>
@@ -79,7 +80,7 @@ export function SailingList({
                   </span>
 
                   <span className="flex flex-col gap-1">
-                    <span className="type-caption">Departure</span>
+                    <span className="type-caption">{t("business.sailings.departure")}</span>
                     <span className="type-label tnum">
                       {sailingDate(s.departsInDays)}
                     </span>
@@ -93,7 +94,7 @@ export function SailingList({
                   </span>
 
                   <span className="flex flex-col gap-1">
-                    <span className="type-caption">Arrival</span>
+                    <span className="type-caption">{t("business.sailings.arrival")}</span>
                     <span className="type-label tnum">
                       {sailingDate(s.departsInDays + s.transitDays)}
                     </span>
@@ -103,12 +104,12 @@ export function SailingList({
                   </span>
 
                   <span className="flex flex-col gap-1">
-                    <span className="type-caption">Transit</span>
+                    <span className="type-caption">{t("business.sailings.transit")}</span>
                     <span className="type-label tnum">
-                      {s.transitDays} days
+                      {t("quote.transitDays", { days: s.transitDays })}
                     </span>
                     <span className="type-caption">
-                      {s.via ? "1 stop" : "Direct"}
+                      {s.via ? t("business.sailings.stop") : t("quote.direct")}
                     </span>
                   </span>
 

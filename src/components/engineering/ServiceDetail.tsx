@@ -38,7 +38,7 @@ export function ServiceDetail({
     <section className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-5">
         <p className="type-overline text-muted">
-          Service details
+          {t("eng.detail.title")}
         </p>
 
         {node ? (
@@ -48,9 +48,12 @@ export function ServiceDetail({
 
             <dl className="mt-2 flex flex-col">
               {[
-                ["Layer", t(stageKey(node.stage))],
-                ["Deep dive", entry ? "Yes" : "Not documented"],
-                ["Hops on route", String(route.length)],
+                [t("eng.detail.layer"), t(stageKey(node.stage))],
+                [
+                  t("eng.detail.deepDive"),
+                  entry ? t("eng.detail.yes") : t("eng.detail.no"),
+                ],
+                [t("eng.detail.hops"), String(route.length)],
               ].map(([term, value]) => (
                 <div
                   key={term}
@@ -64,12 +67,9 @@ export function ServiceDetail({
           </>
         ) : (
           <>
-            <h2 className="type-section">The default route</h2>
+            <h2 className="type-section">{t("eng.detail.none")}</h2>
             <p className="type-body text-muted">
-              The crimson line is the path a quotation request takes when
-              nothing is selected. Pick any box — in the map or in the rail —
-              to re-route it and read what that service does, when it earns its
-              place, and how it is configured.
+              {t("eng.detail.noneBody")}
             </p>
           </>
         )}
@@ -79,7 +79,7 @@ export function ServiceDetail({
         <RequestLog trace={trace} />
         {entry ? (
           <div className="flex min-w-0 flex-col gap-3">
-            <h3 className="type-label">When it earns its place</h3>
+            <h3 className="type-label">{t("eng.detail.when")}</h3>
             <p className="type-caption text-charcoal">{t(entry.whenKey)}</p>
             <div className="mt-2">
               <CodeBlock lang={entry.how.lang} code={entry.how.code} />

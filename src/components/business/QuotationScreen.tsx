@@ -85,11 +85,11 @@ export function QuotationScreen() {
       />
 
       <div className="flex flex-wrap items-end justify-between gap-6">
-        <h2 className="type-section">Your quotation</h2>
+        <h2 className="type-section">{t("business.quotation")}</h2>
 
         <div className="flex flex-wrap items-end gap-6">
           <label className="flex flex-col gap-2">
-            <span className="type-caption">Incoterm</span>
+            <span className="type-caption">{t("quote.incoterm")}</span>
             <select
               value={incoterm}
               onChange={(e) => setIncoterm(e.target.value as Incoterm)}
@@ -106,7 +106,7 @@ export function QuotationScreen() {
           {/* The bundles are pulled from Lokalise at build time; this only
               chooses which one resolves. See src/lib/i18n.ts. */}
           <label className="flex flex-col gap-2">
-            <span className="type-caption">Language</span>
+            <span className="type-caption">{t("nav.language")}</span>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value as Locale)}

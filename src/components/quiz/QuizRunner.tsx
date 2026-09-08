@@ -88,7 +88,7 @@ export function QuizRunner() {
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-5">
         <span className="shrink-0 type-caption tnum">
-          Question {i + 1} of {QUIZ.length}
+          {t("quiz.progress", { n: i + 1, total: QUIZ.length })}
         </span>
         <div className="min-w-0 flex-1">
           {/* i + 1, not i: on arrival the bar was empty, which reads as "no
@@ -97,7 +97,7 @@ export function QuizRunner() {
           <ProgressBar
             value={i + 1}
             max={QUIZ.length}
-            label={`Question ${i + 1} of ${QUIZ.length}`}
+            label={t("quiz.progress", { n: i + 1, total: QUIZ.length })}
           />
         </div>
         {/* Progress is restored from the session, so landing mid-quiz needs an
@@ -121,10 +121,13 @@ export function QuizRunner() {
       <p aria-live="polite" className="sr-only">
         {revealed
           ? state.answers[i] === question.correctId
-            ? "Correct. The explanation is below, and the next question is ready."
-            : `Not quite. The correct answer is ${
-                t(question.options.find((o) => o.id === question.correctId)?.textKey ?? "")
-              }. The explanation is below.`
+            ? t("quiz.announceCorrect")
+            : t("quiz.announceWrong", {
+                text: t(
+                  question.options.find((o) => o.id === question.correctId)
+                    ?.textKey ?? "",
+                ),
+              })
           : ""}
       </p>
 
@@ -154,12 +157,12 @@ export function QuizRunner() {
           }`}
         >
           {!chosen
-            ? "Choose an answer first"
+            ? t("quiz.choose")
             : !revealed
-              ? "Check answer"
+              ? t("quiz.check")
               : isLast
-                ? "See results"
-                : "Next question"}
+                ? t("quiz.results")
+                : t("quiz.next")}
           <ArrowRight size={18} />
         </button>
 
@@ -169,7 +172,7 @@ export function QuizRunner() {
             onClick={() => persist(blank())}
             className="type-caption text-muted underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
           >
-            Start over
+            {t("quiz.startOver")}
           </button>
         ) : null}
       </div>

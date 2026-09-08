@@ -287,6 +287,7 @@
   "quiz.review": "Review the ones you missed below. Each explanation says why the rule exists, not just what it is.",
   "quiz.score": "{score} of {total} correct",
   "quiz.startOver": "Start over",
+  "quiz.title": "Knowledge check.",
   "quiz.title.a": "Knowledge",
   "quiz.title.b": "check",
   "quiz.why": "Why it matters",

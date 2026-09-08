@@ -5,6 +5,7 @@ import Link from "next/link";
 import { STORY_POINTS, compare } from "../model/processModel";
 import type { StoryPoint } from "@/types/process-scene";
 import { ArrowRight } from "../../icons/ArrowRight";
+import { useT } from "../../shell/LocaleProvider";
 import { GapChart } from "./GapChart";
 import { OutcomeCards } from "./OutcomeCards";
 import { QualityEvidence } from "./QualityEvidence";
@@ -19,37 +20,12 @@ import { SimulationPanel } from "./SimulationPanel";
  * honest answer is a guess. These are here because the check downstream is
  * only worth taking if the reader was told.
  */
-const PROTOCOL = [
-  {
-    rule: "[Ticket_ID] Commit Message",
-    body: "Every commit opens with its ticket id. Release notes and the audit trail are generated from that tag, and a pre-receive hook rejects any subject line without one — the convention is enforced by the repository, not by reviewer goodwill.",
-  },
-  {
-    rule: "Two approvals to merge",
-    body: "A pull request needs at least two independent approvals. One reviewer is both a bottleneck and a single point of failure; branch protection enforces the count, and a green build alone never unlocks the merge.",
-  },
-  {
-    rule: "Prefixed branches",
-    body: "Branch names carry their type and ticket, so the board and the repository can be reconciled without anybody maintaining a mapping by hand.",
-  },
-] as const;
+const PROTOCOL = ["commit", "approvals", "branches"] as const;
 
-const WHY = [
-  {
-    title: "Handoffs between roles",
-    body: "Work is passed from one person to the next, and a queue forms at every boundary.",
-  },
-  {
-    title: "Approval gates",
-    body: "A pull request needs two independent approvals, so it waits on two calendars rather than one.",
-  },
-  {
-    title: "Exclusive stages",
-    body: "Each stage handles one item at a time, so a second item cannot flow in parallel — it queues.",
-  },
-] as const;
+const WHY = ["handoffs", "gates", "stages"] as const;
 
 export function ProcessScreen() {
+  const t = useT();
   const [sp, setSp] = useState<StoryPoint>(8);
   const result = useMemo(() => compare(sp), [sp]);
 
@@ -58,14 +34,15 @@ export function ProcessScreen() {
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="mx-auto grid w-full max-w-[86rem] gap-12 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-center">
         <div>
-          <p className="type-eyebrow">Process</p>
+          <p className="type-eyebrow">{t("process.eyebrow")}</p>
           <h1 className="mt-6 type-display">
-            Same agile.
-            <br />A different <span className="text-crimson-ink">flow</span>.
+            {t("process.title.a")}
+            <br />
+            {t("process.title.b")}{" "}
+            <span className="text-crimson-ink">{t("process.title.flow")}</span>.
           </h1>
           <p className="mt-7 max-w-[40ch] type-body text-muted">
-            The work is not slow. What differs between these two teams is how
-            long the work spends waiting, not how fast anybody types.
+            {t("process.lede")}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-7">
@@ -73,14 +50,14 @@ export function ProcessScreen() {
               href="/process/quiz"
               className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
             >
-              Take the knowledge check
+              {t("process.cta.quiz")}
               <ArrowRight size={18} />
             </Link>
             <Link
               href="#simulation"
               className="type-label underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
             >
-              Or run the simulation
+              {t("process.cta.sim")}
             </Link>
           </div>
         </div>
@@ -93,7 +70,7 @@ export function ProcessScreen() {
             className="w-full rounded-card"
           />
           <p className="border-l-2 border-charcoal pl-5 type-label">
-            Same work. Less waiting.
+            {t("process.hero.note")}
           </p>
         </div>
       </section>
@@ -103,16 +80,15 @@ export function ProcessScreen() {
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="type-eyebrow">Two ways to do the same work</p>
-              <h2 className="mt-5 type-page">Same work. Different flow.</h2>
+              <p className="type-eyebrow">{t("process.two.eyebrow")}</p>
+              <h2 className="mt-5 type-page">{t("process.two.title")}</h2>
               <p className="mt-3 max-w-[52ch] type-body text-muted">
-                People build in both. The difference is how the work moves
-                between them.
+                {t("process.two.lede")}
               </p>
             </div>
 
             <label className="flex shrink-0 flex-col gap-2 border-l border-border pl-6">
-              <span className="type-overline text-muted">Story points</span>
+              <span className="type-overline text-muted">{t("process.storyPoints")}</span>
               <select
                 value={sp}
                 onChange={(e) =>
@@ -132,24 +108,24 @@ export function ProcessScreen() {
           <div className="grid gap-10 lg:grid-cols-2">
             {[
               {
-                title: "Traditional scrum (AI assisted)",
-                blurb: "People build. Work waits between steps.",
+                titleKey: "process.trad.title",
+                blurbKey: "process.trad.blurb",
                 src: "/assets/scenes/traditional-desks.png",
                 alt: "Five desks in a row. A stack of work waits beside each one, and the fourth person is idle.",
-                foot: "Multiple handoffs. Queues between roles. Delays add up.",
+                footKey: "process.trad.foot",
               },
               {
-                title: "AI-driven agile (automated)",
-                blurb: "One agent, end to end. People decide.",
+                titleKey: "process.ai.title",
+                blurbKey: "process.ai.blurb",
                 src: "/assets/scenes/ai-conveyor.png",
                 alt: "One conveyor carrying work past a single console, with nothing queued beside it.",
-                foot: "No handoffs. No queue. No approval gate.",
+                footKey: "process.ai.foot",
               },
             ].map((col) => (
-              <div key={col.title} className="flex flex-col gap-5">
+              <div key={col.titleKey} className="flex flex-col gap-5">
                 <div>
-                  <h3 className="type-section">{col.title}</h3>
-                  <p className="mt-1 type-caption">{col.blurb}</p>
+                  <h3 className="type-section">{t(col.titleKey)}</h3>
+                  <p className="mt-1 type-caption">{t(col.blurbKey)}</p>
                 </div>
                 {/*
                   One box, one scale. The two strips arrived at 3:1 and 1.78:1,
@@ -169,7 +145,7 @@ export function ProcessScreen() {
                 </div>
                 {/* mt-auto so the two captions share a baseline whatever
                     padding each illustration carries inside its own box. */}
-                <p className="mt-auto type-caption">{col.foot}</p>
+                <p className="mt-auto type-caption">{t(col.footKey)}</p>
               </div>
             ))}
           </div>
@@ -180,13 +156,15 @@ export function ProcessScreen() {
       <section id="outcome" className="border-t border-border">
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
           <div>
-            <p className="type-eyebrow">A clearly different outcome</p>
+            <p className="type-eyebrow">{t("process.outcome.eyebrow")}</p>
             <h2 className="mt-5 type-page">
-              Same work. A very different outcome.
+              {t("process.outcome.title")}
             </h2>
             <p className="mt-3 max-w-[56ch] type-body text-muted">
-              At {sp} story points the difference comes from waiting, not from
-              typing — and the ratio is {result.ratio.toFixed(1)}×.
+              {t("process.outcome.lede", {
+                sp,
+                ratio: result.ratio.toFixed(1),
+              })}
             </p>
             {/* Said here rather than in a footnote. The queueing model is a
                 model; the measurements are in the section below it, and the
@@ -218,19 +196,19 @@ export function ProcessScreen() {
       <section className="border-t border-border bg-studio">
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
           <div>
-            <p className="type-eyebrow">Why waiting happens</p>
+            <p className="type-eyebrow">{t("process.why.eyebrow")}</p>
             <h2 className="mt-5 type-page">
-              Work waits because of the process, not the people.
+              {t("process.why.title")}
             </h2>
           </div>
           <ul className="grid gap-8 sm:grid-cols-3">
-            {WHY.map((item) => (
+            {WHY.map((k) => (
               <li
-                key={item.title}
+                key={k}
                 className="flex flex-col gap-2 border-t border-border pt-5"
               >
-                <h3 className="type-label">{item.title}</h3>
-                <p className="type-caption">{item.body}</p>
+                <h3 className="type-label">{t(`process.why.${k}`)}</h3>
+                <p className="type-caption">{t(`process.why.${k}Body`)}</p>
               </li>
             ))}
           </ul>
@@ -241,20 +219,19 @@ export function ProcessScreen() {
       <section className="border-t border-border">
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
           <div>
-            <p className="type-eyebrow">The agile delivery protocol</p>
+            <p className="type-eyebrow">{t("process.protocol.eyebrow")}</p>
             <h2 className="mt-5 type-page">
-              Three rules, enforced by tooling.
+              {t("process.protocol.title")}
             </h2>
             <p className="mt-3 max-w-[56ch] type-body text-muted">
-              None of these depend on anybody remembering them, which is the
-              only reason they hold under load.
+              {t("process.protocol.lede")}
             </p>
           </div>
           <dl className="grid gap-8 sm:grid-cols-3">
-            {PROTOCOL.map((item) => (
-              <div key={item.rule} className="flex flex-col gap-2">
-                <dt className="type-label">{item.rule}</dt>
-                <dd className="type-caption">{item.body}</dd>
+            {PROTOCOL.map((k) => (
+              <div key={k} className="flex flex-col gap-2">
+                <dt className="type-label">{t(`process.protocol.${k}`)}</dt>
+                <dd className="type-caption">{t(`process.protocol.${k}Body`)}</dd>
               </div>
             ))}
           </dl>
@@ -265,21 +242,23 @@ export function ProcessScreen() {
       <section className="border-t border-border bg-tint">
         <div className="mx-auto flex max-w-[86rem] flex-wrap items-center gap-8 px-6 py-20">
           <div className="min-w-0 flex-1">
-            <p className="type-eyebrow">A new way forward</p>
+            <p className="type-eyebrow">{t("process.forward.eyebrow")}</p>
             <h2 className="mt-5 type-page">
-              People move from building to{" "}
-              <span className="text-crimson-ink">deciding</span>.
+              {t("process.forward.title.a")}{" "}
+              <span className="text-crimson-ink">
+                {t("process.forward.title.b")}
+              </span>
+              .
             </h2>
             <p className="mt-3 max-w-[52ch] type-body text-muted">
-              The same agile principles, with the queues taken out. The one
-              human step that remains is the judgement call.
+              {t("process.forward.lede")}
             </p>
           </div>
           <Link
             href="/process/quiz"
             className="inline-flex items-center gap-3 border border-charcoal bg-charcoal px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-crimson hover:bg-crimson"
           >
-            Knowledge check
+            {t("process.forward.cta")}
             <ArrowRight size={18} />
           </Link>
         </div>
