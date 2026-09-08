@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useT } from "../shell/LocaleProvider";
 
 /**
  * A native <dialog>, opened with showModal().
@@ -21,6 +22,7 @@ export function Modal({
   title: string;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function Modal({
           onClick={onClose}
           className="shrink-0 border border-control px-3 py-1.5 type-caption text-charcoal rounded-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
         >
-          Close
+          {t("ui.close")}
         </button>
       </div>
       <div className="max-h-[70vh] overflow-y-auto px-6 py-6 sm:px-8">

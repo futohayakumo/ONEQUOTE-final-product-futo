@@ -42,7 +42,7 @@ export function SiteNav() {
         tap to save one row of height.
       */}
       <nav
-        aria-label="Main"
+        aria-label={t("nav.main")}
         className="mx-auto flex max-w-[86rem] flex-col gap-1 px-6 py-3 md:h-16 md:flex-row md:items-center md:gap-10 md:py-0"
       >
         <Link href="/" className="shrink-0 py-1 md:py-0">

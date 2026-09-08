@@ -3,7 +3,9 @@
 import cn from "clsx";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
 import { STEP_IDS } from "./model/processModel";
-import { AGENCY_LABEL, GAP_REASON, STATIONS } from "./scene/stations";
+import { AGENCY_KEY, GAP_REASON_KEYS, STATIONS } from "./scene/stations";
+import { formatDecimal } from "@/lib/localeFormat";
+import { useLocale, useT } from "../shell/LocaleProvider";
 
 export interface Anchor {
   id: string;
@@ -63,6 +65,9 @@ export function StationOverlay({
    * exactly staggers the cards down the screen and they start overlapping the
    * desks. One row reads as one row.
    */
+  const t = useT();
+  const { locale } = useLocale();
+
   const queueBaseline =
     anchors
       .filter((a) => a.id.startsWith("gap-"))
@@ -120,16 +125,18 @@ export function StationOverlay({
                         : "text-muted",
                   )}
                 >
-                  {AGENCY_LABEL[agency]}
+                  {t(AGENCY_KEY[agency])}
                 </span>
               </div>
 
-              <p className="mt-1 type-label">{info.name[mode]}</p>
-              <p className="mt-1 type-caption">{info.does[mode]}</p>
+              <p className="mt-1 type-label">{t(`station.${step}.name.${mode}`)}</p>
+              <p className="mt-1 type-caption">
+                {t(`station.${step}.does.${mode}`)}
+              </p>
 
               {isActive && activePhase === "work" ? (
                 <p className="mt-2 border-t border-border pt-2 type-caption text-crimson">
-                  Working on it now
+                  {t("sim.workingNow")}
                 </p>
               ) : null}
 
@@ -139,7 +146,7 @@ export function StationOverlay({
                   onClick={() => onDrop(step, armed)}
                   className="pointer-events-auto mt-2 w-full border border-crimson px-2 py-1 type-caption text-crimson rounded-sharp transition-colors duration-150 hover:bg-tint"
                 >
-                  Enter {armed} SP here
+                  {t("sim.enterHere", { sp: armed })}
                 </button>
               ) : null}
             </div>
@@ -163,7 +170,7 @@ export function StationOverlay({
         to wait for. Leaving the AI side blank made the difference invisible,
         which was the whole complaint.
       */}
-      {GAP_REASON.map((reason, i) => {
+      {GAP_REASON_KEYS.map((reasonKey, i) => {
         const a = byId.get(`gap-${i}`);
         if (!a) return null;
         const depth = queueDepths[i] ?? 0;
@@ -185,12 +192,10 @@ export function StationOverlay({
             >
               <div className="w-full border border-border bg-studio px-3 py-2 rounded-sharp">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="type-caption">No queue</span>
+                  <span className="type-caption">{t("sim.queueNone")}</span>
                   <span className="type-caption tnum text-charcoal">0</span>
                 </div>
-                <p className="mt-0.5 type-caption">
-                  Nothing waits here. Work carries straight on.
-                </p>
+                <p className="mt-0.5 type-caption">{t("sim.gap.none")}</p>
               </div>
             </div>
           );
@@ -215,14 +220,16 @@ export function StationOverlay({
               )}
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="type-caption">Queue</span>
+                <span className="type-caption">{t("sim.queue")}</span>
                 <span className="type-caption tnum text-charcoal">{depth}</span>
               </div>
-              <p className="mt-0.5 type-caption">{reason}</p>
+              <p className="mt-0.5 type-caption">{t(reasonKey)}</p>
               {waitingHere ? (
                 <p className="mt-1 type-caption tnum text-crimson">
-                  Waiting {activeWaitElapsedDays.toFixed(1)} of{" "}
-                  {activeWaitDays.toFixed(1)} d
+                  {t("sim.waitingOf", {
+                    done: formatDecimal(activeWaitElapsedDays, locale),
+                    total: formatDecimal(activeWaitDays, locale),
+                  })}
                 </p>
               ) : null}
             </div>

@@ -17,6 +17,7 @@ import type {
   StepId,
   StoryPoint,
 } from "@/types/process-scene";
+import { useT } from "../../shell/LocaleProvider";
 import { SceneRoot } from "./SceneRoot";
 import { WorkItemRuntime, type WorkItem } from "./useWorkItems";
 
@@ -44,6 +45,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
     },
     ref,
   ) {
+    const t = useT();
     const runtime = useRef(new WorkItemRuntime()).current;
     const wrapper = useRef<HTMLDivElement>(null);
     const glRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -171,7 +173,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
       >
         {painted ? null : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="type-caption">Preparing the floor plan…</span>
+            <span className="type-caption">{t("sim.loading")}</span>
           </div>
         )}
         {box ? (

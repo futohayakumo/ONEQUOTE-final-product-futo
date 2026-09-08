@@ -53,7 +53,6 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* as above */
     }
-    document.documentElement.lang = next;
   }, []);
 
   return (

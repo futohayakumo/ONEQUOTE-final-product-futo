@@ -43,4 +43,10 @@ export interface QuoteResult {
   validityHours: number;
 }
 
-export type QuoteErrors = Partial<Record<keyof QuoteInput, string>>;
+/** A message the screen still has to translate, plus anything it interpolates. */
+export interface QuoteError {
+  key: string;
+  vars?: Record<string, string | number>;
+}
+
+export type QuoteErrors = Partial<Record<keyof QuoteInput, QuoteError>>;

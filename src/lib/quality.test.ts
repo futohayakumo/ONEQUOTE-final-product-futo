@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   BASELINE_DEFECTS_PER_KLOC,
@@ -19,12 +20,29 @@ import {
 
 const ALL = [...SPEED_EVIDENCE, ...DEFECT_EVIDENCE, ...RECOVERY_EVIDENCE];
 
+/*
+ * The prose of a citation lives in the locale bundles, so "it has a sample
+ * size" is now a question about the bundle rather than about this module.
+ * Read the base bundle directly: asserting the key is non-empty would only
+ * prove the key is non-empty.
+ */
+const EN: Record<string, string> = JSON.parse(
+  readFileSync(new URL("../locales/en.json", import.meta.url), "utf8"),
+);
+
 test("every constant carries a source, a sample and a link", () => {
   for (const e of ALL) {
     assert.ok(e.source.length > 0, `${e.id} has no source`);
-    assert.ok(e.sample.length > 0, `${e.id} has no sample size`);
     assert.match(e.url, /^https:\/\//, `${e.id} has no link`);
-    assert.ok(e.reported.length > 0, `${e.id} does not say how it was reported`);
+    assert.equal(e.reportedKey, `ev.${e.id}.reported`, `${e.id} key drifted`);
+    assert.ok(
+      EN[e.reportedKey]?.length > 0,
+      `${e.id} does not say how it was reported`,
+    );
+    assert.equal(e.metricKey, `ev.${e.id}.metric`, `${e.id} key drifted`);
+    assert.equal(e.sampleKey, `ev.${e.id}.sample`, `${e.id} key drifted`);
+    assert.ok(EN[e.metricKey]?.length > 0, `${e.metricKey} is not translated`);
+    assert.ok(EN[e.sampleKey]?.length > 0, `${e.sampleKey} is not translated`);
   }
 });
 
@@ -86,8 +104,12 @@ test("automated review changes what escapes, not what is written", () => {
 
 test("the headline is the internal figure, and it is labelled as one", () => {
   assert.equal(quality("ai-assisted").speed, INTERNAL.speed);
-  assert.match(INTERNAL.label, /internal/i);
-  assert.ok(INTERNAL.methodology.length > 40, "a sceptic asks how it was counted");
+  assert.match(EN[INTERNAL.labelKey], /internal/i);
+  assert.ok(EN[INTERNAL.noteKey].length > 0, "the caveat travels with the figure");
+  assert.ok(
+    EN[INTERNAL.methodologyKey].length > 40,
+    "a sceptic asks how it was counted",
+  );
 });
 
 test("the internal figure sits above every published one, and says so", () => {

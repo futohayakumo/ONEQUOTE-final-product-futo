@@ -1,7 +1,7 @@
 "use client";
 
 import { LOCALES, LOCALE_LABEL } from "@/lib/i18n";
-import { useLocale } from "./LocaleProvider";
+import { useLocale, useT } from "./LocaleProvider";
 
 /**
  * A native <select>. A custom dropdown here would cost a listbox, a roving
@@ -10,9 +10,10 @@ import { useLocale } from "./LocaleProvider";
  */
 export function LocalePicker({ className }: { className?: string }) {
   const { locale, setLocale } = useLocale();
+  const t = useT();
   return (
     <label className={className}>
-      <span className="sr-only">Language</span>
+      <span className="sr-only">{t("nav.language")}</span>
       <select
         value={locale}
         onChange={(e) => setLocale(e.target.value as typeof locale)}

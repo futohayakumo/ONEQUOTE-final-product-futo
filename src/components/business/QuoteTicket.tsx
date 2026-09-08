@@ -1,7 +1,13 @@
 "use client";
 
 import cn from "clsx";
-import { usd } from "@/lib/format";
+import {
+  formatDate,
+  formatDecimal,
+  formatMoney,
+  formatWeekday,
+  localiseVars,
+} from "@/lib/localeFormat";
 import {
   INCOTERMS,
   accountTotal,
@@ -14,8 +20,7 @@ import { CONTAINERS, LOYALTY_TIERS, PORTS } from "@/lib/pricing";
 import {
   cutOffsFor,
   legsFor,
-  sailingDate,
-  sailingWeekday,
+  sailingAt,
   voyageOf,
   type Sailing,
 } from "@/lib/sailings";
@@ -101,10 +106,10 @@ export function QuoteTicket({
           </span>
           <span className="type-section">{PORTS[pol].city}</span>
           <span className="type-label tnum">
-            {sailingDate(sailing.departsInDays)}
+            {formatDate(sailingAt(sailing.departsInDays), locale)}
           </span>
           <span className="type-caption tnum">
-            {sailingWeekday(sailing.departsInDays)} · {pol}
+            {formatWeekday(sailingAt(sailing.departsInDays), locale)} · {pol}
           </span>
         </div>
 
@@ -133,9 +138,9 @@ export function QuoteTicket({
             {t("quote.arrives", locale)}
           </span>
           <span className="type-section">{PORTS[pod].city}</span>
-          <span className="type-label tnum">{sailingDate(arrival)}</span>
+          <span className="type-label tnum">{formatDate(sailingAt(arrival), locale)}</span>
           <span className="type-caption tnum">
-            {sailingWeekday(arrival)} · {pod}
+            {formatWeekday(sailingAt(arrival), locale)} · {pod}
           </span>
         </div>
       </div>
@@ -236,7 +241,7 @@ export function QuoteTicket({
                     {t(line.labelKey, locale)}
                     <span className="type-caption">
                       {" "}
-                      · {t(line.basisKey, locale, line.basisVars)}
+                      · {t(line.basisKey, locale, localiseVars(line.basisVars, locale))}
                     </span>
                   </dt>
                   <dd
@@ -245,7 +250,7 @@ export function QuoteTicket({
                       !section.onAccount && "line-through",
                     )}
                   >
-                    ${usd(line.amount)}
+                    ${formatMoney(line.amount, locale)}
                   </dd>
                 </div>
               ))}
@@ -257,7 +262,7 @@ export function QuoteTicket({
                     !section.onAccount && "text-muted line-through",
                   )}
                 >
-                  ${usd(section.subtotal)}
+                  ${formatMoney(section.subtotal, locale)}
                 </dd>
               </div>
             </dl>
@@ -273,22 +278,22 @@ export function QuoteTicket({
 
         <div className="flex items-baseline justify-between gap-6">
           <span className="type-body">{t("quote.onYourAccount", locale)}</span>
-          <span className="type-label tnum">${usd(yours)}</span>
+          <span className="type-label tnum">${formatMoney(yours, locale)}</span>
         </div>
         <div className="flex items-baseline justify-between gap-6">
           <span className="type-body">
             {LOYALTY_TIERS[quote.tier].label} ·{" "}
-            {(quote.discountRate * 100).toFixed(2)}%
+            {formatDecimal(quote.discountRate * 100, locale, 2)}%
           </span>
-          <span className="type-label tnum">−${usd(discount)}</span>
+          <span className="type-label tnum">−${formatMoney(discount, locale)}</span>
         </div>
         <div className="flex items-baseline justify-between gap-6 border-t border-border pt-4">
           <span className="type-section">{t("quote.total", locale)}</span>
-          <span className="type-page tnum">${usd(payable)}</span>
+          <span className="type-page tnum">${formatMoney(payable, locale)}</span>
         </div>
         <div className="flex items-baseline justify-between gap-6">
           <span className="type-caption">{t("quote.allIn", locale)}</span>
-          <span className="type-caption tnum">${usd(allIn)}</span>
+          <span className="type-caption tnum">${formatMoney(allIn, locale)}</span>
         </div>
         <p className="type-caption tnum">
           {quote.teuAccrued} TEU ·{" "}
@@ -302,19 +307,14 @@ export function QuoteTicket({
           <h3 className="type-label">{t("cutoff.title", locale)}</h3>
           <p className="mt-2 type-caption">{t("cutoff.lede", locale)}</p>
           <dl className="mt-4 flex flex-col">
-            {cutOffs.map((cut, i) => (
+            {cutOffs.map((cut) => (
               <div
-                key={cut.label}
+                key={cut.labelKey}
                 className="flex items-baseline justify-between gap-4 border-b border-border py-2.5 last:border-b-0"
               >
-                <dt className="type-body">
-                  {t(
-                    ["cutoff.documentation", "cutoff.vgm", "cutoff.cargo"][i],
-                    locale,
-                  )}
-                </dt>
+                <dt className="type-body">{t(cut.labelKey, locale)}</dt>
                 <dd className="type-label tnum">
-                  {sailingDate(cut.offsetDays)}
+                  {formatDate(sailingAt(cut.offsetDays), locale)}
                 </dd>
               </div>
             ))}

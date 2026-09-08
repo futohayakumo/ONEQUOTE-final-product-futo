@@ -1,12 +1,12 @@
 "use client";
 
 import cn from "clsx";
-import { usd } from "@/lib/format";
+import { formatDate, formatMoney, formatWeekday } from "@/lib/localeFormat";
 import { PORTS } from "@/lib/pricing";
-import { sailingDate, sailingWeekday, type Sailing } from "@/lib/sailings";
+import { sailingAt, type Sailing } from "@/lib/sailings";
 import type { PortCode } from "@/types/quote";
 import { ArrowRight } from "../icons/ArrowRight";
-import { useT } from "../shell/LocaleProvider";
+import { useLocale, useT } from "../shell/LocaleProvider";
 
 export function SailingList({
   sailings,
@@ -24,6 +24,7 @@ export function SailingList({
   onSelect: (id: string) => void;
 }) {
   const t = useT();
+  const { locale } = useLocale();
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -75,17 +76,17 @@ export function SailingList({
                     ) : null}
                     <span className="type-label">{s.vessel}</span>
                     <span className="type-caption">
-                      {s.via ? `via ${s.via}` : s.service}
+                      {s.via ? t("quote.viaPort", { port: s.via }) : s.service}
                     </span>
                   </span>
 
                   <span className="flex flex-col gap-1">
                     <span className="type-caption">{t("business.sailings.departure")}</span>
                     <span className="type-label tnum">
-                      {sailingDate(s.departsInDays)}
+                      {formatDate(sailingAt(s.departsInDays), locale)}
                     </span>
                     <span className="type-caption tnum">
-                      {sailingWeekday(s.departsInDays)} · {pol}
+                      {formatWeekday(sailingAt(s.departsInDays), locale)} · {pol}
                     </span>
                   </span>
 
@@ -96,10 +97,10 @@ export function SailingList({
                   <span className="flex flex-col gap-1">
                     <span className="type-caption">{t("business.sailings.arrival")}</span>
                     <span className="type-label tnum">
-                      {sailingDate(s.departsInDays + s.transitDays)}
+                      {formatDate(sailingAt(s.departsInDays + s.transitDays), locale)}
                     </span>
                     <span className="type-caption tnum">
-                      {sailingWeekday(s.departsInDays + s.transitDays)} · {pod}
+                      {formatWeekday(sailingAt(s.departsInDays + s.transitDays), locale)} · {pod}
                     </span>
                   </span>
 
@@ -115,7 +116,7 @@ export function SailingList({
 
                   <span className="ml-auto flex flex-col items-end gap-1">
                     <span className="type-section tnum">
-                      ${usd(priceFor(s))}
+                      ${formatMoney(priceFor(s), locale)}
                     </span>
                     <span className="type-caption">
                       {PORTS[pol].city} → {PORTS[pod].city}

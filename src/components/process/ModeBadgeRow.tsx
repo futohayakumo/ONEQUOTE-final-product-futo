@@ -1,25 +1,29 @@
+"use client";
+
 import cn from "clsx";
 import type { ProcessMode } from "@/types/process-scene";
 import { CubeOutlineIcon, UserIcon } from "../icons/flow";
+import { useT } from "../shell/LocaleProvider";
 
-const BADGES: Record<ProcessMode, { label: string; ai: boolean }[]> = {
+const BADGES: Record<ProcessMode, { key: string; ai: boolean }[]> = {
   traditional: [
-    { label: "Human work", ai: false },
-    { label: "AI-assisted (limited)", ai: true },
+    { key: "sim.badge.humanWork", ai: false },
+    { key: "sim.badge.aiLimited", ai: true },
   ],
   "ai-driven": [
-    { label: "Human decision", ai: false },
-    { label: "AI automation", ai: true },
-    { label: "AI-assisted", ai: true },
+    { key: "sim.badge.humanDecision", ai: false },
+    { key: "sim.badge.aiAutomation", ai: true },
+    { key: "sim.badge.aiAssisted", ai: true },
   ],
 };
 
 export function ModeBadgeRow({ mode }: { mode: ProcessMode }) {
+  const t = useT();
   return (
     <div className="flex flex-wrap gap-2">
       {BADGES[mode].map((b) => (
         <span
-          key={b.label}
+          key={b.key}
           className={cn(
             "inline-flex items-center gap-2 border px-3 py-1.5 type-caption rounded-sharp",
             b.ai
@@ -30,7 +34,7 @@ export function ModeBadgeRow({ mode }: { mode: ProcessMode }) {
           <span className={b.ai ? "text-crimson" : "text-muted"}>
             {b.ai ? <CubeOutlineIcon size={14} /> : <UserIcon size={14} />}
           </span>
-          {b.label}
+          {t(b.key)}
         </span>
       ))}
     </div>

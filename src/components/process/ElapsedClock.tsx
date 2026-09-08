@@ -2,6 +2,8 @@
 
 import cn from "clsx";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
+import { formatDecimal } from "@/lib/localeFormat";
+import { useLocale, useT } from "../shell/LocaleProvider";
 import { compare } from "./model/processModel";
 
 /**
@@ -26,12 +28,13 @@ export function ElapsedClock({
   elapsedDays: number;
   phase: "work" | "wait" | "transit" | null;
 }) {
+  const t = useT();
+  const { locale } = useLocale();
+
   if (sp === null) {
     return (
       <div className="flex items-center gap-4 border border-border bg-studio px-5 py-3 rounded-sharp">
-        <span className="type-caption">
-          No work in flight. Send a story point box through to start the clock.
-        </span>
+        <span className="type-caption">{t("sim.clock.idle")}</span>
       </div>
     );
   }
@@ -45,10 +48,12 @@ export function ElapsedClock({
     <div className="flex flex-col gap-3 border border-border bg-studio px-5 py-4 rounded-sharp">
       <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
         <span className="type-label tnum">
-          {elapsedDays.toFixed(1)} d elapsed
+          {t("sim.clock.elapsed", { days: formatDecimal(elapsedDays, locale) })}
         </span>
         <span className="type-caption tnum">
-          of {total.totalDays.toFixed(1)} d total
+          {t("sim.clock.total", {
+            days: formatDecimal(total.totalDays, locale),
+          })}
         </span>
         <span
           className={cn(
@@ -56,16 +61,18 @@ export function ElapsedClock({
             phase === "wait" ? "text-crimson" : "text-charcoal",
           )}
         >
-          {phase === "wait"
-            ? "Waiting in a queue — nobody is touching it"
-            : phase === "work"
-              ? "Being worked on"
-              : phase === "transit"
-                ? "Moving to the next station"
-                : "Finished"}
+          {t(
+            phase === "wait"
+              ? "sim.clock.wait"
+              : phase === "work"
+                ? "sim.clock.work"
+                : phase === "transit"
+                  ? "sim.clock.transit"
+                  : "sim.clock.done",
+          )}
         </span>
         <span className="ml-auto type-caption tnum">
-          Flow efficiency {efficiency}%
+          {t("sim.clock.efficiency", { pct: efficiency })}
         </span>
       </div>
 
@@ -77,7 +84,7 @@ export function ElapsedClock({
         aria-valuenow={Math.round(elapsedDays)}
         aria-valuemin={0}
         aria-valuemax={Math.round(total.totalDays)}
-        aria-label="Simulated days elapsed"
+        aria-label={t("sim.clock.aria")}
       >
         <div
           className={cn(

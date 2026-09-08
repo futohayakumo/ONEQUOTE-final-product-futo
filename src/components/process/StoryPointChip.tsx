@@ -2,6 +2,7 @@
 
 import cn from "clsx";
 import type { StoryPoint } from "@/types/process-scene";
+import { useT } from "../shell/LocaleProvider";
 
 /**
  * Drag source. Also a real <button>, because HTML5 drag and drop does not
@@ -23,12 +24,13 @@ export function StoryPointChip({
   onDragEnd: () => void;
   onPointerDown: (e: React.PointerEvent) => void;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
       draggable
       aria-pressed={armed}
-      aria-label={`Send ${sp === 8 ? "an" : "a"} ${sp} story point item through the pipeline`}
+      aria-label={t("sim.chip.aria", { sp })}
       onClick={onArm}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -41,7 +43,7 @@ export function StoryPointChip({
       )}
     >
       <span className="type-label tnum leading-none">{sp}</span>
-      <span className="type-caption leading-none">SP</span>
+      <span className="type-caption leading-none">{t("sim.chip.sp")}</span>
     </button>
   );
 }

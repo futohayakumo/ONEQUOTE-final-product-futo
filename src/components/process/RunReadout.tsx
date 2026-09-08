@@ -1,7 +1,9 @@
 "use client";
 
 import type { StepId, StoryPoint } from "@/types/process-scene";
-import { STEP_LABEL, compare } from "./model/processModel";
+import { formatDecimal } from "@/lib/localeFormat";
+import { compare } from "./model/processModel";
+import { useLocale, useT } from "../shell/LocaleProvider";
 import { SectionTitle } from "../ui/SectionTitle";
 
 export interface RunRow {
@@ -19,44 +21,41 @@ export interface RunRow {
  * inside the renderer.
  */
 export function RunReadout({ runs }: { runs: RunRow[] }) {
+  const t = useT();
+  const { locale } = useLocale();
+
   if (runs.length === 0) {
     return (
       <div className="flex flex-col gap-2 border border-border bg-studio p-6 rounded-sharp">
-        <SectionTitle as="h3">Cycle time</SectionTitle>
-        <p className="type-caption">
-          Drop a story point box onto a step, or select one and press Enter, to
-          see how long the same work takes under each approach.
-        </p>
+        <SectionTitle as="h3">{t("sim.readout.title")}</SectionTitle>
+        <p className="type-caption">{t("sim.readout.empty")}</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-4 border border-border bg-studio p-6 rounded-sharp">
-      <SectionTitle as="h3">Cycle time</SectionTitle>
+      <SectionTitle as="h3">{t("sim.readout.title")}</SectionTitle>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[36rem] border-collapse">
-          <caption className="sr-only">
-            Simulated cycle time in days for each dropped work item under both
-            delivery approaches.
-          </caption>
+          <caption className="sr-only">{t("sim.readout.caption")}</caption>
           <thead>
             <tr className="border-b border-border">
               <th scope="col" className="py-2 pr-4 text-left type-caption">
-                Item
+                {t("sim.readout.item")}
               </th>
               <th scope="col" className="py-2 pr-4 text-left type-caption">
-                Entered at
+                {t("sim.readout.enteredAt")}
               </th>
               <th scope="col" className="py-2 pr-4 text-right type-caption">
-                Traditional Agile
+                {t("sim.mode.traditional")}
               </th>
               <th scope="col" className="py-2 pr-4 text-right type-caption">
-                AI-Driven Delivery
+                {t("sim.mode.ai")}
               </th>
               <th scope="col" className="py-2 text-right type-caption">
-                Faster by
+                {t("sim.readout.fasterBy")}
               </th>
             </tr>
           </thead>
@@ -72,23 +71,33 @@ export function RunReadout({ runs }: { runs: RunRow[] }) {
                     scope="row"
                     className="py-3 pr-4 text-left type-label tnum"
                   >
-                    {run.sp} SP
+                    {t("sim.readout.sp", { sp: run.sp })}
                   </th>
                   <td className="py-3 pr-4 type-caption">
-                    {STEP_LABEL[run.startStep]}
+                    {t(`sim.step.${run.startStep}`)}
                   </td>
                   <td className="py-3 pr-4 text-right type-body tnum">
-                    {c.traditional.totalDays.toFixed(1)} d
+                    {t("sim.readout.days", {
+                      days: formatDecimal(c.traditional.totalDays, locale),
+                    })}
                     <span className="ml-2 type-caption">
-                      ({c.traditional.waitDays.toFixed(1)} waiting)
+                      {t("sim.readout.waiting", {
+                        days: formatDecimal(c.traditional.waitDays, locale),
+                      })}
                     </span>
                   </td>
                   <td className="py-3 pr-4 text-right type-body tnum">
-                    {c.aiDriven.totalDays.toFixed(1)} d
-                    <span className="ml-2 type-caption">(0.0 waiting)</span>
+                    {t("sim.readout.days", {
+                      days: formatDecimal(c.aiDriven.totalDays, locale),
+                    })}
+                    <span className="ml-2 type-caption">
+                      {t("sim.readout.waiting", {
+                        days: formatDecimal(0, locale),
+                      })}
+                    </span>
                   </td>
                   <td className="py-3 text-right type-label tnum text-crimson">
-                    {c.ratio.toFixed(1)}&times;
+                    {t("sim.readout.times", { n: formatDecimal(c.ratio, locale) })}
                   </td>
                 </tr>
               );
@@ -98,19 +107,8 @@ export function RunReadout({ runs }: { runs: RunRow[] }) {
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
-        <p className="max-w-[86ch] type-caption">
-          Flow efficiency under Traditional Agile is the share of elapsed time
-          that is actual work. It falls as batch size grows, because queue wait
-          is superlinear in story points while hands-on effort is linear.
-        </p>
-        <p className="max-w-[86ch] type-caption">
-          These are modelled figures, not measurements. The assumption doing
-          most of the work is that AI-driven delivery carries no approval queue:
-          hands-on effort is comparable, and almost the entire difference is
-          wait time that never accrues. If your review gate stays human, the gap
-          narrows sharply — which is the argument for removing the gate, not for
-          the tooling alone.
-        </p>
+        <p className="max-w-[86ch] type-caption">{t("sim.readout.note1")}</p>
+        <p className="max-w-[86ch] type-caption">{t("sim.readout.note2")}</p>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
 import { quoteForSailing, sailingsFor } from "@/lib/sailings";
 import { INCOTERM_ORDER, INCOTERMS, type Incoterm } from "@/lib/charges";
-import { LOCALES, LOCALE_LABEL, t, type Locale } from "@/lib/i18n";
+import { useLocale, useT } from "../shell/LocaleProvider";
 import { QuoteTicket } from "./QuoteTicket";
 import { SailingList } from "./SailingList";
 import { SearchPanel, type SearchState } from "./SearchPanel";
@@ -22,13 +22,23 @@ export function QuotationScreen() {
   const [query, setQuery] = useState<SearchState>(INITIAL);
   const [sailingId, setSailingId] = useState<string>("");
   const [incoterm, setIncoterm] = useState<Incoterm>("FOB");
-  const [locale, setLocale] = useState<Locale>("en");
+  /*
+   * The locale comes from the nav, not from this screen.
+   *
+   * There was a second <select> right here, which is how the site ended up
+   * with two language controls that disagreed: switching in the nav left the
+   * ticket English, and switching here left the rest of the page English.
+   * One control, one locale.
+   */
+  const t = useT();
+  const { locale } = useLocale();
 
   // pricing.ts owns the rules and the limit. The screen used to restate both,
   // so changing MAX_CBM moved the constant and the tested validator while the
   // two live copies -- this comparison and the input's max -- stayed at 2000.
   const errors = validateQuote({ ...form, cbm: form.cbm === "" ? "" : form.cbm });
   const error = errors.pod ?? errors.cbm ?? null;
+  const errorText = error ? t(error.key, error.vars) : null;
 
   const sailings = useMemo(
     () => sailingsFor(query.pol, query.pod),
@@ -66,7 +76,7 @@ export function QuotationScreen() {
     <div className="flex flex-col gap-14">
       <SearchPanel
         value={form}
-        error={error}
+        error={errorText}
         onChange={setForm}
         onSearch={() => {
           if (error) return;
@@ -97,24 +107,7 @@ export function QuotationScreen() {
             >
               {INCOTERM_ORDER.map((term) => (
                 <option key={term} value={term}>
-                  {term} — {t(INCOTERMS[term].glossKey, locale)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {/* The bundles are pulled from Lokalise at build time; this only
-              chooses which one resolves. See src/lib/i18n.ts. */}
-          <label className="flex flex-col gap-2">
-            <span className="type-caption">{t("nav.language")}</span>
-            <select
-              value={locale}
-              onChange={(e) => setLocale(e.target.value as Locale)}
-              className="w-40 border border-control bg-studio px-4 py-2.5 type-label rounded-card"
-            >
-              {LOCALES.map((l) => (
-                <option key={l} value={l}>
-                  {LOCALE_LABEL[l]}
+                  {term} — {t(INCOTERMS[term].glossKey)}
                 </option>
               ))}
             </select>

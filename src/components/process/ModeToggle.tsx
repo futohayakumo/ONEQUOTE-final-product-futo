@@ -2,17 +2,18 @@
 
 import cn from "clsx";
 import type { ProcessMode } from "@/types/process-scene";
+import { useT } from "../shell/LocaleProvider";
 
-const OPTIONS: { id: ProcessMode; label: string; sub: string }[] = [
+const OPTIONS: { id: ProcessMode; labelKey: string; subKey: string }[] = [
   {
     id: "traditional",
-    label: "Traditional Agile",
-    sub: "Siloed. Hand-offs. Wait times.",
+    labelKey: "sim.mode.traditional",
+    subKey: "sim.mode.traditionalSub",
   },
   {
     id: "ai-driven",
-    label: "AI-Driven Delivery",
-    sub: "Continuous flow. Intelligent orchestration.",
+    labelKey: "sim.mode.ai",
+    subKey: "sim.mode.aiSub",
   },
 ];
 
@@ -23,6 +24,7 @@ export function ModeToggle({
   mode: ProcessMode;
   onChange: (m: ProcessMode) => void;
 }) {
+  const t = useT();
   const move = (dir: 1 | -1) => {
     const i = OPTIONS.findIndex((o) => o.id === mode);
     onChange(OPTIONS[(i + dir + OPTIONS.length) % OPTIONS.length].id);
@@ -31,7 +33,7 @@ export function ModeToggle({
   return (
     <div
       role="radiogroup"
-      aria-label="Delivery approach"
+      aria-label={t("sim.mode.legend")}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") {
           e.preventDefault();
@@ -61,9 +63,9 @@ export function ModeToggle({
             )}
           >
             <span className={cn("type-section", active && "text-crimson")}>
-              {o.label}
+              {t(o.labelKey)}
             </span>
-            <span className="type-caption">{o.sub}</span>
+            <span className="type-caption">{t(o.subKey)}</span>
           </button>
         );
       })}

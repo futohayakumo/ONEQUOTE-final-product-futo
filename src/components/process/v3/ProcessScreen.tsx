@@ -66,7 +66,7 @@ export function ProcessScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/scenes/01-team-planning-room.png"
-            alt="A team at a planning board, work on the wall behind them."
+            alt={t("process.outcome.alt")}
             className="w-full rounded-card"
           />
           <p className="border-l-2 border-charcoal pl-5 type-label">
@@ -170,11 +170,7 @@ export function ProcessScreen() {
                 model; the measurements are in the section below it, and the
                 reader should know which they are looking at. */}
             <p className="mt-3 max-w-[56ch] type-caption">
-              These figures come from a queueing model, not from a measurement.
-              The constants are stated in{" "}
-              <code className="type-console">processModel.ts</code> and chosen
-              to show the shape of the effect — a queue that grows with batch
-              size. The published measurements are in the next section.
+              {t("process.outcome.caveat")}
             </p>
           </div>
 

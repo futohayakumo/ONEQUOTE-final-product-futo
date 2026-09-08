@@ -4,6 +4,7 @@ import cn from "clsx";
 import { useCallback } from "react";
 import { NODES } from "@/lib/flow-data";
 import type { NodeId } from "@/types/flow";
+import { useT } from "../shell/LocaleProvider";
 import { ChevronRight } from "../icons/ChevronRight";
 import {
   BarsIcon,
@@ -70,6 +71,7 @@ export function FlowNode({
   onPeek: (id: NodeId) => void;
   onPeekEnd: () => void;
 }) {
+  const t = useT();
   const node = NODES[id];
   const Icon = ICON[id];
   const onRoute = hopIndex !== null;
@@ -123,7 +125,7 @@ export function FlowNode({
         <span
           aria-hidden
           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted"
-          title="Has a deep dive"
+          title={t("flow.node.deepDive")}
         >
           <ChevronRight size={14} />
         </span>

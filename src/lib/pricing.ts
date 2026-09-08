@@ -109,21 +109,27 @@ export function laneBaseUsd(a: PortCode, b: PortCode): number {
 export function validateQuote(input: QuoteInput): QuoteErrors {
   const errors: QuoteErrors = {};
 
-  if (!input.pol) errors.pol = "Select a port of loading.";
-  if (!input.pod) errors.pod = "Select a port of discharge.";
+  // Keys, not sentences. The validator is pure and has no locale; the screen
+  // that renders the message is the thing that knows which language to say it
+  // in. The range message carries its bound as a variable so the limit stays
+  // stated once, here.
+  if (!input.pol) errors.pol = { key: "quote.error.pol" };
+  if (!input.pod) errors.pod = { key: "quote.error.pod" };
   if (input.pol && input.pod && input.pol === input.pod) {
-    errors.pod = "Port of loading and discharge must differ.";
+    errors.pod = { key: "quote.error.samePort" };
   }
   if (input.cbm === "" || Number.isNaN(Number(input.cbm))) {
-    errors.cbm = "Enter a cargo volume.";
+    errors.cbm = { key: "quote.error.cbmMissing" };
   } else {
     const v = Number(input.cbm);
     if (v <= 0 || v > MAX_CBM) {
-      errors.cbm = `Cargo volume must be between 1 and ${MAX_CBM} CBM.`;
+      errors.cbm = { key: "quote.error.cbmRange", vars: { max: MAX_CBM } };
     }
   }
-  if (!input.containerType) errors.containerType = "Select a container type.";
-  if (!input.tier) errors.tier = "Select a loyalty tier.";
+  if (!input.containerType) {
+    errors.containerType = { key: "quote.error.container" };
+  }
+  if (!input.tier) errors.tier = { key: "quote.error.tier" };
 
   return errors;
 }

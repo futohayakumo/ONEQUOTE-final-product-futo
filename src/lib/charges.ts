@@ -129,6 +129,14 @@ export interface ChargeSection {
   subtotal: number;
 }
 
+/*
+ * A rate as a percentage, as a NUMBER — the renderer prints it, because only
+ * the renderer knows whether the decimal separator is a dot or a comma.
+ * Rounded on the way out: 0.12 * 100 is 12.000000000000002 in binary floating
+ * point, and that lands on the page verbatim.
+ */
+const pct = (rate: number) => Math.round(rate * 1000) / 10;
+
 const money = (x: number) => Math.round(x * 100) / 100;
 
 export function chargeSections(input: {
@@ -201,14 +209,14 @@ export function chargeSections(input: {
         code: "BAF",
         labelKey: "charge.baf",
         basisKey: "basis.shareOfFreight",
-        basisVars: { pct: (BUNKER_RATE * 100).toFixed(1) },
+        basisVars: { pct: pct(BUNKER_RATE) },
         amount: money(oceanFreight * BUNKER_RATE),
       },
       {
         code: "CAF",
         labelKey: "charge.caf",
         basisKey: "basis.shareOfFreight",
-        basisVars: { pct: (CURRENCY_RATE * 100).toFixed(1) },
+        basisVars: { pct: pct(CURRENCY_RATE) },
         amount: money(oceanFreight * CURRENCY_RATE),
       },
     ]),

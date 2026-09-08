@@ -1,6 +1,7 @@
 "use client";
 
 import type { StoryPoint } from "@/types/process-scene";
+import { useT } from "../shell/LocaleProvider";
 import { STORY_POINTS } from "./model/processModel";
 import { StoryPointChip } from "./StoryPointChip";
 
@@ -19,16 +20,17 @@ export function StoryPointTray({
   onPointerDown: (sp: StoryPoint, e: React.PointerEvent) => void;
   hint: string;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-4 border border-border bg-studio p-5 rounded-sharp lg:flex-row lg:items-center lg:gap-8">
       <div className="flex flex-col gap-1.5 lg:w-64 lg:shrink-0">
-        <span className="type-label text-crimson">Drag &amp; drop</span>
+        <span className="type-label text-crimson">{t("sim.tray.title")}</span>
         <span className="type-caption">{hint}</span>
       </div>
       <div
         className="flex flex-wrap gap-3"
         role="group"
-        aria-label="Story point sizes"
+        aria-label={t("sim.tray.group")}
       >
         {STORY_POINTS.map((sp) => (
           <StoryPointChip

@@ -106,32 +106,23 @@ export function sailingsFor(pol: PortCode, pod: PortCode): Sailing[] {
 const REFERENCE = Date.UTC(2026, 8, 18);
 const DAY = 86_400_000;
 
-/*
- * Formatted from tables, not from toLocaleDateString.
+/**
+ * The instant a sailing date falls on.
  *
- * These strings render on the server and again in the browser. Node built
- * without full ICU falls back to a different set of month and weekday
- * abbreviations than Chrome ships, which is a hydration mismatch on every
- * sailing row — silent in development, and dependent on how the deploy
- * image was compiled. Three lines of table remove the dependency entirely.
+ * Formatting moved to localeFormat.ts. How a language writes a date — the
+ * order of the parts, the month's name — is a translation decision, and a
+ * pure pricing model has no business holding one. This returns the moment;
+ * the bundle says how to write it.
  */
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-export function sailingDate(offsetDays: number): string {
-  const d = new Date(REFERENCE + offsetDays * DAY);
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${day} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+export function sailingAt(offsetDays: number): number {
+  return REFERENCE + offsetDays * DAY;
 }
 
-export function sailingWeekday(offsetDays: number): string {
-  return WEEKDAYS[new Date(REFERENCE + offsetDays * DAY).getUTCDay()];
-}
 
 export interface SailingQuoteLine {
-  label: string;
-  detail: string | null;
+  labelKey: string;
+  detailKey: string | null;
+  detailVars?: Record<string, string | number>;
   amount: number;
 }
 
@@ -166,19 +157,26 @@ export function quoteForSailing(
   const round = (x: number) => Math.round(x * 100) / 100;
   const lines: SailingQuoteLine[] = [
     {
-      label: "Ocean freight",
-      detail: `${quote.units} × ${quote.containerLabel}`,
+      labelKey: "sailingQuote.ocean",
+      detailKey: "sailingQuote.units",
+      detailVars: { units: quote.units, container: quote.containerLabel },
       amount: round(quote.oceanFreight * sailing.rateFactor),
     },
     {
-      label: "Terminal handling",
-      detail: `${quote.cbm} CBM`,
+      labelKey: "sailingQuote.thc",
+      detailKey: "sailingQuote.cbm",
+      detailVars: { cbm: quote.cbm },
       amount: quote.terminalHandling,
     },
-    { label: "Documentation", detail: null, amount: quote.documentation },
     {
-      label: "Bunker adjustment",
-      detail: "12% of ocean freight",
+      labelKey: "sailingQuote.doc",
+      detailKey: null,
+      amount: quote.documentation,
+    },
+    {
+      labelKey: "sailingQuote.baf",
+      detailKey: "sailingQuote.bafBasis",
+      detailVars: { pct: 12 },
       amount: round(quote.bunkerAdjustment * sailing.rateFactor),
     },
   ];
@@ -198,26 +196,26 @@ export function quoteForSailing(
  * Offsets are the ordinary liner pattern, counted back from departure.
  */
 export interface CutOff {
-  label: string;
-  detail: string;
+  labelKey: string;
+  detailKey: string;
   offsetDays: number;
 }
 
 export function cutOffsFor(sailing: Sailing): CutOff[] {
   return [
     {
-      label: "Documentation",
-      detail: "Shipping instructions and the draft bill of lading.",
+      labelKey: "cutoff.documentation",
+      detailKey: "cutoff.documentationDetail",
       offsetDays: sailing.departsInDays - 3,
     },
     {
-      label: "VGM",
-      detail: "Verified gross mass, per SOLAS. No VGM, no load.",
+      labelKey: "cutoff.vgm",
+      detailKey: "cutoff.vgmDetail",
       offsetDays: sailing.departsInDays - 2,
     },
     {
-      label: "Cargo / CY",
-      detail: "The box has to be inside the terminal gate.",
+      labelKey: "cutoff.cargo",
+      detailKey: "cutoff.cargoDetail",
       offsetDays: sailing.departsInDays - 1,
     },
   ];

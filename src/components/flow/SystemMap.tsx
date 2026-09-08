@@ -8,6 +8,7 @@ import {
   STAGES,
 } from "@/lib/flow-data";
 import type { NodeId } from "@/types/flow";
+import { useT } from "../shell/LocaleProvider";
 import { FlowConnectors } from "./FlowConnectors";
 import { isColumnar } from "./routeGeometry";
 import { FlowLegend } from "./FlowLegend";
@@ -28,6 +29,7 @@ export function SystemMap({
   route: readonly NodeId[];
   onSelect: (id: NodeId | null) => void;
 }) {
+  const t = useT();
 
   const [peek, setPeek] = useState<NodeId | null>(null);
   const [focusNode, setFocusNode] = useState<NodeId>("new-request");
@@ -94,8 +96,12 @@ export function SystemMap({
   };
 
   const announcement = selected
-    ? `${NODES[selected].label} selected. Route is now ${route.length} hops, ending at ${NODES[route[route.length - 1]].label}.`
-    : "Selection cleared. Showing the default route.";
+    ? t("flow.map.selected", {
+        node: NODES[selected].label,
+        hops: route.length,
+        last: NODES[route[route.length - 1]].label,
+      })
+    : t("flow.map.cleared");
 
   return (
     <div className="flex flex-col gap-6">
@@ -103,7 +109,7 @@ export function SystemMap({
         <div
           ref={gridRef}
           role="group"
-          aria-label="System flow map. Use the arrow keys to move between components, and Enter to inspect one."
+          aria-label={t("flow.map.aria")}
           onKeyDown={onKeyDown}
           className="grid gap-y-8 sm:grid-cols-2 sm:gap-x-0 lg:grid-cols-4"
         >

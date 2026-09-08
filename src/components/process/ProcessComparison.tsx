@@ -1,5 +1,6 @@
 "use client";
 
+import cn from "clsx";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type {
@@ -10,7 +11,9 @@ import type {
   WorkItemResult,
 } from "@/types/process-scene";
 import { detectWebGL, useBrowserValue } from "@/lib/useBrowserValue";
+import { formatDecimal } from "@/lib/localeFormat";
 import { ArrowRight } from "../icons/ArrowRight";
+import { useLocale, useT } from "../shell/LocaleProvider";
 import { TransitionLink } from "../ui/TransitionLink";
 import { StationOverlay, type Anchor } from "./StationOverlay";
 import { ElapsedClock } from "./ElapsedClock";
@@ -20,25 +23,37 @@ import { ModeToggle } from "./ModeToggle";
 import { ProcessSceneFallback } from "./ProcessSceneFallback";
 import { RunReadout, type RunRow } from "./RunReadout";
 import { StoryPointTray } from "./StoryPointTray";
-import { STEP_LABEL, compare } from "./model/processModel";
+import { compare } from "./model/processModel";
 
 /**
  * `ssr: false` is only legal from a client component in the App Router, which
  * is why this file carries "use client". This dynamic() call is also the chunk
  * boundary: three.js is loaded here and nowhere else in the app.
  */
+function SceneLoading({ full }: { full?: boolean }) {
+  const t = useT();
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center",
+        full ? "h-full w-full" : "h-full",
+      )}
+    >
+      <span className="type-caption">{t("sim.loading")}</span>
+    </div>
+  );
+}
+
 const ProcessScene = dynamic(() => import("./scene/ProcessScene"), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full items-center justify-center">
-      <span className="type-caption">Preparing the floor plan…</span>
-    </div>
-  ),
+  loading: () => <SceneLoading full />,
 });
 
 const DND_TYPE = "application/x-story-point";
 
 export function ProcessComparison() {
+  const t = useT();
+  const { locale } = useLocale();
   const [mode, setMode] = useState<ProcessMode>("traditional");
   const [armed, setArmed] = useState<StoryPoint | null>(null);
   const [hovered, setHovered] = useState<StepId | null>(null);
@@ -87,10 +102,16 @@ export function ProcessComparison() {
       );
       const c = compare(sp, startStep);
       setAnnouncement(
-        `${sp} story point item entered at ${STEP_LABEL[startStep]}. Traditional Agile ${c.traditional.totalDays.toFixed(1)} days, AI-driven delivery ${c.aiDriven.totalDays.toFixed(1)} days. ${c.ratio.toFixed(1)} times faster.`,
+        t("sim.announce.entered", {
+          sp,
+          step: t(`sim.step.${startStep}`),
+          trad: formatDecimal(c.traditional.totalDays, locale),
+          ai: formatDecimal(c.aiDriven.totalDays, locale),
+          ratio: formatDecimal(c.ratio, locale),
+        }),
       );
     },
-    [],
+    [locale, t],
   );
 
   const place = useCallback(
@@ -166,11 +187,8 @@ export function ProcessComparison() {
   );
 
   const hint = useMemo(
-    () =>
-      mode === "traditional"
-        ? "Place a box on any step to watch it move — and wait — through each hand-off. Keyboard: select a size, then choose a step."
-        : "Place a box anywhere. There is no queue to choose and no hand-off to aim at.",
-    [mode],
+    () => t(mode === "traditional" ? "sim.hint.traditional" : "sim.hint.ai"),
+    [mode, t],
   );
 
   const SceneImpl = use3d ? ProcessScene : ProcessSceneFallback;
@@ -215,9 +233,7 @@ export function ProcessComparison() {
         onDragOver={(e) => e.preventDefault()}
       >
         {use3d === null ? (
-          <div className="flex h-full items-center justify-center">
-            <span className="type-caption">Preparing the floor plan…</span>
-          </div>
+          <SceneLoading />
         ) : (
           <SceneImpl
             ref={sceneRef}
@@ -269,15 +285,16 @@ export function ProcessComparison() {
                 elapsedDays: r.totalDays,
               }));
               setAnnouncement(
-                `${r.sp} story point item completed in ${r.totalDays.toFixed(1)} simulated days.`,
+                t("sim.announce.completed", {
+                  sp: r.sp,
+                  days: formatDecimal(r.totalDays, locale),
+                }),
               );
             }}
             onUnavailable={() => setForcedFallback(true)}
-            ariaLabel={
-              mode === "traditional"
-                ? "Traditional Agile floor: five workstations in a row with cardboard boxes queued between every hand-off."
-                : "AI-driven floor: a continuous conveyor loop past automated checkpoints, with no queues."
-            }
+            ariaLabel={t(
+              mode === "traditional" ? "sim.aria.traditional" : "sim.aria.ai",
+            )}
           />
         )}
 
@@ -322,9 +339,7 @@ export function ProcessComparison() {
             place(sp, "intake");
           } else {
             setArmed(sp);
-            setAnnouncement(
-              `${sp} story point selected. Choose a step below, or press Enter again to enter at Intake.`,
-            );
+            setAnnouncement(t("sim.announce.selected", { sp }));
           }
         }}
         onDragStart={(sp, e) => {
@@ -345,21 +360,21 @@ export function ProcessComparison() {
       {armed !== null ? (
         <div className="flex flex-wrap items-center gap-3 border-2 border-crimson bg-tint p-4 rounded-sharp">
           <span className="type-label">
-            {armed} SP selected. Choose a station on the floor above, or
+            {t("sim.armed.prompt", { sp: armed })}
           </span>
           <button
             type="button"
             onClick={() => place(armed, "intake")}
             className="border border-border bg-studio px-3 py-2 type-caption rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
           >
-            start at the beginning
+            {t("sim.armed.start")}
           </button>
           <button
             type="button"
             onClick={() => setArmed(null)}
             className="ml-auto type-caption text-muted transition-colors duration-150 hover:text-crimson"
           >
-            Cancel
+            {t("sim.armed.cancel")}
           </button>
         </div>
       ) : null}
@@ -371,7 +386,7 @@ export function ProcessComparison() {
           href="/process/quiz"
           className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3 type-label text-studio rounded-sharp transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
         >
-          Take Quiz
+          {t("sim.takeQuiz")}
           <ArrowRight size={18} />
         </TransitionLink>
       </div>

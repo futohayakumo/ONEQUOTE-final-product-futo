@@ -17,24 +17,14 @@ import {
   type Evidence,
   type QualityMode,
 } from "@/lib/quality";
+import { formatDecimal } from "@/lib/localeFormat";
+import { useLocale, useT } from "../../shell/LocaleProvider";
 import { Modal } from "../../ui/Modal";
 
-const MODES: { mode: QualityMode; title: string; blurb: string }[] = [
-  {
-    mode: "traditional",
-    title: "No assistant",
-    blurb: "The baseline every figure below is measured against.",
-  },
-  {
-    mode: "ai-assisted",
-    title: "AI assistance only",
-    blurb: "Faster to write. More defects reaching production.",
-  },
-  {
-    mode: "ai-with-qa",
-    title: "AI assistance with automated review",
-    blurb: "Same code, same speed. Most of the defects stopped at the gate.",
-  },
+const MODES: readonly QualityMode[] = [
+  "traditional",
+  "ai-assisted",
+  "ai-with-qa",
 ];
 
 function Bar({ value, max, tone }: { value: number; max: number; tone: string }) {
@@ -50,17 +40,18 @@ function Bar({ value, max, tone }: { value: number; max: number; tone: string })
 }
 
 function Sources({ rows }: { rows: readonly Evidence[] }) {
+  const t = useT();
   return (
     <tbody>
       {rows.map((e) => (
         <tr key={e.id} className="border-b border-border align-top">
           <th scope="row" className="py-3 pr-6 text-left type-body font-normal">
-            {e.metric}
+            {t(e.metricKey)}
           </th>
           <td className="py-3 pr-6 type-label tnum whitespace-nowrap">
-            {e.reported}
+            {t(e.reportedKey)}
           </td>
-          <td className="py-3 pr-6 type-caption">{e.sample}</td>
+          <td className="py-3 pr-6 type-caption">{t(e.sampleKey)}</td>
           <td className="py-3 type-caption">
             <a
               href={e.url}
@@ -93,41 +84,45 @@ function Sources({ rows }: { rows: readonly Evidence[] }) {
  * published figure is about 1.8×.
  */
 export function QualityEvidence() {
+  const t = useT();
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
-  const rows = MODES.map((m) => ({ ...m, ...quality(m.mode) }));
+  const rows = MODES.map((mode) => quality(mode));
   const maxEscape = Math.max(...rows.map((r) => r.escapedPerKloc));
   const base = rows[0];
+  const num = (n: number, digits = 2) => formatDecimal(n, locale, digits);
+  const pct = (n: number) => t("quality.pct", { n: Math.round(n * 100) });
 
   return (
     <section className="border-t border-border bg-studio">
       <div className="mx-auto flex max-w-[86rem] flex-col gap-12 px-6 py-20">
         <div>
-          <p className="type-eyebrow">What we measured</p>
-          <h2 className="mt-5 type-page">
-            Three times the throughput. Five times the defects.
-          </h2>
+          <p className="type-eyebrow">{t("quality.eyebrow")}</p>
+          <h2 className="mt-5 type-page">{t("quality.title")}</h2>
           <p className="mt-3 max-w-[60ch] type-body text-muted">
-            Assistance did not make the team a little faster and a little
-            sloppier. It roughly tripled what got written and roughly
-            quintupled what was wrong with it — and the second number is the
-            one that decides whether the first one was worth having.
+            {t("quality.lede")}
           </p>
           {/* The attribution is next to the claim, not in a footer. An internal
               measurement is legitimate evidence and weaker evidence than a
               multi-organisation study, and the reader should be able to weigh
               it without going looking. */}
           <p className="mt-4 max-w-[60ch] type-caption">
-            {INTERNAL.speed}× and {INTERNAL.defects}× are from the{" "}
-            <strong className="type-label">{INTERNAL.label}</strong>.{" "}
-            {INTERNAL.note} Published studies put the same two effects at{" "}
-            <span className="tnum">{PUBLISHED_SPEED.toFixed(2)}×</span> and{" "}
-            <span className="tnum">{PUBLISHED_DEFECT.toFixed(2)}×</span> —{" "}
+            {t("quality.attr.pre", {
+              speed: INTERNAL.speed,
+              defects: INTERNAL.defects,
+            })}{" "}
+            <strong className="type-label">{t(INTERNAL.labelKey)}</strong>
+            {t("quality.attr.post", {
+              note: t(INTERNAL.noteKey),
+              pubSpeed: num(PUBLISHED_SPEED),
+              pubDefect: num(PUBLISHED_DEFECT),
+            })}{" "}
             <button
               type="button"
               onClick={() => setOpen(true)}
               className="type-caption text-crimson-ink underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
             >
-              see what everyone else found
+              {t("quality.attr.link")}
             </button>
             .
           </p>
@@ -142,33 +137,39 @@ export function QualityEvidence() {
                 className="flex flex-col gap-5 border border-border p-6 rounded-card shadow-card"
               >
                 <div>
-                  <h3 className="type-label">{row.title}</h3>
-                  <p className="mt-1 type-caption">{row.blurb}</p>
+                  <h3 className="type-label">
+                    {t(`quality.mode.${row.mode}.title`)}
+                  </h3>
+                  <p className="mt-1 type-caption">
+                    {t(`quality.mode.${row.mode}.blurb`)}
+                  </p>
                 </div>
 
                 <dl className="flex flex-col gap-4">
                   <div>
-                    <dt className="type-caption">Lead time</dt>
+                    <dt className="type-caption">
+                      {t("quality.metric.leadTime")}
+                    </dt>
                     <dd className="type-section tnum">
-                      {row.speed.toFixed(2)}×
+                      {t("quality.times", { n: num(row.speed) })}
                     </dd>
                   </div>
                   <div>
                     <dt className="type-caption">
-                      Defects written, per 1,000 lines
+                      {t("quality.metric.written")}
                     </dt>
                     <dd className="type-label tnum">
-                      {row.defectsPerKloc.toFixed(2)}
+                      {num(row.defectsPerKloc)}
                     </dd>
                   </div>
                   <div>
                     <dt className="type-caption">
-                      Defects reaching production
+                      {t("quality.metric.escaped")}
                     </dt>
                     <dd
                       className={`type-page tnum ${worse ? "text-crimson-ink" : ""}`}
                     >
-                      {row.escapedPerKloc.toFixed(2)}
+                      {num(row.escapedPerKloc)}
                     </dd>
                     <dd className="mt-3">
                       <Bar
@@ -180,10 +181,10 @@ export function QualityEvidence() {
                   </div>
                   {row.caught > 0 ? (
                     <div>
-                      <dt className="type-caption">Caught before merge</dt>
-                      <dd className="type-label tnum">
-                        {Math.round(row.caught * 100)}%
-                      </dd>
+                      <dt className="type-caption">
+                        {t("quality.metric.caught")}
+                      </dt>
+                      <dd className="type-label tnum">{pct(row.caught)}</dd>
                     </div>
                   ) : null}
                 </dl>
@@ -194,92 +195,92 @@ export function QualityEvidence() {
 
         <div className="flex flex-col gap-4 border-l-2 border-crimson pl-6">
           <p className="max-w-[70ch] type-body">
-            Automated review does not make the code better — the same{" "}
-            <span className="tnum">
-              {quality("ai-assisted").defectsPerKloc.toFixed(2)}
-            </span>{" "}
-            defects per thousand lines are written either way. It changes how
-            many get out, catching{" "}
-            <span className="tnum">{Math.round(RECOVERY * 100)}%</span> at the
-            gate.
+            {t("quality.body1", {
+              written: num(quality("ai-assisted").defectsPerKloc),
+              recovery: Math.round(RECOVERY * 100),
+            })}
           </p>
           <p className="max-w-[70ch] type-body">
-            <strong className="type-label">And that is not enough.</strong> At a{" "}
-            {DEFECT_FACTOR}× injection rate the gate has to catch{" "}
-            <span className="tnum">
-              {Math.round(BREAK_EVEN_CATCH * 100)}%
-            </span>{" "}
-            just to break even with writing the code by hand. The best measured
-            AI reviewer catches{" "}
-            <span className="tnum">{Math.round(RECOVERY * 100)}%</span>. So
-            &ldquo;add AI review&rdquo; is not a conclusion — it is a target
-            with a number on it, and we are{" "}
-            <span className="tnum">
-              {Math.round((BREAK_EVEN_CATCH - RECOVERY) * 100)}
-            </span>{" "}
-            points short of it.
+            <strong className="type-label">{t("quality.body2.strong")}</strong>{" "}
+            {t("quality.body2", {
+              factor: DEFECT_FACTOR,
+              breakEven: Math.round(BREAK_EVEN_CATCH * 100),
+              recovery: Math.round(RECOVERY * 100),
+              short: Math.round((BREAK_EVEN_CATCH - RECOVERY) * 100),
+            })}
           </p>
         </div>
-
       </div>
 
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="What everyone else found"
+        title={t("quality.modal.title")}
       >
         <div className="flex flex-col gap-6">
           <p className="max-w-[70ch] type-body">
-            No published study reports anything close to our own numbers. The
-            internal figure is{" "}
-            <span className="tnum">{SPEED_GAP.toFixed(1)}×</span> the published
-            median on throughput and{" "}
-            <span className="tnum">{DEFECT_GAP.toFixed(1)}×</span> on defects.
-            That gap is worth sitting with rather than explaining away: either
-            the team is unusual, or the counting is — and the honest position is
-            that a figure nobody outside can reproduce is weaker evidence than
-            one measured across 84 organisations, however much we trust our own.
+            {t("quality.modal.lede", {
+              speedGap: num(SPEED_GAP, 1),
+              defectGap: num(DEFECT_GAP, 1),
+            })}
           </p>
-          <p className="max-w-[70ch] type-caption">{INTERNAL.methodology}</p>
+          <p className="max-w-[70ch] type-caption">
+            {t(INTERNAL.methodologyKey)}
+          </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Throughput", INTERNAL.speed, PUBLISHED_SPEED],
-              ["Defects", INTERNAL.defects, PUBLISHED_DEFECT],
-            ].map(([label, ours, theirs]) => (
+            {(
+              [
+                ["quality.modal.throughput", INTERNAL.speed, PUBLISHED_SPEED],
+                ["quality.modal.defects", INTERNAL.defects, PUBLISHED_DEFECT],
+              ] as const
+            ).map(([labelKey, ours, theirs]) => (
               <div
-                key={String(label)}
+                key={labelKey}
                 className="flex items-baseline justify-between gap-4 border border-border p-4 rounded-card"
               >
-                <span className="type-caption">{label}</span>
+                <span className="type-caption">{t(labelKey)}</span>
                 <span className="type-label tnum">
-                  {Number(ours).toFixed(2)}× ours ·{" "}
+                  {t("quality.modal.ours", { n: num(ours) })} ·{" "}
                   <span className="text-muted">
-                    {Number(theirs).toFixed(2)}× published
+                    {t("quality.modal.published", { n: num(theirs) })}
                   </span>
                 </span>
               </div>
             ))}
           </div>
 
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Evidence table, scrollable">
-          <table className="w-full min-w-[46rem]">
-            <caption className="pb-4 text-left type-label">
-              The measurements these figures come from
-            </caption>
-            <thead>
-              <tr className="border-b border-charcoal text-left">
-                <th scope="col" className="pb-2 pr-6 type-caption">Metric</th>
-                <th scope="col" className="pb-2 pr-6 type-caption">Reported</th>
-                <th scope="col" className="pb-2 pr-6 type-caption">Sample</th>
-                <th scope="col" className="pb-2 type-caption">Source</th>
-              </tr>
-            </thead>
-            <Sources rows={SPEED_EVIDENCE} />
-            <Sources rows={DEFECT_EVIDENCE} />
-            <Sources rows={RECOVERY_EVIDENCE} />
-          </table>
-        </div>
+          <div
+            className="overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label={t("quality.modal.tableAria")}
+          >
+            <table className="w-full min-w-[46rem]">
+              <caption className="pb-4 text-left type-label">
+                {t("quality.modal.caption")}
+              </caption>
+              <thead>
+                <tr className="border-b border-charcoal text-left">
+                  <th scope="col" className="pb-2 pr-6 type-caption">
+                    {t("quality.modal.col.metric")}
+                  </th>
+                  <th scope="col" className="pb-2 pr-6 type-caption">
+                    {t("quality.modal.col.reported")}
+                  </th>
+                  <th scope="col" className="pb-2 pr-6 type-caption">
+                    {t("quality.modal.col.sample")}
+                  </th>
+                  <th scope="col" className="pb-2 type-caption">
+                    {t("quality.modal.col.source")}
+                  </th>
+                </tr>
+              </thead>
+              <Sources rows={SPEED_EVIDENCE} />
+              <Sources rows={DEFECT_EVIDENCE} />
+              <Sources rows={RECOVERY_EVIDENCE} />
+            </table>
+          </div>
         </div>
       </Modal>
     </section>

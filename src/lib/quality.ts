@@ -19,13 +19,26 @@ export interface Evidence {
   id: string;
   /** Internal telemetry, or a published study anyone can go and read. */
   origin: "internal" | "published";
-  /** What was measured. */
-  metric: string;
+  /**
+   * Bundle keys, not prose. This screen switches language like every other
+   * one, and a citation whose metric and sample stay English while the
+   * paragraph around them translates reads as a broken translation rather
+   * than a quotation. The source name and the URL are NOT keyed: those are
+   * the publication's own name and address, and translating either would
+   * break the citation.
+   *
+   * Both resolve to `ev.<id>.metric` and `ev.<id>.sample`.
+   */
+  metricKey: string;
   /** The measured multiplier against a non-AI baseline. 1.0 = no change. */
   factor: number;
-  /** How it was reported, in the source's own units. */
-  reported: string;
-  sample: string;
+  /**
+   * How it was reported, in the source's own units — keyed, because the
+   * numeral is the source's and the sentence around it ("no significant
+   * change") is not, and a decimal comma is not optional in Vietnamese.
+   */
+  reportedKey: string;
+  sampleKey: string;
   source: string;
   url: string;
 }
@@ -45,18 +58,17 @@ export interface Evidence {
  * counted.
  */
 export const INTERNAL: {
-  label: string;
+  labelKey: string;
   speed: number;
   defects: number;
-  note: string;
-  methodology: string;
+  noteKey: string;
+  methodologyKey: string;
 } = {
-  label: "OTSV internal report",
+  labelKey: "quality.internal.label",
   speed: 3,
   defects: 5,
-  note: "Measured on our own delivery, not published.",
-  methodology:
-    "Throughput and defect counts taken from the team's own delivery record. Sample size and counting method are not published, so this figure cannot be reproduced from outside — which is exactly why the published studies sit beside it.",
+  noteKey: "quality.internal.note",
+  methodologyKey: "quality.internal.methodology",
 };
 
 /** Lead time. Every published source agrees it improves; none says threefold. */
@@ -64,30 +76,30 @@ export const SPEED_EVIDENCE: readonly Evidence[] = [
   {
     id: "codeninety-lead-time",
     origin: "published",
-    metric: "PR lead time, draft to review",
+    metricKey: "ev.codeninety-lead-time.metric",
     factor: 1 / (1 - 0.324),
-    reported: "−32.4%",
-    sample: "84 organisations, 14,200+ developers, 12 months",
+    reportedKey: "ev.codeninety-lead-time.reported",
+    sampleKey: "ev.codeninety-lead-time.sample",
     source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
     url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
   },
   {
     id: "codeninety-guardrails",
     origin: "published",
-    metric: "PR lead time, organisations with review guardrails",
+    metricKey: "ev.codeninety-guardrails.metric",
     factor: 1 / (1 - 0.45),
-    reported: "−45.0%",
-    sample: "the high-maturity subset of the same cohort",
+    reportedKey: "ev.codeninety-guardrails.reported",
+    sampleKey: "ev.codeninety-guardrails.sample",
     source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
     url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
   },
   {
     id: "uplevel-throughput",
     origin: "published",
-    metric: "PR throughput and cycle time",
+    metricKey: "ev.uplevel-throughput.metric",
     factor: 1.0,
-    reported: "no significant change",
-    sample: "~800 developers, 3 months with and without Copilot",
+    reportedKey: "ev.uplevel-throughput.reported",
+    sampleKey: "ev.uplevel-throughput.sample",
     source: "Uplevel Data Labs, Gen AI for Coding",
     url: "https://uplevelteam.com/blog/ai-for-developer-productivity",
   },
@@ -98,40 +110,40 @@ export const DEFECT_EVIDENCE: readonly Evidence[] = [
   {
     id: "codeninety-defects",
     origin: "published",
-    metric: "Defect injection rate",
+    metricKey: "ev.codeninety-defects.metric",
     factor: 4.8 / 3.2,
-    reported: "+50.0% — 3.2 to 4.8 bugs per 1,000 lines",
-    sample: "84 organisations, 14,200+ developers, 12 months",
+    reportedKey: "ev.codeninety-defects.reported",
+    sampleKey: "ev.codeninety-defects.sample",
     source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
     url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
   },
   {
     id: "coderabbit-issues",
     origin: "published",
-    metric: "Issues raised per pull request",
+    metricKey: "ev.coderabbit-issues.metric",
     factor: 10.83 / 6.45,
-    reported: "10.83 against 6.45 for human-only",
-    sample: "470 open-source pull requests",
+    reportedKey: "ev.coderabbit-issues.reported",
+    sampleKey: "ev.coderabbit-issues.sample",
     source: "CodeRabbit, State of AI vs Human Code Generation",
     url: "https://www.coderabbit.ai/blog/tackling-a-legacy-codebase-and-high-defect-rate-after-an-acquisition",
   },
   {
     id: "uplevel-bugs",
     origin: "published",
-    metric: "Bugs introduced",
+    metricKey: "ev.uplevel-bugs.metric",
     factor: 1.41,
-    reported: "+41%",
-    sample: "~800 developers, 3 months with and without Copilot",
+    reportedKey: "ev.uplevel-bugs.reported",
+    sampleKey: "ev.uplevel-bugs.sample",
     source: "Uplevel Data Labs, Gen AI for Coding",
     url: "https://uplevelteam.com/blog/ai-for-developer-productivity",
   },
   {
     id: "sonar-bugs",
     origin: "published",
-    metric: "Bugs in AI-accelerated codebases",
+    metricKey: "ev.sonar-bugs.metric",
     factor: 1.09,
-    reported: "+9%, with pull requests 154% larger",
-    sample: "SonarSource telemetry",
+    reportedKey: "ev.sonar-bugs.reported",
+    sampleKey: "ev.sonar-bugs.sample",
     url: "https://www.softwareseni.com/what-the-research-actually-shows-about-ai-coding-assistant-productivity/",
     source: "SonarSource, via SoftwareSeni",
   },
@@ -142,20 +154,20 @@ export const RECOVERY_EVIDENCE: readonly Evidence[] = [
   {
     id: "codeninety-guardrails-recovery",
     origin: "published",
-    metric: "Defect and security penalty mitigated",
+    metricKey: "ev.codeninety-guardrails-recovery.metric",
     factor: 0.8,
-    reported: "80%+ mitigated, while still gaining 45% lead time",
-    sample: "the high-maturity subset of 84 organisations",
+    reportedKey: "ev.codeninety-guardrails-recovery.reported",
+    sampleKey: "ev.codeninety-guardrails-recovery.sample",
     source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
     url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
   },
   {
     id: "coderabbit-catch",
     origin: "published",
-    metric: "Seeded defects caught before merge",
+    metricKey: "ev.coderabbit-catch.metric",
     factor: 15 / 23,
-    reported: "15 of 23, with 6 false positives",
-    sample: "independent benchmark, 23 seeded bugs",
+    reportedKey: "ev.coderabbit-catch.reported",
+    sampleKey: "ev.coderabbit-catch.sample",
     source: "CodeRabbit, independent evaluation",
     url: "https://www.greptile.com/content-library/best-ai-code-review-tools",
   },

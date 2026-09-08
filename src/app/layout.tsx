@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { t } from "@/lib/i18n";
 import { LocaleProvider } from "@/components/shell/LocaleProvider";
 import { LocalizeScript } from "@/components/shell/LocalizeScript";
 import { SiteFooter } from "@/components/shell/SiteFooter";
 import { SiteNav } from "@/components/shell/SiteNav";
+import { SkipLink } from "@/components/shell/SkipLink";
 import { inter, mono } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Integrated Portfolio for Enterprise Delivery",
+  title: t("meta.site"),
   description:
     "A case study bridging global shipping domains, modern system architecture, and AI-driven delivery workflows.",
   /*
@@ -32,13 +34,8 @@ export default function RootLayout({
       <body className="flex min-h-svh flex-col bg-canvas type-body">
         {/* Six controls sat between every navigation and the page content,
             re-traversed on every route. */}
-        <a
-          href="#content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60] focus:border focus:border-crimson focus:bg-studio focus:px-4 focus:py-2 focus:type-label focus:rounded-card"
-        >
-          Skip to content
-        </a>
         <LocaleProvider>
+          <SkipLink />
           <LocalizeScript />
           <SiteNav />
         {/* Clips the route transition's sideways travel. See .app-shell. */}

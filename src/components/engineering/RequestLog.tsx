@@ -25,7 +25,7 @@ export function RequestLog({ trace }: { trace: Trace }) {
       <div
         tabIndex={0}
         role="region"
-        aria-label="Request log, scrollable"
+        aria-label={t("eng.log.aria")}
         className="overflow-x-auto bg-console p-5 rounded-card"
       >
         <table className="w-full type-console">

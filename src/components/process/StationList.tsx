@@ -2,8 +2,10 @@
 
 import cn from "clsx";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
+import { formatDecimal } from "@/lib/localeFormat";
+import { useLocale, useT } from "../shell/LocaleProvider";
 import { STEP_IDS } from "./model/processModel";
-import { AGENCY_LABEL, GAP_REASON, STATIONS } from "./scene/stations";
+import { AGENCY_KEY, GAP_REASON_KEYS, STATIONS } from "./scene/stations";
 
 /**
  * The narrow-screen form of the station overlay.
@@ -35,6 +37,9 @@ export function StationList({
   queueDepths: number[];
   onDrop: (step: StepId, sp: StoryPoint) => void;
 }) {
+  const t = useT();
+  const { locale } = useLocale();
+
   return (
     <ol className="flex flex-col gap-3 lg:hidden">
       {STEP_IDS.map((step, i) => {
@@ -60,21 +65,25 @@ export function StationList({
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="type-caption">
-                    {mode === "traditional" ? "Queue" : "No queue"}
+                    {t(mode === "traditional" ? "sim.queue" : "sim.queueNone")}
                   </span>
                   <span className="type-caption tnum text-charcoal">
                     {mode === "traditional" ? (queueDepths[i - 1] ?? 0) : 0}
                   </span>
                 </div>
                 <p className="mt-0.5 type-caption">
-                  {mode === "traditional"
-                    ? GAP_REASON[i - 1]
-                    : "Nothing waits here. Work carries straight on."}
+                  {t(
+                    mode === "traditional"
+                      ? GAP_REASON_KEYS[i - 1]
+                      : "sim.gap.none",
+                  )}
                 </p>
                 {waitingHere ? (
                   <p className="mt-1 type-caption tnum text-crimson">
-                    Waiting {activeWaitElapsedDays.toFixed(1)} of{" "}
-                    {activeWaitDays.toFixed(1)} d
+                    {t("sim.waitingOf", {
+                      done: formatDecimal(activeWaitElapsedDays, locale),
+                      total: formatDecimal(activeWaitDays, locale),
+                    })}
                   </p>
                 ) : null}
               </div>
@@ -100,14 +109,14 @@ export function StationList({
                         : "text-muted",
                   )}
                 >
-                  {AGENCY_LABEL[agency]}
+                  {t(AGENCY_KEY[agency])}
                 </span>
               </div>
-              <p className="mt-1 type-label">{info.name[mode]}</p>
-              <p className="mt-1 type-caption">{info.does[mode]}</p>
+              <p className="mt-1 type-label">{t(`station.${step}.name.${mode}`)}</p>
+              <p className="mt-1 type-caption">{t(`station.${step}.does.${mode}`)}</p>
               {isActive && activePhase === "work" ? (
                 <p className="mt-2 border-t border-border pt-2 type-caption text-crimson">
-                  Working on it now
+                  {t("sim.workingNow")}
                 </p>
               ) : null}
               {armed !== null ? (
@@ -116,7 +125,7 @@ export function StationList({
                   onClick={() => onDrop(step, armed)}
                   className="mt-3 w-full border border-crimson px-3 py-2 type-caption text-crimson rounded-sharp transition-colors duration-150 hover:bg-tint"
                 >
-                  Enter {armed} SP here
+                  {t("sim.enterHere", { sp: armed })}
                 </button>
               ) : null}
             </div>

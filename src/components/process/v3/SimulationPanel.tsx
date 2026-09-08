@@ -18,15 +18,20 @@ import { useT } from "../../shell/LocaleProvider";
  * screen that imported it, and eleven files and 2,225 lines quietly left the
  * bundle while the hero still promised "see the process in one minute".
  */
+function SimulationLoading() {
+  const t = useT();
+  return (
+    <div className="flex h-96 items-center justify-center border border-border bg-studio rounded-card">
+      <p className="type-caption">{t("process.sim.loading")}</p>
+    </div>
+  );
+}
+
 const ProcessComparison = dynamic(
   () => import("../ProcessComparison").then((m) => m.ProcessComparison),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-96 items-center justify-center border border-border bg-studio rounded-card">
-        <p className="type-caption">Loading the simulation…</p>
-      </div>
-    ),
+    loading: () => <SimulationLoading />,
   },
 );
 
