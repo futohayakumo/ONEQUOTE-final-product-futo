@@ -77,7 +77,7 @@ export function QuoteTicket({
           <p className="type-overline text-border">{t("quote.title", locale)}</p>
           <p className="mt-2 type-page text-studio tnum">{quote.quoteId}</p>
           <p className="mt-1 type-caption text-border">
-            {INCOTERMS[incoterm].label}
+            {incoterm} — {t(INCOTERMS[incoterm].glossKey, locale)}
           </p>
         </div>
         <div className="text-right">
@@ -203,7 +203,12 @@ export function QuoteTicket({
                   section.onAccount ? "text-charcoal" : "text-muted",
                 )}
               >
-                {section.title}
+                {section.port
+                  ? t("section.withPort", locale, {
+                      section: t(section.titleKey, locale),
+                      port: section.port,
+                    })
+                  : t(section.titleKey, locale)}
               </h3>
               <span
                 className={cn(
@@ -228,8 +233,11 @@ export function QuoteTicket({
                 >
                   <dt className="type-body">
                     <span className="type-label tnum">{line.code}</span>{" "}
-                    {line.label}
-                    <span className="type-caption"> · {line.basis}</span>
+                    {t(line.labelKey, locale)}
+                    <span className="type-caption">
+                      {" "}
+                      · {t(line.basisKey, locale, line.basisVars)}
+                    </span>
                   </dt>
                   <dd
                     className={cn(
@@ -259,7 +267,9 @@ export function QuoteTicket({
 
       {/* ── Total ────────────────────────────────────────────── */}
       <footer className="flex flex-col gap-4 border-t-2 border-charcoal bg-canvas px-6 py-7 sm:px-8">
-        <p className="type-caption">{INCOTERMS[incoterm].note}</p>
+        <p className="type-caption">
+          {t(INCOTERMS[incoterm].noteKey, locale)}
+        </p>
 
         <div className="flex items-baseline justify-between gap-6">
           <span className="type-body">{t("quote.onYourAccount", locale)}</span>

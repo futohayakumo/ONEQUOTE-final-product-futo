@@ -17,7 +17,7 @@ import { writeFile } from "node:fs/promises";
 
 const TOKEN = process.env.LOKALISE_API_TOKEN;
 const PROJECT = process.env.LOKALISE_PROJECT_ID;
-const LOCALES = ["en", "ja"];
+const LOCALES = ["en", "ja", "vi"];
 const BASE = "en";
 
 if (!TOKEN || !PROJECT) {

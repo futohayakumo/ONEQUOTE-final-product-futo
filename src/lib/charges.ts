@@ -47,38 +47,39 @@ export const CURRENCY_RATE = 0.025;
  */
 export type Incoterm = "EXW" | "FOB" | "CFR" | "CIF" | "DAP" | "DDP";
 
+/**
+ * The three-letter term is the term. Only the gloss and the note translate —
+ * "FOB" is FOB in every language, and localising it would be a mistranslation
+ * of a contract.
+ */
 export const INCOTERMS: Record<
   Incoterm,
-  { label: string; note: string; sections: SectionId[] }
+  { glossKey: string; noteKey: string; sections: SectionId[] }
 > = {
-  EXW: {
-    label: "EXW — Ex Works",
-    note: "The buyer carries everything from the seller's door. Nothing on this quotation is the seller's cost.",
-    sections: [],
-  },
+  EXW: { glossKey: "incoterm.exw", noteKey: "incoterm.exw.note", sections: [] },
   FOB: {
-    label: "FOB — Free On Board",
-    note: "The seller pays to get the box loaded. Ocean and destination sit with the buyer.",
+    glossKey: "incoterm.fob",
+    noteKey: "incoterm.fob.note",
     sections: ["origin"],
   },
   CFR: {
-    label: "CFR — Cost and Freight",
-    note: "The seller pays origin and the sea leg. Destination charges sit with the buyer.",
+    glossKey: "incoterm.cfr",
+    noteKey: "incoterm.cfr.note",
     sections: ["origin", "ocean"],
   },
   CIF: {
-    label: "CIF — Cost, Insurance and Freight",
-    note: "As CFR, with marine insurance added. Destination charges still sit with the buyer.",
+    glossKey: "incoterm.cif",
+    noteKey: "incoterm.cif.note",
     sections: ["origin", "ocean"],
   },
   DAP: {
-    label: "DAP — Delivered At Place",
-    note: "The seller carries it to the named place. Import duty and clearance remain the buyer's.",
+    glossKey: "incoterm.dap",
+    noteKey: "incoterm.dap.note",
     sections: ["origin", "ocean", "destination"],
   },
   DDP: {
-    label: "DDP — Delivered Duty Paid",
-    note: "The seller carries everything, duty included.",
+    glossKey: "incoterm.ddp",
+    noteKey: "incoterm.ddp.note",
     sections: ["origin", "ocean", "destination"],
   },
 };
@@ -94,18 +95,34 @@ export const INCOTERM_ORDER: readonly Incoterm[] = [
 
 export type SectionId = "origin" | "ocean" | "destination";
 
+/**
+ * Lines carry KEYS, not prose.
+ *
+ * The first version returned English strings from here, so half the ticket
+ * translated and half did not — the section headings and every charge label
+ * stayed in English behind a Vietnamese total. A pure pricing model has no
+ * business holding display copy; it says what the charge IS and the component
+ * says it in whatever language is being read.
+ *
+ * `code` is the exception and stays literal. THC is THC on a Vietnamese
+ * invoice too; translating an industry abbreviation would make the line
+ * harder to reconcile, not easier.
+ */
 export interface ChargeLine {
   /** The abbreviation the industry uses, because that is what the invoice says. */
   code: string;
-  label: string;
+  labelKey: string;
   /** What it is charged on — per container, per B/L, a share of the freight. */
-  basis: string;
+  basisKey: string;
+  basisVars?: Record<string, string | number>;
   amount: number;
 }
 
 export interface ChargeSection {
   id: SectionId;
-  title: string;
+  titleKey: string;
+  /** The port code the heading names, or absent for the ocean leg. */
+  port?: PortCode;
   /** True when this Incoterm puts the section on the quoted party's account. */
   onAccount: boolean;
   lines: ChargeLine[];
@@ -127,80 +144,92 @@ export function chargeSections(input: {
 
   const build = (
     id: SectionId,
-    title: string,
+    titleKey: string,
+    port: PortCode | undefined,
     lines: ChargeLine[],
   ): ChargeSection => ({
     id,
-    title,
+    titleKey,
+    port,
     onAccount: on.includes(id),
     lines,
     subtotal: money(lines.reduce((n, l) => n + l.amount, 0)),
   });
 
+  const perContainer = { key: "basis.perContainer", vars: { units } };
+  const perBl = { key: "basis.perBl" };
+
   return [
-    build("origin", `Origin — ${pol}`, [
+    build("origin", "section.origin", pol, [
       {
         code: "THC",
-        label: "Terminal handling",
-        basis: `per container × ${units}`,
+        labelKey: "charge.thc",
+        basisKey: perContainer.key,
+        basisVars: perContainer.vars,
         amount: money(THC_USD[pol].origin * units),
       },
       {
         code: "DOC",
-        label: "Documentation",
-        basis: "per bill of lading",
+        labelKey: "charge.doc",
+        basisKey: perBl.key,
         amount: DOCUMENTATION_USD,
       },
       {
         code: "SEAL",
-        label: "Security seal",
-        basis: `per container × ${units}`,
+        labelKey: "charge.seal",
+        basisKey: perContainer.key,
+        basisVars: perContainer.vars,
         amount: money(SEAL_USD * units),
       },
       {
         code: "ISPS",
-        label: "Port security",
-        basis: `per container × ${units}`,
+        labelKey: "charge.isps",
+        basisKey: perContainer.key,
+        basisVars: perContainer.vars,
         amount: money(ISPS_USD * units),
       },
     ]),
-    build("ocean", "Ocean freight", [
+    build("ocean", "section.ocean", undefined, [
       {
         code: "O/F",
-        label: "Base ocean freight",
-        basis: `per container × ${units}`,
+        labelKey: "charge.of",
+        basisKey: perContainer.key,
+        basisVars: perContainer.vars,
         amount: money(oceanFreight),
       },
       {
         code: "BAF",
-        label: "Bunker adjustment",
-        basis: `${(BUNKER_RATE * 100).toFixed(1)}% of O/F`,
+        labelKey: "charge.baf",
+        basisKey: "basis.shareOfFreight",
+        basisVars: { pct: (BUNKER_RATE * 100).toFixed(1) },
         amount: money(oceanFreight * BUNKER_RATE),
       },
       {
         code: "CAF",
-        label: "Currency adjustment",
-        basis: `${(CURRENCY_RATE * 100).toFixed(1)}% of O/F`,
+        labelKey: "charge.caf",
+        basisKey: "basis.shareOfFreight",
+        basisVars: { pct: (CURRENCY_RATE * 100).toFixed(1) },
         amount: money(oceanFreight * CURRENCY_RATE),
       },
     ]),
-    build("destination", `Destination — ${pod}`, [
+    build("destination", "section.destination", pod, [
       {
         code: "DTHC",
-        label: "Terminal handling",
-        basis: `per container × ${units}`,
+        labelKey: "charge.thc",
+        basisKey: perContainer.key,
+        basisVars: perContainer.vars,
         amount: money(THC_USD[pod].destination * units),
       },
       {
         code: "D/O",
-        label: "Delivery order",
-        basis: "per bill of lading",
+        labelKey: "charge.do",
+        basisKey: perBl.key,
         amount: DELIVERY_ORDER_USD,
       },
       {
         code: "ENS",
-        label: "Manifest filing",
-        basis: "per bill of lading",
+        labelKey: "charge.ens",
+        basisKey: perBl.key,
         amount: MANIFEST_FILING_USD,
       },
     ]),

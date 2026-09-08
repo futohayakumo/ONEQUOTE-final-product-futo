@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
 import { quoteForSailing, sailingsFor } from "@/lib/sailings";
 import { INCOTERM_ORDER, INCOTERMS, type Incoterm } from "@/lib/charges";
-import { LOCALES, type Locale } from "@/lib/i18n";
+import { LOCALES, LOCALE_LABEL, t, type Locale } from "@/lib/i18n";
 import { QuoteTicket } from "./QuoteTicket";
 import { SailingList } from "./SailingList";
 import { SearchPanel, type SearchState } from "./SearchPanel";
@@ -97,7 +97,7 @@ export function QuotationScreen() {
             >
               {INCOTERM_ORDER.map((term) => (
                 <option key={term} value={term}>
-                  {INCOTERMS[term].label}
+                  {term} — {t(INCOTERMS[term].glossKey, locale)}
                 </option>
               ))}
             </select>
@@ -110,11 +110,11 @@ export function QuotationScreen() {
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value as Locale)}
-              className="w-32 border border-control bg-studio px-4 py-2.5 type-label rounded-card"
+              className="w-40 border border-control bg-studio px-4 py-2.5 type-label rounded-card"
             >
               {LOCALES.map((l) => (
                 <option key={l} value={l}>
-                  {l === "en" ? "English" : "日本語"}
+                  {LOCALE_LABEL[l]}
                 </option>
               ))}
             </select>

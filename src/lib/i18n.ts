@@ -1,5 +1,6 @@
 import en from "@/locales/en.json";
 import ja from "@/locales/ja.json";
+import vi from "@/locales/vi.json";
 
 /**
  * Copy lives outside the components, in key-value bundles Lokalise owns.
@@ -19,11 +20,19 @@ import ja from "@/locales/ja.json";
  * that renders `quote.total` is obviously broken; one that renders an empty
  * string is quietly broken, and the quiet failure is the expensive one.
  */
-export const LOCALES = ["en", "ja"] as const;
+export const LOCALES = ["en", "ja", "vi"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const BASE_LOCALE: Locale = "en";
 
-const BUNDLES: Record<Locale, Record<string, string>> = { en, ja };
+/** Each language in its own language. A picker that says "Japanese" is for
+ *  people who already read English. */
+export const LOCALE_LABEL: Record<Locale, string> = {
+  en: "English",
+  ja: "日本語",
+  vi: "Tiếng Việt",
+};
+
+const BUNDLES: Record<Locale, Record<string, string>> = { en, ja, vi };
 
 export function t(
   key: string,
