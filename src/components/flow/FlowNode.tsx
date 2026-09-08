@@ -94,7 +94,7 @@ export function FlowNode({
       onFocus={() => onPeek(id)}
       onBlur={onPeekEnd}
       className={cn(
-        "relative z-10 flex w-full items-center gap-3 py-3.5 pl-9 pr-7 text-left rounded-card transition-colors duration-150",
+        "relative z-10 flex w-full items-start gap-3 py-3 pl-9 pr-7 text-left rounded-card transition-colors duration-150",
         selected
           ? "border-2 border-crimson bg-tint shadow-raised"
           : onRoute
@@ -116,10 +116,21 @@ export function FlowNode({
         ) : null}
       </span>
 
-      <span className={onRoute ? "text-crimson" : "text-muted"}>
+      <span className={`mt-0.5 ${onRoute ? "text-crimson" : "text-muted"}`}>
         <Icon size={20} />
       </span>
-      <span className="type-label">{node.label}</span>
+      {/*
+        The label, and under it what the box takes and what it hands on.
+        Fifteen identically sized boxes carrying one noun each is a diagram
+        that looks organised and explains nothing: a reader can see that
+        Validation sits between Intake and the Gateway without learning that
+        it turns a payload into an accept or a reject. The second line is the
+        difference between a picture of a system and a description of one.
+      */}
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="type-label">{node.label}</span>
+        <span className="type-caption">{t(`node.${id}.io`)}</span>
+      </span>
 
       {node.componentId ? (
         <span

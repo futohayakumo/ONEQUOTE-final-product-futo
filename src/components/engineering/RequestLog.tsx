@@ -20,6 +20,8 @@ export function RequestLog({ trace }: { trace: Trace }) {
         </span>
       </div>
 
+      <p className="max-w-[86ch] type-caption">{t("eng.log.lede")}</p>
+
       {/* tabIndex 0 + a role, or the 40% of this log that overflows on a
           phone is reachable by pointer only. */}
       <div

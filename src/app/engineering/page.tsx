@@ -8,7 +8,7 @@ export const metadata = { title: `${t("meta.engineering")} — ${t("meta.site")}
 
 export default function EngineeringPage() {
   return (
-    <main className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-16">
+    <main className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-14">
       <DocumentLocale titleKey="meta.engineering" />
       <PageHeader
         eyebrowKey="eng.eyebrow"

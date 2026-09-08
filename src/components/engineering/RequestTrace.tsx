@@ -1,6 +1,6 @@
 "use client";
 
-import { NODES } from "@/lib/flow-data";
+import { NODES, STAGES } from "@/lib/flow-data";
 import type { Trace } from "@/lib/trace";
 import type { NodeId } from "@/types/flow";
 import { useT } from "../shell/LocaleProvider";
@@ -10,6 +10,10 @@ import { useT } from "../shell/LocaleProvider";
  * re-routing the diagram re-times it — a fixed timeline under a diagram that
  * changes would say the same thing about two different paths.
  */
+const STAGE_TITLE: Record<string, string> = Object.fromEntries(
+  STAGES.map((s) => [s.id, s.titleKey]),
+);
+
 export function RequestTrace({ trace }: { trace: Trace }) {
   const t = useT();
   return (
@@ -48,8 +52,18 @@ export function RequestTrace({ trace }: { trace: Trace }) {
               }
             />
             <span className="type-caption tnum text-muted">{hop.hop}</span>
-            <span className="type-label">
+            {/* The layer, so the timeline shows the request crossing tiers
+                rather than five equivalent stops on one line. */}
+            <span className="type-overline text-muted">
+              {t(STAGE_TITLE[NODES[hop.id as NodeId]?.stage] ?? "")}
+            </span>
+            <span className="pr-4 type-label">
               {NODES[hop.id as NodeId]?.label ?? hop.label}
+            </span>
+            {/* Timings alone say how long each stop took and nothing about what
+                any of them did. This is the state change. */}
+            <span className="pr-4 type-caption">
+              {t(`node.${hop.id}.io`)}
             </span>
             <span className="type-caption tnum">{hop.at}</span>
             <span className="type-caption tnum">{hop.ms} ms</span>

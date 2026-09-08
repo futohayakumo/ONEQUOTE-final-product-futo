@@ -81,8 +81,9 @@ export function ServiceDetail({
           <div className="flex min-w-0 flex-col gap-3">
             <h3 className="type-label">{t("eng.detail.when")}</h3>
             <p className="type-caption text-charcoal">{t(entry.whenKey)}</p>
-            <div className="mt-2">
+            <div className="mt-2 flex min-w-0 flex-col gap-2">
               <CodeBlock lang={entry.how.lang} code={entry.how.code} />
+              <p className="type-caption">{t("eng.detail.howNote")}</p>
             </div>
           </div>
         ) : null}

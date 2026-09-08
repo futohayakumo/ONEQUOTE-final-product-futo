@@ -78,10 +78,10 @@ export function EngineeringScreen() {
   );
 
   return (
-    <div className="flex flex-col gap-14">
+    <div className="flex flex-col gap-10">
       <ViewTabs />
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
         <CategoryRail selected={selected} onSelect={select} />
         <div className="min-w-0">
           <SystemMap selected={selected} route={route} onSelect={select} />
