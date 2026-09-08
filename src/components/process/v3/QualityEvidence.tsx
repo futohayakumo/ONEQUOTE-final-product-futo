@@ -1,16 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import {
+  BREAK_EVEN_CATCH,
   DEFECT_EVIDENCE,
   DEFECT_FACTOR,
+  DEFECT_GAP,
+  INTERNAL,
+  PUBLISHED_DEFECT,
+  PUBLISHED_SPEED,
   RECOVERY,
   RECOVERY_EVIDENCE,
   SPEED_EVIDENCE,
-  SPEED_FACTOR,
+  SPEED_GAP,
   quality,
   type Evidence,
   type QualityMode,
 } from "@/lib/quality";
+import { Modal } from "../../ui/Modal";
 
 const MODES: { mode: QualityMode; title: string; blurb: string }[] = [
   {
@@ -86,6 +93,7 @@ function Sources({ rows }: { rows: readonly Evidence[] }) {
  * published figure is about 1.8×.
  */
 export function QualityEvidence() {
+  const [open, setOpen] = useState(false);
   const rows = MODES.map((m) => ({ ...m, ...quality(m.mode) }));
   const maxEscape = Math.max(...rows.map((r) => r.escapedPerKloc));
   const base = rows[0];
@@ -94,15 +102,34 @@ export function QualityEvidence() {
     <section className="border-t border-border bg-studio">
       <div className="mx-auto flex max-w-[86rem] flex-col gap-12 px-6 py-20">
         <div>
-          <p className="type-eyebrow">What the measurements say</p>
+          <p className="type-eyebrow">What we measured</p>
           <h2 className="mt-5 type-page">
-            Assistance buys speed and sells quality.
+            Three times the throughput. Five times the defects.
           </h2>
           <p className="mt-3 max-w-[60ch] type-body text-muted">
-            Every figure on this screen is a published measurement with its
-            sample attached. The headline numbers are the median of the sources
-            below, not an average — one outlier should not be able to move a
-            claim, and a median is something you can check by counting.
+            Assistance did not make the team a little faster and a little
+            sloppier. It roughly tripled what got written and roughly
+            quintupled what was wrong with it — and the second number is the
+            one that decides whether the first one was worth having.
+          </p>
+          {/* The attribution is next to the claim, not in a footer. An internal
+              measurement is legitimate evidence and weaker evidence than a
+              multi-organisation study, and the reader should be able to weigh
+              it without going looking. */}
+          <p className="mt-4 max-w-[60ch] type-caption">
+            {INTERNAL.speed}× and {INTERNAL.defects}× are from the{" "}
+            <strong className="type-label">{INTERNAL.label}</strong>.{" "}
+            {INTERNAL.note} Published studies put the same two effects at{" "}
+            <span className="tnum">{PUBLISHED_SPEED.toFixed(2)}×</span> and{" "}
+            <span className="tnum">{PUBLISHED_DEFECT.toFixed(2)}×</span> —{" "}
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="type-caption text-crimson-ink underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
+            >
+              see what everyone else found
+            </button>
+            .
           </p>
         </div>
 
@@ -165,18 +192,75 @@ export function QualityEvidence() {
           })}
         </div>
 
-        <p className="max-w-[70ch] type-body">
-          Assistance alone is the one column that is worse than doing nothing:{" "}
-          <span className="tnum">
-            {(SPEED_FACTOR).toFixed(2)}× the lead time,{" "}
-            {(DEFECT_FACTOR).toFixed(2)}× the defects
-          </span>
-          . Automated review does not make the code better — the same number of
-          defects is written either way — it changes how many get out, catching{" "}
-          <span className="tnum">{Math.round(RECOVERY * 100)}%</span> of them at
-          the gate. That is the only configuration on this page that beats the
-          baseline on both axes.
-        </p>
+        <div className="flex flex-col gap-4 border-l-2 border-crimson pl-6">
+          <p className="max-w-[70ch] type-body">
+            Automated review does not make the code better — the same{" "}
+            <span className="tnum">
+              {quality("ai-assisted").defectsPerKloc.toFixed(2)}
+            </span>{" "}
+            defects per thousand lines are written either way. It changes how
+            many get out, catching{" "}
+            <span className="tnum">{Math.round(RECOVERY * 100)}%</span> at the
+            gate.
+          </p>
+          <p className="max-w-[70ch] type-body">
+            <strong className="type-label">And that is not enough.</strong> At a{" "}
+            {DEFECT_FACTOR}× injection rate the gate has to catch{" "}
+            <span className="tnum">
+              {Math.round(BREAK_EVEN_CATCH * 100)}%
+            </span>{" "}
+            just to break even with writing the code by hand. The best measured
+            AI reviewer catches{" "}
+            <span className="tnum">{Math.round(RECOVERY * 100)}%</span>. So
+            &ldquo;add AI review&rdquo; is not a conclusion — it is a target
+            with a number on it, and we are{" "}
+            <span className="tnum">
+              {Math.round((BREAK_EVEN_CATCH - RECOVERY) * 100)}
+            </span>{" "}
+            points short of it.
+          </p>
+        </div>
+
+      </div>
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="What everyone else found"
+      >
+        <div className="flex flex-col gap-6">
+          <p className="max-w-[70ch] type-body">
+            No published study reports anything close to our own numbers. The
+            internal figure is{" "}
+            <span className="tnum">{SPEED_GAP.toFixed(1)}×</span> the published
+            median on throughput and{" "}
+            <span className="tnum">{DEFECT_GAP.toFixed(1)}×</span> on defects.
+            That gap is worth sitting with rather than explaining away: either
+            the team is unusual, or the counting is — and the honest position is
+            that a figure nobody outside can reproduce is weaker evidence than
+            one measured across 84 organisations, however much we trust our own.
+          </p>
+          <p className="max-w-[70ch] type-caption">{INTERNAL.methodology}</p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Throughput", INTERNAL.speed, PUBLISHED_SPEED],
+              ["Defects", INTERNAL.defects, PUBLISHED_DEFECT],
+            ].map(([label, ours, theirs]) => (
+              <div
+                key={String(label)}
+                className="flex items-baseline justify-between gap-4 border border-border p-4 rounded-card"
+              >
+                <span className="type-caption">{label}</span>
+                <span className="type-label tnum">
+                  {Number(ours).toFixed(2)}× ours ·{" "}
+                  <span className="text-muted">
+                    {Number(theirs).toFixed(2)}× published
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
 
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Evidence table, scrollable">
           <table className="w-full min-w-[46rem]">
@@ -196,7 +280,8 @@ export function QualityEvidence() {
             <Sources rows={RECOVERY_EVIDENCE} />
           </table>
         </div>
-      </div>
+        </div>
+      </Modal>
     </section>
   );
 }
