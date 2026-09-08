@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  MAX_CBM,
   CONTAINERS,
   CONTAINER_ORDER,
   PORTS,
@@ -16,7 +17,13 @@ export interface SearchState {
   pod: PortCode;
   containerType: ContainerType;
   tier: LoyaltyTier;
-  cbm: number;
+  /**
+   * `number | ""` because a controlled number input needs an empty state.
+   * With a bare number, Number("") is 0 and `value` writes it straight back,
+   * so clearing the field leaves a 0 the user has to select and overwrite.
+   * types/quote.ts already modelled it this way; the newer screen dropped it.
+   */
+  cbm: number | "";
 }
 
 const FIELD =
@@ -122,17 +129,23 @@ export function SearchPanel({
             type="number"
             inputMode="numeric"
             min={1}
-            max={2000}
+            max={MAX_CBM}
             className={`${FIELD} tnum`}
             value={value.cbm}
-            onChange={(e) => set("cbm", Number(e.target.value))}
+            onChange={(e) =>
+              set("cbm", e.target.value === "" ? "" : Number(e.target.value))
+            }
           />
         </label>
 
+        {/* Disabled, not merely inert. The handler already refused to run on
+            an invalid form, but the button kept its fill and its hover, so the
+            primary action swallowed the click with no feedback at all. */}
         <button
           type="button"
           onClick={onSearch}
-          className="ml-auto inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
+          disabled={error !== null}
+          className="ml-auto inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal disabled:cursor-not-allowed disabled:border-border disabled:bg-mist disabled:text-muted"
         >
           Search sailings
           <ArrowRight size={18} />

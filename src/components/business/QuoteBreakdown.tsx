@@ -28,10 +28,11 @@ export function QuoteBreakdown({
   );
 
   return (
-    <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+    <section className="flex flex-col gap-6">
+      <h2 className="type-section">Cost breakdown</h2>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
       <div className="border border-border bg-studio p-6 rounded-card shadow-card sm:p-8">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="type-section">Cost breakdown</h2>
           <span className="type-caption tnum">
             {quote.units} container{quote.units === 1 ? "" : "s"} ·{" "}
             {quote.teuAccrued} TEU
@@ -64,9 +65,7 @@ export function QuoteBreakdown({
               {LOYALTY_TIERS[quote.tier].label}
               <span className="type-caption"> · {pct(quote.discountRate)}</span>
             </dt>
-            <dd className="type-label tnum text-crimson-ink">
-              −${usd(discount)}
-            </dd>
+            <dd className="type-label tnum">−${usd(discount)}</dd>
           </div>
 
           <div className="flex items-baseline justify-between gap-6 border-t-2 border-charcoal pt-5">
@@ -76,7 +75,9 @@ export function QuoteBreakdown({
         </dl>
       </div>
 
-      <aside className="flex flex-col gap-4 border border-border bg-canvas p-6 rounded-card">
+      {/* Same surface and elevation as the panel beside it — two cards in one
+          row with different fills and different shadows read as an accident. */}
+      <aside className="flex flex-col gap-4 border border-border bg-studio p-6 rounded-card shadow-card">
         <h3 className="type-label">Notes</h3>
         <ul className="flex list-disc flex-col gap-2 pl-4 type-caption">
           <li>Transit times are estimates.</li>
@@ -106,6 +107,7 @@ export function QuoteBreakdown({
           </div>
         </dl>
       </aside>
+      </div>
     </section>
   );
 }

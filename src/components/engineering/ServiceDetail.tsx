@@ -2,6 +2,7 @@
 
 import { COMPONENT_CATALOG } from "@/lib/component-catalog";
 import { NODES, STAGES } from "@/lib/flow-data";
+import type { Trace } from "@/lib/trace";
 import type { NodeId } from "@/types/flow";
 import { CodeBlock } from "../ui/CodeBlock";
 import { RequestLog } from "./RequestLog";
@@ -20,9 +21,11 @@ function stageLabel(stage: string) {
 export function ServiceDetail({
   selected,
   route,
+  trace,
 }: {
   selected: NodeId | null;
   route: readonly NodeId[];
+  trace: Trace;
 }) {
   const node = selected ? NODES[selected] : null;
   const entry = node?.componentId
@@ -32,7 +35,7 @@ export function ServiceDetail({
   return (
     <section className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-5">
-        <p className="type-caption tracking-[0.16em] text-muted uppercase">
+        <p className="type-overline text-muted">
           Service details
         </p>
 
@@ -59,19 +62,19 @@ export function ServiceDetail({
           </>
         ) : (
           <>
-            <h2 className="type-section">Nothing selected</h2>
+            <h2 className="type-section">The default route</h2>
             <p className="type-body text-muted">
-              The crimson line is the default route a quotation request takes.
-              Select any box — in the map or in the rail — to re-route it and
-              read what that service does, when it earns its place, and how it
-              is configured.
+              The crimson line is the path a quotation request takes when
+              nothing is selected. Pick any box — in the map or in the rail —
+              to re-route it and read what that service does, when it earns its
+              place, and how it is configured.
             </p>
           </>
         )}
       </div>
 
       <div className="flex min-w-0 flex-col gap-8">
-        <RequestLog route={route} />
+        <RequestLog trace={trace} />
         {entry ? (
           <div className="flex min-w-0 flex-col gap-3">
             <h3 className="type-label">When it earns its place</h3>

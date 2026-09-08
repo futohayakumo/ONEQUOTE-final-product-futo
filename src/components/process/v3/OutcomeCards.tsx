@@ -12,14 +12,14 @@ function Bar({
   max: number;
 }) {
   return (
-    <div className="flex h-3 w-full overflow-hidden bg-mist rounded-full">
+    <div className="flex h-3 w-full overflow-hidden bg-mist rounded-sharp">
       <span
         className="bg-charcoal"
         style={{ width: `${(touch / max) * 100}%` }}
         aria-hidden
       />
       <span
-        className="bg-crimson"
+        className="bg-muted"
         style={{ width: `${(wait / max) * 100}%` }}
         aria-hidden
       />
@@ -31,6 +31,14 @@ function Bar({
  * Both cards are drawn against the SAME maximum, so the two bars are directly
  * comparable by length. Scaling each card to its own total is the standard way
  * to make a fourteen-fold difference look like a small one.
+ *
+ * Nothing here is crimson. The chart beside it uses crimson for the AI-driven
+ * series — the thing the page argues FOR — and these cards previously used it
+ * for waiting, the thing the page argues against. Two correct legends, forty
+ * pixels apart, meaning opposite things: a reader who trusts the colour reads
+ * the chart backwards. Waiting is now plain muted, and the losing card no
+ * longer wears `tint`, which is this system's active/selected fill and made
+ * the worse outcome look like the chosen one.
  */
 export function OutcomeCards({
   traditional,
@@ -41,24 +49,29 @@ export function OutcomeCards({
 }) {
   const max = traditional.totalDays;
 
+  // The model rounds touch, wait and total independently, so at 0.5 SP the
+  // two figures printed beneath the headline sum to 3.79 under a headline of
+  // 3.78. The headline is the number the reader trusts, so the split is
+  // derived from it rather than reported alongside it.
+  const split = (s: Schedule) => {
+    const wait = Math.round((s.totalDays - s.touchDays) * 100) / 100;
+    return { touch: s.touchDays, wait };
+  };
+
   const cards = [
     {
       title: "Traditional scrum (AI assisted)",
       schedule: traditional,
-      tone: "bg-tint",
+      tone: "bg-studio",
       split: [
-        { label: "Actual work", value: traditional.touchDays, ink: "" },
-        {
-          label: "Waiting",
-          value: traditional.waitDays,
-          ink: "text-crimson-ink",
-        },
+        { label: "Actual work", value: split(traditional).touch, ink: "" },
+        { label: "Waiting", value: split(traditional).wait, ink: "text-muted" },
       ],
     },
     {
       title: "AI-driven agile (automated)",
       schedule: aiDriven,
-      tone: "bg-canvas",
+      tone: "bg-tint",
       split: [
         {
           label: "Work and decision",
@@ -83,8 +96,8 @@ export function OutcomeCards({
           </p>
 
           <Bar
-            touch={card.schedule.touchDays}
-            wait={card.schedule.waitDays}
+            touch={split(card.schedule).touch}
+            wait={split(card.schedule).wait}
             max={max}
           />
 

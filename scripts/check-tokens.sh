@@ -48,6 +48,12 @@ report "gradients only via the named photo scrims" \
 report "no off-scale type utilities" \
   "$(printf '%s\n' "$CLASS_LINES" | grep -E '(^|[ "'\''`])text-(xs|sm|base|lg|xl|[2-9]xl)($|[ "'\''`])|font-serif')"
 
+# Six places had re-invented the small-caps label role at three tracking values
+# and four colours. type-eyebrow and type-overline are the only two spellings;
+# an arbitrary tracking value means a seventh is being born.
+report "no hand-rolled small-caps labels" \
+  "$(printf '%s\n' "$CLASS_LINES" | grep -E 'tracking-\[')"
+
 report "no serif display faces anywhere" \
   "$(grep -rnE 'Playfair|Georgia|Times New Roman' src/ 2>/dev/null | grep -v 'NOT defined')"
 
@@ -87,6 +93,24 @@ report "no real organisation, vendor or person names in tracked files" "$tracked
 printf '  ..: %d tracked binary files were NOT scanned for names (images cannot be grepped)\n' "$binaries"
 
 # Filenames are published too.
+# The directory this repository lives in is itself a name, and the guard above
+# cannot see it: `git ls-files` prints paths relative to the root, so the root's
+# own name never appears in the scan. That is how a sessionStorage key built
+# from the folder name sat in the source through every check -- the pattern
+# matches the two-word product name, not the bare token the folder uses.
+#
+# This check skips itself, like the pattern scan above does, or it would report
+# its own explanation as the violation.
+REPO_DIR=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+report "the repository directory name appears in no tracked file" \
+  "$(git grep -lI -i -- "$REPO_DIR" 2>/dev/null | grep -v '^scripts/check-tokens.sh$' || true)"
+
+# Blob CONTENTS are scanned above; commit objects are not. Author name, author
+# email and message text all publish with the repository and all survived every
+# check here. An email address is a real name whatever the pattern says.
+report "commit authorship carries no real name" \
+  "$(git log --format='%an <%ae>' 2>/dev/null | sort -u | grep -iE "$LEAK_PATTERN" || true)"
+
 report "no real names in tracked filenames" \
   "$(git ls-files 2>/dev/null | grep -iE "$LEAK_PATTERN" || true)"
 

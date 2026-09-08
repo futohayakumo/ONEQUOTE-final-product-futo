@@ -1,18 +1,27 @@
-import { NODES } from "@/lib/flow-data";
-import type { NodeId } from "@/types/flow";
-
 /**
  * A synthetic trace for whatever route the map is currently showing.
  *
- * The comps draw a fixed six-hop timeline with fixed millisecond figures. Fixed
- * numbers under a diagram that re-routes on every click would be decoration —
- * the timeline would say the same thing about two different paths. So the
- * figures live per node here and the timeline is computed from the live route.
+ * The comps draw a fixed six-hop timeline with fixed millisecond figures.
+ * Fixed numbers under a diagram that re-routes on every click would be
+ * decoration — the timeline would say the same thing about two different
+ * paths. So the figures live per node here and everything is computed from the
+ * live route.
  *
- * Everything is pure and deterministic. No Date.now(), because these render on
- * the server too and a clock read during render is a hydration mismatch.
+ * ONE WALK PRODUCES EVERYTHING. An earlier version had `buildTrace`,
+ * `buildLog` and `totalMs` each advancing their own clock, and they disagreed:
+ * the log's own timestamps spanned 854 ms while the line beneath them printed
+ * `duration=250ms`, because the log charged transport between hops and the
+ * total did not, and because the total dropped the final hop that the log
+ * still waited for. Two formulas for one figure is two figures. Everything
+ * below now comes out of `buildTrace` and nothing recomputes it.
+ *
+ * Nothing here imports a value — labels are passed in — so the node test
+ * runner can execute this file directly, the same reason processModel.ts and
+ * sailings.ts have no runtime imports either.
  */
-const SERVICE_MS: Partial<Record<NodeId, number>> = {
+
+/** Time in a service. Keys are NodeIds; typed loosely so this file stays free. */
+const SERVICE_MS: Record<string, number> = {
   "new-request": 120,
   email: 240,
   "api-integration": 60,
@@ -31,76 +40,84 @@ const SERVICE_MS: Partial<Record<NodeId, number>> = {
 };
 
 const DEFAULT_MS = 100;
+/** Cost of getting from one service to the next. Small, but not free. */
+const TRANSPORT_MS = 6;
 /** 12:01:23.112 — a plausible wall clock, held constant so it never drifts. */
 const BASE_MS = 12 * 3_600_000 + 1 * 60_000 + 23 * 1000 + 112;
 
 export interface TraceHop {
-  id: NodeId;
+  id: string;
   label: string;
   /** 1-based, as shown. */
   hop: number;
-  /** Wall clock at entry, hh:mm:ss. */
+  /** Wall clock at entry, to the millisecond. Truncating to whole seconds
+   *  made every hop of a 250 ms request render the same string. */
   at: string;
-  /** Time spent in this service. Null on the final hop — nothing follows it. */
-  ms: number | null;
-}
-
-function clock(msSinceMidnight: number, withMillis = false): string {
-  const total = Math.floor(msSinceMidnight / 1000);
-  const hh = String(Math.floor(total / 3600) % 24).padStart(2, "0");
-  const mm = String(Math.floor(total / 60) % 60).padStart(2, "0");
-  const ss = String(total % 60).padStart(2, "0");
-  if (!withMillis) return `${hh}:${mm}:${ss}`;
-  return `${hh}:${mm}:${ss}.${String(Math.floor(msSinceMidnight) % 1000).padStart(3, "0")}`;
-}
-
-export function buildTrace(route: readonly NodeId[]): TraceHop[] {
-  let t = BASE_MS;
-  return route.map((id, i) => {
-    const ms = SERVICE_MS[id] ?? DEFAULT_MS;
-    const hop: TraceHop = {
-      id,
-      label: NODES[id].label,
-      hop: i + 1,
-      at: clock(t),
-      ms: i === route.length - 1 ? null : ms,
-    };
-    t += ms;
-    return hop;
-  });
-}
-
-export function totalMs(route: readonly NodeId[]): number {
-  return route
-    .slice(0, -1)
-    .reduce((n, id) => n + (SERVICE_MS[id] ?? DEFAULT_MS), 0);
+  /** Time spent inside this service. */
+  ms: number;
 }
 
 export interface LogLine {
   at: string;
-  level: "INFO" | "WARN";
   message: string;
   detail?: string;
+  /** The closing line. The only one that carries Terminal Green. */
+  final?: boolean;
 }
 
-/** The request log for one route, in the order the services actually ran. */
-export function buildLog(route: readonly NodeId[]): LogLine[] {
-  const lines: LogLine[] = [];
-  let t = BASE_MS;
-  const push = (message: string, detail?: string) => {
-    lines.push({ at: clock(t, true), level: "INFO", message, detail });
-  };
+export interface Trace {
+  hops: TraceHop[];
+  log: LogLine[];
+  /** Entry of the first service to completion of the last. */
+  totalMs: number;
+}
 
-  push("Received quotation request", "requestId=6f3a2b9c");
+function clock(ms: number): string {
+  const total = Math.floor(ms / 1000);
+  const hh = String(Math.floor(total / 3600) % 24).padStart(2, "0");
+  const mm = String(Math.floor(total / 60) % 60).padStart(2, "0");
+  const ss = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}:${ss}.${String(Math.floor(ms) % 1000).padStart(3, "0")}`;
+}
+
+export function serviceMs(id: string): number {
+  return SERVICE_MS[id] ?? DEFAULT_MS;
+}
+
+export function buildTrace(
+  route: readonly string[],
+  labelOf: (id: string) => string,
+): Trace {
+  const hops: TraceHop[] = [];
+  const log: LogLine[] = [];
+  let t = BASE_MS;
+  const start = t;
+
+  log.push({ at: clock(t), message: "Received request", detail: "requestId=6f3a2b9c" });
+
   route.forEach((id, i) => {
-    const ms = SERVICE_MS[id] ?? DEFAULT_MS;
-    t += 6;
-    push(`Entering ${NODES[id].label}`, i === 0 ? "channel=portal" : undefined);
-    t += ms;
-    if (i < route.length - 1) {
-      push(`${NODES[id].label} responded`, `duration=${ms}ms`);
-    }
+    if (i > 0) t += TRANSPORT_MS;
+    hops.push({ id, label: labelOf(id), hop: i + 1, at: clock(t), ms: serviceMs(id) });
+    log.push({
+      at: clock(t),
+      message: `Entering ${labelOf(id)}`,
+      detail: i === 0 ? "channel=portal" : undefined,
+    });
+    t += serviceMs(id);
+    log.push({
+      at: clock(t),
+      message: `${labelOf(id)} responded`,
+      detail: `duration=${serviceMs(id)}ms`,
+    });
   });
-  push("Request completed", `duration=${totalMs(route)}ms  status=200`);
-  return lines;
+
+  const totalMs = t - start;
+  log.push({
+    at: clock(t),
+    message: "Request completed",
+    detail: `duration=${totalMs}ms  status=200`,
+    final: true,
+  });
+
+  return { hops, log, totalMs };
 }

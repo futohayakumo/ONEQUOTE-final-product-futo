@@ -20,14 +20,13 @@ pnpm verify         # token guards, types, lint, unit tests, production build
 
 | Route | What it does |
 | :--- | :--- |
-| `/` | Entrance, and the case for the AI-driven development lifecycle behind the build |
-| `/journeys` | Three persona gateways: business, engineering, process |
-| `/journeys/business` | Quotation simulator, with a replayed transaction trace |
-| `/journeys/engineering` | Request flow across four platform stages. Select any node to re-route the request and read what that component does |
-| `/journeys/process` | An animated 3D comparison of two delivery approaches, with live queue and cycle-time readouts |
-| `/journeys/process/quiz` | Five-question knowledge check on the team's rules |
+| `/` | Entrance. Five bands, closing on the three perspectives — the gateway screen it replaced is gone |
+| `/business` | Quotation simulator, with a replayed transaction trace |
+| `/engineering` | Request flow across four platform stages. Select any node to re-route the request and read what that component does |
+| `/process` | The comparison as an argument — a lead-time chart against batch size, the protocol the quiz then tests, and the animated 3D simulation behind one click |
+| `/process/quiz` | Five-question knowledge check on the team's rules |
 
-All six are statically rendered.
+All five are statically rendered.
 
 ## Things worth knowing before changing anything
 

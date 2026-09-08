@@ -18,10 +18,11 @@ export function RouteDetails({
   units: number;
 }) {
   return (
-    <section className="border border-border bg-studio p-6 rounded-card shadow-card sm:p-8">
+    <section className="flex flex-col gap-6">
       <h2 className="type-section">Route details</h2>
 
-      <div className="mt-7 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,17rem)]">
+      <div className="border border-border bg-studio p-6 rounded-card shadow-card sm:p-8">
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,17rem)]">
         <div>
           <div className="relative flex items-center">
             <span aria-hidden className="h-0.5 flex-1 bg-charcoal" />
@@ -35,7 +36,7 @@ export function RouteDetails({
             <span className="flex flex-col gap-1">
               <span
                 aria-hidden
-                className="mb-2 block h-3 w-3 bg-crimson rounded-full"
+                className="mb-2 block h-3 w-3 bg-charcoal rounded-full"
               />
               <span className="type-label">{PORTS[pol].city}</span>
               <span className="type-caption tnum">
@@ -45,7 +46,7 @@ export function RouteDetails({
             <span className="flex flex-col items-end gap-1">
               <span
                 aria-hidden
-                className="mb-2 block h-3 w-3 bg-crimson rounded-full"
+                className="mb-2 block h-3 w-3 bg-charcoal rounded-full"
               />
               <span className="type-label">{PORTS[pod].city}</span>
               <span className="type-caption tnum">
@@ -68,6 +69,7 @@ export function RouteDetails({
             </div>
           ))}
         </dl>
+      </div>
       </div>
     </section>
   );

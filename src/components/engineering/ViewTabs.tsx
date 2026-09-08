@@ -10,19 +10,17 @@
 export function ViewTabs() {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border">
-      <div role="tablist" aria-label="Diagram view" className="flex gap-7">
-        <button
-          type="button"
-          role="tab"
-          aria-selected
-          className="relative pb-3 type-label text-crimson-ink"
-        >
+      {/* Not a tablist. One tab and no tabpanel announces "tab 1 of 1" over a
+          control that does nothing; the honest markup is a heading and a note.
+          The business screen already does it this way. */}
+      <div className="flex gap-7">
+        <span className="relative pb-3 type-label text-crimson-ink">
           System map
           <span
             aria-hidden
             className="absolute inset-x-0 bottom-0 h-0.5 bg-crimson"
           />
-        </button>
+        </span>
         <span className="pb-3 type-label text-muted">
           C4 view{" "}
           <span className="type-caption">(not built)</span>

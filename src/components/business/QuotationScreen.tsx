@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CONTAINERS, calculateQuote } from "@/lib/pricing";
+import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
 import { quoteForSailing, sailingsFor } from "@/lib/sailings";
 import { QuoteBreakdown } from "./QuoteBreakdown";
 import { RouteDetails } from "./RouteDetails";
@@ -13,7 +13,7 @@ const INITIAL: SearchState = {
   pod: "SGSIN",
   containerType: "20GP",
   tier: "SILVER_SAIL",
-  cbm: 90,
+  cbm: 90 as number | "",
 };
 
 export function QuotationScreen() {
@@ -21,12 +21,11 @@ export function QuotationScreen() {
   const [query, setQuery] = useState<SearchState>(INITIAL);
   const [sailingId, setSailingId] = useState<string>("");
 
-  const error =
-    form.pol === form.pod
-      ? "Origin and destination must be different ports."
-      : form.cbm < 1 || form.cbm > 2000
-        ? "Volume must be between 1 and 2000 CBM."
-        : null;
+  // pricing.ts owns the rules and the limit. The screen used to restate both,
+  // so changing MAX_CBM moved the constant and the tested validator while the
+  // two live copies -- this comparison and the input's max -- stayed at 2000.
+  const errors = validateQuote({ ...form, cbm: form.cbm === "" ? "" : form.cbm });
+  const error = errors.pod ?? errors.cbm ?? null;
 
   const sailings = useMemo(
     () => sailingsFor(query.pol, query.pod),
@@ -38,7 +37,7 @@ export function QuotationScreen() {
       calculateQuote({
         pol: query.pol,
         pod: query.pod,
-        cbm: query.cbm,
+        cbm: query.cbm === "" ? 1 : query.cbm,
         containerType: query.containerType,
         tier: query.tier,
       }),

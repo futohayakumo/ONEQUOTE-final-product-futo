@@ -29,9 +29,11 @@ export function StageColumn({
     // the node cards carry all the surface; a bordered column on top of
     // bordered nodes is two frames doing one frame's job.
     <div
-      className={`flex flex-col gap-5 px-5 ${index > 0 ? "lg:border-l lg:border-border" : ""}`}
+      className={`flex flex-col gap-5 px-5 ${
+        index % 2 === 1 ? "sm:border-l sm:border-border" : ""
+      } ${index > 0 ? "lg:border-l lg:border-border" : ""}`}
     >
-      <h3 className="type-caption tracking-[0.16em] text-muted uppercase">
+      <h3 className="type-overline text-muted">
         {stage.title}
       </h3>
 

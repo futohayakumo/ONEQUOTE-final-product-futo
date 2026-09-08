@@ -4,6 +4,7 @@ import type { FlowEdge, NodeId } from "@/types/flow";
 import {
   arrowD,
   edgeGeometry,
+  isColumnar,
   routeGeometry,
   type Rect,
 } from "./routeGeometry";
@@ -32,10 +33,10 @@ export function FlowConnectors({
   spineEdges: readonly FlowEdge[];
   peekEdges: readonly FlowEdge[];
 }) {
-  // Below the lg breakpoint the stage grid collapses to one column and every
-  // pair of boxes reads as "same column", which would draw vertical spaghetti.
-  // The numbered route readout carries the flow on narrow screens instead.
-  if (size.w < 1024) return null;
+  // When the grid collapses to one column every pair of boxes reads as "same
+  // column", which would draw vertical spaghetti. The numbered timeline below
+  // the map carries the order on narrow screens instead.
+  if (!isColumnar(rects as Record<string, Rect>)) return null;
 
   const spine = edgeGeometry(spineEdges, rects as Record<string, Rect>);
   const peek = edgeGeometry(peekEdges, rects as Record<string, Rect>);

@@ -7,7 +7,7 @@ import { ProgressBar } from "../ui/ProgressBar";
 import { QuestionCard } from "./QuestionCard";
 import { QuizResult } from "./QuizResult";
 
-const STORAGE_KEY = "oneportfolio.quiz.v1";
+const STORAGE_KEY = "portfolio.knowledge-check.v1";
 
 interface Saved {
   index: number;
@@ -32,9 +32,18 @@ export function QuizRunner() {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as Saved;
+      // All three fields, not one. `revealed` and `index` were trusted, so a
+      // session written by an earlier shape gave `state.revealed[i]` of
+      // undefined or an index past the end -- a TypeError during render, which
+      // the try/catch around the parse does not cover.
       if (
         Array.isArray(parsed.answers) &&
-        parsed.answers.length === QUIZ.length
+        parsed.answers.length === QUIZ.length &&
+        Array.isArray(parsed.revealed) &&
+        parsed.revealed.length === QUIZ.length &&
+        Number.isInteger(parsed.index) &&
+        parsed.index >= 0 &&
+        parsed.index < QUIZ.length
       ) {
         // Reading sessionStorage during render would cause a hydration
         // mismatch, so saved progress is restored once after mount.
@@ -79,8 +88,11 @@ export function QuizRunner() {
           Question {i + 1} of {QUIZ.length}
         </span>
         <div className="min-w-0 flex-1">
+          {/* i + 1, not i: on arrival the bar was empty, which reads as "no
+              progress bar" rather than "question one of five". The question
+              you are on is progress. */}
           <ProgressBar
-            value={i + (revealed ? 1 : 0)}
+            value={i + 1}
             max={QUIZ.length}
             label={`Question ${i + 1} of ${QUIZ.length}`}
           />
@@ -122,7 +134,7 @@ export function QuizRunner() {
           }}
           className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal disabled:cursor-not-allowed disabled:border-border disabled:bg-mist disabled:text-muted"
         >
-          {isLast ? "See results" : "Next"}
+          {isLast ? "See results" : "Next question"}
           <ArrowRight size={18} />
         </button>
       </div>

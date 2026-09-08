@@ -1,16 +1,15 @@
 "use client";
 
-import { buildTrace, totalMs } from "@/lib/trace";
+import { NODES } from "@/lib/flow-data";
+import type { Trace } from "@/lib/trace";
 import type { NodeId } from "@/types/flow";
 
 /**
  * The horizontal timeline under the map. It reads the live route, so
  * re-routing the diagram re-times it — a fixed timeline under a diagram that
- * changes would be saying the same thing about two different paths.
+ * changes would say the same thing about two different paths.
  */
-export function RequestTrace({ route }: { route: readonly NodeId[] }) {
-  const hops = buildTrace(route);
-
+export function RequestTrace({ trace }: { trace: Trace }) {
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -21,7 +20,8 @@ export function RequestTrace({ route }: { route: readonly NodeId[] }) {
           </p>
         </div>
         <p className="type-caption tnum">
-          <span className="type-label">{totalMs(route)} ms</span> end to end
+          <span className="type-label">{trace.totalMs} ms</span> from first
+          entry to response
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export function RequestTrace({ route }: { route: readonly NodeId[] }) {
           aria-hidden
           className="absolute top-1.5 right-4 left-4 hidden h-px bg-border sm:block"
         />
-        {hops.map((hop, i) => (
+        {trace.hops.map((hop, i) => (
           <li
             key={hop.id}
             className="relative flex flex-1 flex-col gap-2 sm:items-start"
@@ -46,11 +46,11 @@ export function RequestTrace({ route }: { route: readonly NodeId[] }) {
               }
             />
             <span className="type-caption tnum text-muted">{hop.hop}</span>
-            <span className="type-label">{hop.label}</span>
-            <span className="type-caption tnum">{hop.at}</span>
-            <span className="type-caption tnum">
-              {hop.ms === null ? "—" : `${hop.ms} ms`}
+            <span className="type-label">
+              {NODES[hop.id as NodeId]?.label ?? hop.label}
             </span>
+            <span className="type-caption tnum">{hop.at}</span>
+            <span className="type-caption tnum">{hop.ms} ms</span>
           </li>
         ))}
       </ol>

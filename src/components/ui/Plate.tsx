@@ -17,6 +17,7 @@ export function Plate({
   spec,
   ratio,
   tone = "light",
+  align = "center",
   className,
 }: {
   /** What image goes here. */
@@ -26,13 +27,23 @@ export function Plate({
   /** CSS aspect-ratio, e.g. "16 / 9". Omit when the parent sets the height. */
   ratio?: string;
   tone?: "light" | "dark";
+  /**
+   * `corner` for a plate mounted behind live type. A centred label lands on
+   * the copy the moment the band narrows -- at 768 the globe band's label ran
+   * straight through "See the network" -- and that overlap is a preview of a
+   * real legibility problem, because the scrim will occupy the same place.
+   */
+  align?: "center" | "corner";
   className?: string;
 }) {
   return (
     <div
       style={ratio ? { aspectRatio: ratio } : undefined}
       className={cn(
-        "flex flex-col items-center justify-center gap-1 border px-4 text-center",
+        "flex flex-col gap-1 border px-4",
+        align === "center"
+          ? "items-center justify-center text-center"
+          : "items-end justify-end p-4 text-right",
         tone === "dark"
           ? "border-charcoal bg-charcoal"
           : "border-border bg-mist",

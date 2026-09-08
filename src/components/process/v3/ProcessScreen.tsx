@@ -8,6 +8,31 @@ import { ArrowRight } from "../../icons/ArrowRight";
 import { Plate } from "../../ui/Plate";
 import { GapChart } from "./GapChart";
 import { OutcomeCards } from "./OutcomeCards";
+import { SimulationPanel } from "./SimulationPanel";
+
+/**
+ * The rules the quiz then asks about.
+ *
+ * Q1 and Q3 of the knowledge check test the commit convention and the approval
+ * count. The screen that stated them was dropped in the v3 rewrite, which left
+ * the quiz asking about a protocol the site never explains — a quiz whose only
+ * honest answer is a guess. These are here because the check downstream is
+ * only worth taking if the reader was told.
+ */
+const PROTOCOL = [
+  {
+    rule: "[Ticket_ID] Commit Message",
+    body: "Every commit opens with its ticket id. Release notes and the audit trail are generated from that tag, and a pre-receive hook rejects any subject line without one — the convention is enforced by the repository, not by reviewer goodwill.",
+  },
+  {
+    rule: "Two approvals to merge",
+    body: "A pull request needs at least two independent approvals. One reviewer is both a bottleneck and a single point of failure; branch protection enforces the count, and a green build alone never unlocks the merge.",
+  },
+  {
+    rule: "Prefixed branches",
+    body: "Branch names carry their type and ticket, so the board and the repository can be reconciled without anybody maintaining a mapping by hand.",
+  },
+] as const;
 
 const WHY = [
   {
@@ -31,7 +56,7 @@ export function ProcessScreen() {
   return (
     <div className="flex flex-col">
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="mx-auto grid w-full max-w-[86rem] gap-12 px-6 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-center">
+      <section className="mx-auto grid w-full max-w-[86rem] gap-12 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-center">
         <div>
           <p className="type-eyebrow">Process</p>
           <h1 className="mt-6 type-display">
@@ -45,17 +70,17 @@ export function ProcessScreen() {
 
           <div className="mt-10 flex flex-wrap items-center gap-7">
             <Link
-              href="#outcome"
+              href="/process/quiz"
               className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
             >
-              See the numbers
+              Take the knowledge check
               <ArrowRight size={18} />
             </Link>
             <Link
-              href="/process/quiz"
-              className="type-label text-crimson-ink underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
+              href="#simulation"
+              className="type-label underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
             >
-              Take the knowledge check
+              Or run the simulation
             </Link>
           </div>
         </div>
@@ -67,7 +92,7 @@ export function ProcessScreen() {
             ratio="16 / 10"
             className="rounded-card"
           />
-          <p className="border-l-2 border-crimson pl-5 type-label">
+          <p className="border-l-2 border-charcoal pl-5 type-label">
             Same work. Less waiting.
           </p>
         </div>
@@ -86,14 +111,14 @@ export function ProcessScreen() {
               </p>
             </div>
 
-            <label className="flex items-center gap-3">
-              <span className="type-caption">Story points</span>
+            <label className="flex shrink-0 flex-col gap-2 border-l border-border pl-6">
+              <span className="type-overline text-muted">Story points</span>
               <select
                 value={sp}
                 onChange={(e) =>
                   setSp(Number(e.target.value) as StoryPoint)
                 }
-                className="border border-border bg-studio px-4 py-2.5 type-label tnum rounded-card"
+                className="w-28 border border-border bg-studio px-4 py-2.5 type-label tnum rounded-card shadow-card"
               >
                 {STORY_POINTS.map((p) => (
                   <option key={p} value={p}>
@@ -163,6 +188,8 @@ export function ProcessScreen() {
         </div>
       </section>
 
+      <SimulationPanel />
+
       {/* ── Why waiting happens ──────────────────────────────── */}
       <section className="border-t border-border bg-studio">
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
@@ -176,13 +203,37 @@ export function ProcessScreen() {
             {WHY.map((item) => (
               <li
                 key={item.title}
-                className="flex flex-col gap-2 border-t-2 border-crimson pt-5"
+                className="flex flex-col gap-2 border-t border-border pt-5"
               >
                 <h3 className="type-label">{item.title}</h3>
                 <p className="type-caption">{item.body}</p>
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* ── The protocol ─────────────────────────────────────── */}
+      <section className="border-t border-border">
+        <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
+          <div>
+            <p className="type-eyebrow">The agile delivery protocol</p>
+            <h2 className="mt-5 type-page">
+              Three rules, enforced by tooling.
+            </h2>
+            <p className="mt-3 max-w-[56ch] type-body text-muted">
+              None of these depend on anybody remembering them, which is the
+              only reason they hold under load.
+            </p>
+          </div>
+          <dl className="grid gap-8 sm:grid-cols-3">
+            {PROTOCOL.map((item) => (
+              <div key={item.rule} className="flex flex-col gap-2">
+                <dt className="type-label">{item.rule}</dt>
+                <dd className="type-caption">{item.body}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 

@@ -76,8 +76,8 @@ export const LOYALTY_TIERS: Record<
   BLUE_WAVE: { label: "Blue Wave", discountRate: 0.0, milestoneTeu: 5 },
   SILVER_SAIL: { label: "Silver Sail", discountRate: 0.03, milestoneTeu: 10 },
   GOLDEN_SEA: { label: "Golden Sea", discountRate: 0.06, milestoneTeu: 20 },
-  MILLION_MAGENTA: {
-    label: "Million Magenta",
+  PLATINUM_TIDE: {
+    label: "Platinum Tide",
     discountRate: 0.1,
     milestoneTeu: 50,
   },
@@ -87,7 +87,7 @@ export const TIER_ORDER: readonly LoyaltyTier[] = [
   "BLUE_WAVE",
   "SILVER_SAIL",
   "GOLDEN_SEA",
-  "MILLION_MAGENTA",
+  "PLATINUM_TIDE",
 ] as const;
 
 export const CBM_TERMINAL_HANDLING_USD_PER_CBM = 4.5;

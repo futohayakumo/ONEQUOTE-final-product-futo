@@ -39,6 +39,7 @@ export function JourneyStrip() {
           body="Port to port. A single quotation commits a slot, a rate and a date — and everything downstream is bound by it."
           href="/business"
           linkLabel="See the quotation flow"
+          emphasis="accent"
         />
 
         <ol className="grid flex-1 grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-3">
@@ -70,7 +71,7 @@ export function JourneyStrip() {
                   </span>
                 ) : null}
               </div>
-              <span className="mt-5 type-caption tracking-[0.16em] text-charcoal uppercase">
+              <span className="mt-5 type-overline text-charcoal">
                 {step.label}
               </span>
               <p className="mt-2 type-caption">{step.blurb}</p>

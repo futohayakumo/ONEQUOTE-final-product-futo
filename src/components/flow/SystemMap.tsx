@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   NEIGHBOUR_EDGES,
   NODES,
@@ -9,24 +9,10 @@ import {
 } from "@/lib/flow-data";
 import type { NodeId } from "@/types/flow";
 import { FlowConnectors } from "./FlowConnectors";
+import { isColumnar } from "./routeGeometry";
 import { FlowLegend } from "./FlowLegend";
 import { StageColumn } from "./StageColumn";
 import { useNodeGeometry } from "./useNodeGeometry";
-
-function isNodeId(v: string): v is NodeId {
-  return v in NODES;
-}
-
-/** The old ?c= links pointed at components; keep them working. */
-const LEGACY_C_TO_NODE: Record<string, NodeId> = {
-  "web-portal": "request-intake",
-  "routing-gateway": "routing-gateway",
-  "quotation-service": "quotation-service",
-  "campaign-service": "campaign-service",
-  "data-platform": "data-platform",
-  "feature-flags": "feature-flags",
-  "translation-api": "translation-api",
-};
 
 /**
  * The diagram itself. Selection is a prop rather than local state: the rail,
@@ -47,28 +33,6 @@ export function SystemMap({
   const [focusNode, setFocusNode] = useState<NodeId>("new-request");
   const { containerRef, registerNode, rects, size } = useNodeGeometry();
   const gridRef = useRef<HTMLDivElement>(null);
-
-  // Hydrate from the URL once, after mount. Reading searchParams on the server
-  // would make this route dynamic; it has to stay static.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const n = params.get("n");
-    const c = params.get("c");
-    const resolved =
-      n && isNodeId(n)
-        ? n
-        : c && LEGACY_C_TO_NODE[c]
-          ? LEGACY_C_TO_NODE[c]
-          : null;
-    if (!resolved) return;
-    onSelect(resolved);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFocusNode(resolved);
-    // Hydrating the URL is a once-on-mount job. Re-running it when the parent
-    // re-creates onSelect would re-apply the query string over a live
-    // selection and snap the map back on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const select = useCallback(
     (id: NodeId | null) => {
@@ -143,7 +107,7 @@ export function SystemMap({
           role="group"
           aria-label="System flow map. Use the arrow keys to move between components, and Enter to inspect one."
           onKeyDown={onKeyDown}
-          className="grid gap-y-8 lg:grid-cols-4 lg:gap-x-0"
+          className="grid gap-y-8 sm:grid-cols-2 sm:gap-x-0 lg:grid-cols-4"
         >
           {STAGES.map((stage, index) => (
             <StageColumn
@@ -169,7 +133,8 @@ export function SystemMap({
         />
       </div>
 
-      <FlowLegend />
+      {/* Describes three line styles; pointless when none are drawn. */}
+      {isColumnar(rects) ? <FlowLegend /> : null}
 
       <p aria-live="polite" className="sr-only">
         {announcement}

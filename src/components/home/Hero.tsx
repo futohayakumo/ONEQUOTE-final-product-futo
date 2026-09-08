@@ -14,6 +14,7 @@ export function Hero() {
           label="Hero — port at first light, vessel berthed under cranes"
           spec="2400 × 900 · no wordmark on the hull"
           tone="dark"
+          align="corner"
           className="h-full w-full"
         />
       </div>
@@ -50,7 +51,7 @@ export function Hero() {
             </Link>
 
             <Link
-              href="/process"
+              href="/process#simulation"
               className="group inline-flex items-center gap-3 type-label text-studio"
             >
               <span
@@ -62,7 +63,7 @@ export function Hero() {
                 </svg>
               </span>
               <span className="underline underline-offset-4 group-hover:text-crimson-lift">
-                See the process in one minute
+                Run the delivery simulation
               </span>
             </Link>
           </div>
@@ -78,7 +79,7 @@ export function Hero() {
           {RAIL.map((word) => (
             <li
               key={word}
-              className="type-caption tracking-[0.24em] text-border uppercase"
+              className="type-overline text-border"
             >
               {word}
             </li>

@@ -213,13 +213,37 @@
   font-variant-ligatures: none;
 }
 
+/* The section opener. Crimson, and the only small-caps label that is. */
 @utility type-eyebrow {
   font-size: 13px;
   line-height: 1;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-crimson-ink);
+}
+
+/*
+ * Every other small-caps label: column headings, panel titles, the words
+ * running up the edge of a photograph, the note beside a page title.
+ *
+ * This exists because the same role had been re-invented six times at three
+ * different tracking values and four different colours -- 0.14em muted here,
+ * 0.16em charcoal there, 0.24em border on the hero rail. Each was defensible
+ * alone; together they meant the reader could never learn what a small-caps
+ * label signifies, which is the single loudest reason five screens did not
+ * read as one product.
+ *
+ * It deliberately sets no colour. Colour is the one axis that legitimately
+ * varies here -- muted on paper, studio on a dark band -- and baking a default
+ * in only invites an override that may or may not win the cascade.
+ */
+@utility type-overline {
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 /* Back navigation reverses the entrance. */

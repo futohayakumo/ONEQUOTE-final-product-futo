@@ -1,4 +1,4 @@
-# ONEportfolio — working rules
+# Working rules
 
 Run `pnpm verify` before every commit. It runs the token guards, TypeScript,
 ESLint, the unit tests, and a production build.
@@ -22,7 +22,7 @@ Nine colours, and no others:
 | `tint` | `#FDF2F8` | active item background |
 | `console` | `#0F172A` | terminal background |
 | `terminal` | `#34D399` | **console only** (1.75:1 on white) |
-| `mist` | `#E2E8F0` | inert fills, progress tracks |
+| `mist` | `#E2E8F0` | inert fills, progress tracks, disabled controls |
 | `crimson-ink` | `#D81175` | crimson **type** on light grounds |
 | `crimson-lift` | `#E6388F` | crimson **type** on charcoal |
 
@@ -34,9 +34,23 @@ passes. `#E1127A` *as type* clears 4.5 on pure white only — 4.39 on `canvas`,
 measure wrong; the two variants exist because the difference is 4% of
 lightness.
 
-Type scale, as bundled utilities: `type-display` (56px, hero H1 and the three
-persona titles only), `type-page`, `type-section`, `type-body`, `type-label`,
-`type-caption`, `type-console`, `type-eyebrow`.
+Type scale, as bundled utilities: `type-display` (56px, reserved for the two
+screens that open with a statement — the home hero and the process hero),
+`type-page`, `type-section`, `type-body`, `type-label`, `type-caption`,
+`type-console`, `type-wordmark`.
+
+Small-caps labels have exactly two spellings and no third. `type-eyebrow` is
+the crimson section opener; `type-overline` is every other one — column
+headings, panel titles, the words up the edge of a photograph — and sets no
+colour, because colour is the axis that legitimately varies there. Both track
+at 0.16em. Six places had re-invented this role at three tracking values and
+four colours, which is the loudest single reason five screens can stop reading
+as one product; `check:tokens` now fails on any `tracking-[…]`.
+
+**v2 reserved `type-display` for the three persona titles.** Those had a screen
+each at `/journeys`; they are now cards in the home page's closing band, and
+56px does not fit in a 220px card. The rule moved with the design rather than
+the cards being bent to fit it.
 
 Geometry, as of v3. The refreshed comps use rounder corners and a whisper of
 elevation, and they won that argument — but the set is still closed, and
@@ -83,9 +97,23 @@ silently. `pnpm check:tokens` is what catches it — and note that it skips
 binary files, so a real name rendered into a photograph passes every check in
 this repository. That is why `public/assets/branded/` is gitignored.
 
-Crimson is allowed on: primary CTA fills, the eyebrow label and its 2px rule,
-an active node's 2px border, the selected connector, numbered badges, link
-arrows, and the focus ring. Nothing else.
+Crimson is allowed on: primary CTA fills, the eyebrow label, an active node's
+2px border, the selected connector, numbered badges, link arrows, the focus
+ring, and **one word inside a hero heading** — the comps do this twice and it
+is the only place the accent carries meaning rather than direction. Nothing
+else.
+
+Two corollaries that were violated and are worth stating. Decorative glyphs do
+not get it: two crimson port dots in the route panel were the only warm marks
+there, so the eye went to twelve pixels carrying no information. And a benefit
+does not get it: crimson on the loyalty discount made a saving read as a
+problem, in a charcoal invoice where it was the only colour.
+
+**Crimson must mean one thing per screen.** On the process screen it marked
+waiting on the left card and the AI-driven series on the chart 40px to its
+right — two correct legends meaning opposite things, so a reader who trusted
+the colour read the chart backwards. The accent belongs to whatever the screen
+argues *for*.
 
 ## Publishing safety
 
@@ -118,7 +146,7 @@ variable names, simulated payloads, commit messages, filenames and assets.
 
 ## Architecture notes
 
-- All six routes must stay statically rendered. Never read `searchParams` on
+- All five routes must stay statically rendered. Never read `searchParams` on
   the server; sync selection state client-side with `history.replaceState`.
 - `three.js` may only be imported from `src/components/process/scene/**`.
   ESLint enforces this. The 2D UI and the no-WebGL fallback share

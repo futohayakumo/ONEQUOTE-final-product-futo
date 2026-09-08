@@ -23,12 +23,12 @@ export function PageHeader({
     >
       <div className="min-w-0 flex-1">
         <p className="type-eyebrow">{eyebrow}</p>
-        <h1 className="mt-5 max-w-[22ch] type-page">{title}</h1>
-        <p className="mt-4 max-w-[70ch] type-body text-muted">{lede}</p>
+        <h1 className="mt-5 max-w-[34ch] type-page">{title}</h1>
+        <p className="mt-4 max-w-[62ch] type-body text-muted">{lede}</p>
       </div>
       {note ? (
         <div className="shrink-0 border-l border-border pl-8 lg:max-w-[16rem]">
-          <p className="type-caption tracking-[0.16em] text-charcoal uppercase">
+          <p className="type-overline text-charcoal">
             {note}
           </p>
           <span aria-hidden className="mt-4 block h-0.5 w-10 bg-crimson" />

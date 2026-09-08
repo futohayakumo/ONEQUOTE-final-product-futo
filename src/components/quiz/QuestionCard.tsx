@@ -20,7 +20,7 @@ export function QuestionCard({
       {/* A real fieldset/legend, so the group and the "N of 4" position are
           announced. A div with onClick loses all of that. */}
       <fieldset className="flex flex-col gap-3 border-0 p-0">
-        <legend className="mb-3 type-section">{question.prompt}</legend>
+        <legend className="mb-5 type-section">{question.prompt}</legend>
         {question.options.map((option, i) => (
           <OptionRow
             key={option.id}

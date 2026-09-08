@@ -106,20 +106,27 @@ export function sailingsFor(pol: PortCode, pod: PortCode): Sailing[] {
 const REFERENCE = Date.UTC(2026, 8, 18);
 const DAY = 86_400_000;
 
+/*
+ * Formatted from tables, not from toLocaleDateString.
+ *
+ * These strings render on the server and again in the browser. Node built
+ * without full ICU falls back to a different set of month and weekday
+ * abbreviations than Chrome ships, which is a hydration mismatch on every
+ * sailing row — silent in development, and dependent on how the deploy
+ * image was compiled. Three lines of table remove the dependency entirely.
+ */
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export function sailingDate(offsetDays: number): string {
-  return new Date(REFERENCE + offsetDays * DAY).toLocaleDateString("en-GB", {
-    timeZone: "UTC",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const d = new Date(REFERENCE + offsetDays * DAY);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${day} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
 export function sailingWeekday(offsetDays: number): string {
-  return new Date(REFERENCE + offsetDays * DAY).toLocaleDateString("en-GB", {
-    timeZone: "UTC",
-    weekday: "short",
-  });
+  return WEEKDAYS[new Date(REFERENCE + offsetDays * DAY).getUTCDay()];
 }
 
 export interface SailingQuoteLine {

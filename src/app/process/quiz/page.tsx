@@ -7,7 +7,7 @@ export const metadata = { title: "Knowledge check" };
 
 export default function QuizPage() {
   return (
-    <main className="mx-auto flex max-w-[62rem] flex-col gap-12 px-6 py-16">
+    <main className="mx-auto flex max-w-[86rem] flex-col gap-12 px-6 py-16">
       <Link
         href="/process"
         className="inline-flex w-fit items-center gap-2.5 type-label text-muted transition-colors duration-150 hover:text-charcoal"
@@ -35,7 +35,9 @@ export default function QuizPage() {
         }
       />
 
-      <QuizRunner />
+      <div className="max-w-[54rem]">
+        <QuizRunner />
+      </div>
     </main>
   );
 }

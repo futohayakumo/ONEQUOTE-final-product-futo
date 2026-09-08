@@ -31,6 +31,7 @@ export default function BusinessPage() {
             label="Terminal yard — supervisor among container stacks"
             spec="2400 × 560 · no wordmark on the vest"
             tone="dark"
+            align="corner"
             className="h-full w-full"
           />
         </div>

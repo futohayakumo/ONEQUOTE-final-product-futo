@@ -4,7 +4,7 @@ import { SectionTitle } from "../ui/SectionTitle";
 
 export function PlatformNote() {
   return (
-    <div className="grid min-w-0 gap-6 overflow-hidden border border-border bg-studio p-6 rounded-sharp lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+    <div className="grid min-w-0 items-start gap-8 overflow-hidden border border-border bg-studio p-6 rounded-card shadow-card lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-3">
         <SectionTitle as="h3">{PLATFORM_NOTE.title}</SectionTitle>
         <p className="type-caption text-charcoal">{PLATFORM_NOTE.body}</p>

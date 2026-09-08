@@ -15,6 +15,7 @@ export function NetworkBand() {
           label="Dark globe with lit trade lanes"
           spec="available — banners/03, needs 2400 wide"
           tone="dark"
+          align="corner"
           className="h-full w-full"
         />
       </div>

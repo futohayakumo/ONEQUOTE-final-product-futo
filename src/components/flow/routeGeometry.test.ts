@@ -4,6 +4,7 @@ import {
   arrowD,
   edgeGeometry,
   edgePoints,
+  isColumnar,
   polylineLength,
   routeGeometry,
   terminalDirection,
@@ -95,4 +96,26 @@ test("edgeGeometry skips edges whose endpoints are unmeasured", () => {
   );
   assert.equal(out.length, 1);
   assert.equal(out[0].key, "a->b");
+});
+
+test("isColumnar reflects the layout, not a width guess", () => {
+  // Collapsed: every node stacked in one column.
+  const stacked: Record<string, Rect> = {
+    a: { x: 0, y: 0, w: 200, h: 40 },
+    b: { x: 0, y: 60, w: 200, h: 40 },
+    c: { x: 2, y: 120, w: 200, h: 40 },
+  };
+  assert.equal(isColumnar(stacked), false);
+
+  // Four columns, the arrangement the connectors are drawn for.
+  const columns: Record<string, Rect> = {
+    a: { x: 0, y: 0, w: 200, h: 40 },
+    b: { x: 240, y: 0, w: 200, h: 40 },
+    c: { x: 480, y: 0, w: 200, h: 40 },
+    d: { x: 720, y: 0, w: 200, h: 40 },
+  };
+  assert.equal(isColumnar(columns), true);
+
+  // Nothing measured yet.
+  assert.equal(isColumnar({}), false);
 });

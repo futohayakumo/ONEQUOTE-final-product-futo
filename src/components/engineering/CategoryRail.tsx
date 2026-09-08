@@ -2,6 +2,7 @@
 
 import cn from "clsx";
 import { COMPONENT_CATALOG, COMPONENT_ORDER } from "@/lib/component-catalog";
+import { NODES } from "@/lib/flow-data";
 import type { ComponentId, NodeId } from "@/types/flow";
 
 /**
@@ -20,6 +21,11 @@ export function CategoryRail({
   const activeComponent = COMPONENT_ORDER.find(
     (id: ComponentId) => COMPONENT_CATALOG[id].nodeId === selected,
   );
+  // Only 7 of the 15 nodes carry a deep dive. Selecting one of the other 8 in
+  // the map used to leave this rail with nothing lit and nothing highlighted,
+  // so it read as "nothing is selected" while the map, the timeline and the
+  // detail panel all said otherwise.
+  const orphanSelection = selected !== null && activeComponent === undefined;
 
   return (
     <nav aria-label="Services" className="flex flex-col gap-1">
@@ -36,6 +42,13 @@ export function CategoryRail({
       >
         All services
       </button>
+
+      {orphanSelection ? (
+        <p className="px-4 py-2.5 type-caption">
+          {NODES[selected].label} is selected in the map. It has no deep dive,
+          so it is not listed here.
+        </p>
+      ) : null}
 
       {COMPONENT_ORDER.map((id: ComponentId) => {
         const entry = COMPONENT_CATALOG[id];

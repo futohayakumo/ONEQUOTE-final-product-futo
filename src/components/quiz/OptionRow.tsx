@@ -46,10 +46,10 @@ export function OptionRow({
     <label
       className={cn(
         "flex cursor-pointer items-center gap-4 px-5 py-4 rounded-card transition-colors duration-150",
-        chosenAndRight && "border-2 border-charcoal bg-studio",
-        chosenAndWrong && "border-2 border-crimson bg-tint",
-        revealedAnswer && "border-2 border-charcoal bg-studio",
-        !revealed && checked && "border-2 border-crimson bg-tint",
+        chosenAndRight && "border-2 border-charcoal bg-studio shadow-raised",
+        chosenAndWrong && "border-2 border-crimson bg-tint shadow-raised",
+        revealedAnswer && "border-2 border-charcoal bg-studio shadow-raised",
+        !revealed && checked && "border-2 border-crimson bg-tint shadow-raised",
         !revealed &&
           !checked &&
           "border border-border bg-studio shadow-card hover:border-crimson",

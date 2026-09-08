@@ -48,13 +48,13 @@ test("worked example B — Singapore to Rotterdam, 30 CBM, 20' Standard GP, Blue
   assert.equal(q.nextMilestoneTeu, 5);
 });
 
-test("worked example C — Tokyo to Yokohama, 200 CBM, 40' Reefer RF, Million Magenta", () => {
+test("worked example C — Tokyo to Yokohama, 200 CBM, 40' Reefer RF, Platinum Tide", () => {
   const q = calculateQuote({
     pol: "JPTYO",
     pod: "JPYOK",
     cbm: 200,
     containerType: "40RF",
-    tier: "MILLION_MAGENTA",
+    tier: "PLATINUM_TIDE",
   });
 
   assert.equal(q.units, 3); // ceil(200 / 67) = 3, not 4

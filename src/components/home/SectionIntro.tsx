@@ -17,6 +17,7 @@ export function SectionIntro({
   href,
   linkLabel,
   tone = "light",
+  emphasis = "quiet",
 }: {
   no: string;
   title: React.ReactNode;
@@ -25,6 +26,11 @@ export function SectionIntro({
   href: string;
   linkLabel: string;
   tone?: "light" | "dark";
+  /**
+   * Only one band per page should carry the accent. Four crimson "See the X →"
+   * links of identical weight is four equal exits, which is none.
+   */
+  emphasis?: "quiet" | "accent";
 }) {
   const dark = tone === "dark";
   return (
@@ -38,7 +44,7 @@ export function SectionIntro({
         {title}
       </h2>
       <p
-        className={`mt-3 type-caption tracking-[0.14em] uppercase ${dark ? "text-border" : ""}`}
+        className={`mt-3 type-overline ${dark ? "text-border" : "text-muted"}`}
       >
         {subtitle}
       </p>
@@ -49,10 +55,14 @@ export function SectionIntro({
           pair: #E1127A is 4.39:1 on canvas and 3.88:1 on charcoal. */}
       <Link
         href={href}
-        className={`mt-8 inline-flex items-center gap-2.5 type-label transition-colors duration-150 ${
-          dark
-            ? "text-crimson-lift hover:text-studio"
-            : "text-crimson-ink hover:text-charcoal"
+        className={`mt-8 inline-flex items-center gap-2.5 type-label underline underline-offset-4 transition-colors duration-150 ${
+          emphasis === "accent"
+            ? dark
+              ? "text-crimson-lift hover:text-studio"
+              : "text-crimson-ink hover:text-charcoal"
+            : dark
+              ? "text-border hover:text-studio"
+              : "text-muted hover:text-charcoal"
         }`}
       >
         {linkLabel}

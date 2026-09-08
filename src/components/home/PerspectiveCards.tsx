@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { PERSONAS } from "@/lib/personas";
+import { PERSONAS, type PersonaId } from "@/lib/personas";
 import { ArrowRight } from "../icons/ArrowRight";
 import { Plate } from "../ui/Plate";
 import { SectionIntro } from "./SectionIntro";
 
-const ART: Record<string, { label: string; spec: string }> = {
+const ART: Record<PersonaId, { label: string; spec: string }> = {
   business: {
     label: "Executive above a container terminal",
     spec: "available — spot/10",
@@ -19,7 +19,7 @@ const ART: Record<string, { label: string; spec: string }> = {
   },
 };
 
-const HEADING: Record<string, string> = {
+const HEADING: Record<PersonaId, string> = {
   business: "The business view",
   engineering: "The systems view",
   process: "The delivery view",

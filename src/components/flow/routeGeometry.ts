@@ -12,6 +12,22 @@ export interface Pt {
   y: number;
 }
 
+/**
+ * Is the stage grid actually laid out in columns?
+ *
+ * The connectors used to decide this from a width threshold, and the threshold
+ * measured the wrong box: the grid flips to four columns at a VIEWPORT of
+ * 1024, but the measured container is the viewport minus the rail, the gap and
+ * the page padding. Between 1024 and about 1320 the grid was columnar and the
+ * connectors drew nothing — which covers 1280x800, one of the commonest laptop
+ * sizes. Asking the measured rects how many distinct columns exist cannot go
+ * out of step with the CSS, because it IS the CSS's output.
+ */
+export function isColumnar(rects: Record<string, Rect>): boolean {
+  const xs = Object.values(rects).map((r) => Math.round(r.x / 8));
+  return new Set(xs).size > 1;
+}
+
 export interface Rect {
   x: number;
   y: number;
