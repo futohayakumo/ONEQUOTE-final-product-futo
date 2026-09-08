@@ -124,7 +124,7 @@ fi
 
 # Terminal Green measures 1.75:1 on white — console surfaces only.
 report "Terminal Green confined to the console" \
-  "$(grep -rn 'text-terminal' src/ 2>/dev/null | grep -vE 'components/(quote/QuoteConsole|ui/CodeBlock)')"
+  "$(grep -rn 'text-terminal' src/ 2>/dev/null | grep -vE 'components/(quote/QuoteConsole|engineering/RequestLog|ui/CodeBlock)')"
 
 # three.js must stay inside the lazily-loaded scene chunk, or the other five
 # screens start paying ~250 kB for a renderer they never use.

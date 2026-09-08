@@ -92,12 +92,12 @@ export function FlowNode({
       onFocus={() => onPeek(id)}
       onBlur={onPeekEnd}
       className={cn(
-        "relative z-10 flex w-full items-center gap-3 py-3 pl-9 pr-7 text-left rounded-sharp transition-colors duration-150",
+        "relative z-10 flex w-full items-center gap-3 py-3.5 pl-9 pr-7 text-left rounded-card transition-colors duration-150",
         selected
-          ? "border-2 border-crimson bg-tint"
+          ? "border-2 border-crimson bg-tint shadow-raised"
           : onRoute
-            ? "border-2 border-crimson bg-studio"
-            : "border border-border bg-studio hover:border-crimson",
+            ? "border-2 border-crimson bg-studio shadow-card"
+            : "border border-border bg-studio shadow-card hover:border-crimson",
       )}
     >
       {/* Reserved gutter — always present, so geometry never changes. */}
@@ -117,7 +117,7 @@ export function FlowNode({
       <span className={onRoute ? "text-crimson" : "text-muted"}>
         <Icon size={20} />
       </span>
-      <span className="type-caption text-charcoal">{node.label}</span>
+      <span className="type-label">{node.label}</span>
 
       {node.componentId ? (
         <span

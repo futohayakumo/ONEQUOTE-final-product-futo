@@ -35,14 +35,14 @@ export function QuizResult({
           return (
             <li
               key={q.id}
-              className="flex gap-4 border border-border bg-studio p-4 rounded-sharp"
+              className="flex gap-4 border border-border bg-studio p-5 rounded-card shadow-card"
             >
               <span
                 aria-hidden
                 className={
                   right
                     ? "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-charcoal bg-charcoal text-studio"
-                    : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-crimson text-crimson"
+                    : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-crimson text-crimson-ink"
                 }
                 style={{ borderRadius: 9999 }}
               >
@@ -66,14 +66,14 @@ export function QuizResult({
         <button
           type="button"
           onClick={onRetake}
-          className="border border-border bg-studio px-6 py-3 type-label rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
+          className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
         >
           Retake
         </button>
         <TransitionLink
           href="/process"
           direction="back"
-          className="border border-border bg-studio px-6 py-3 type-label rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
+          className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
         >
           Back to Process Comparison
         </TransitionLink>

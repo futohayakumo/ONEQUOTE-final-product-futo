@@ -73,7 +73,7 @@ export function QuizRunner() {
   const isLast = i === QUIZ.length - 1;
 
   return (
-    <div className="flex max-w-[54rem] flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center gap-5">
         <span className="shrink-0 type-caption tnum">
           Question {i + 1} of {QUIZ.length}
@@ -91,7 +91,7 @@ export function QuizRunner() {
           <button
             type="button"
             onClick={() => persist(blank())}
-            className="shrink-0 type-caption text-muted transition-colors duration-150 hover:text-crimson"
+            className="shrink-0 type-caption text-muted underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
           >
             Start over
           </button>
@@ -120,7 +120,7 @@ export function QuizRunner() {
             if (isLast) setFinished(true);
             else persist({ ...state, index: i + 1 });
           }}
-          className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3 type-label text-studio rounded-sharp transition-colors duration-150 hover:border-charcoal hover:bg-charcoal disabled:cursor-not-allowed disabled:border-border disabled:bg-border disabled:text-muted"
+          className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal disabled:cursor-not-allowed disabled:border-border disabled:bg-mist disabled:text-muted"
         >
           {isLast ? "See results" : "Next"}
           <ArrowRight size={18} />

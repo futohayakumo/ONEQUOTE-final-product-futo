@@ -5,6 +5,7 @@ import { FlowNode } from "./FlowNode";
 
 export function StageColumn({
   stage,
+  index,
   selected,
   route,
   focusNode,
@@ -14,6 +15,7 @@ export function StageColumn({
   onPeekEnd,
 }: {
   stage: FlowStage;
+  index: number;
   selected: NodeId | null;
   route: readonly NodeId[];
   focusNode: NodeId;
@@ -23,18 +25,17 @@ export function StageColumn({
   onPeekEnd: () => void;
 }) {
   return (
-    // No whole-column tint. Per-node highlighting makes it redundant, and a
-    // tinted column was by far the largest accent mass on the screen.
-    <div className="flex flex-col gap-4 border border-border bg-studio p-5 rounded-sharp">
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-1.5">
-          <span className="type-eyebrow">{stage.no}</span>
-          <span className="block h-0.5 w-5 bg-crimson" aria-hidden />
-        </div>
-        <h3 className="type-label tracking-wide">{stage.title}</h3>
-      </div>
+    // No card, no tint. The comps separate the columns with a hairline and let
+    // the node cards carry all the surface; a bordered column on top of
+    // bordered nodes is two frames doing one frame's job.
+    <div
+      className={`flex flex-col gap-5 px-5 ${index > 0 ? "lg:border-l lg:border-border" : ""}`}
+    >
+      <h3 className="type-caption tracking-[0.16em] text-muted uppercase">
+        {stage.title}
+      </h3>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-4">
         {stage.nodes.map((id) => {
           const hop = route.indexOf(id);
           return (

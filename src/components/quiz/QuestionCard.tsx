@@ -21,10 +21,11 @@ export function QuestionCard({
           announced. A div with onClick loses all of that. */}
       <fieldset className="flex flex-col gap-3 border-0 p-0">
         <legend className="mb-3 type-section">{question.prompt}</legend>
-        {question.options.map((option) => (
+        {question.options.map((option, i) => (
           <OptionRow
             key={option.id}
             option={option}
+            letter={`${String.fromCharCode(65 + i)}.`}
             name={question.id}
             checked={selected === option.id}
             revealed={revealed}

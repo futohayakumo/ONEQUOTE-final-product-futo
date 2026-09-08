@@ -22,6 +22,7 @@ import { CheckIcon, CrossIcon } from "../icons/quiz";
  */
 export function OptionRow({
   option,
+  letter,
   name,
   checked,
   revealed,
@@ -29,6 +30,8 @@ export function OptionRow({
   onSelect,
 }: {
   option: QuizOption;
+  /** A., B., C., D. — a stable handle for talking about an answer. */
+  letter: string;
   name: string;
   checked: boolean;
   revealed: boolean;
@@ -42,14 +45,14 @@ export function OptionRow({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center gap-4 px-4 py-3.5 rounded-sharp transition-colors duration-150",
+        "flex cursor-pointer items-center gap-4 px-5 py-4 rounded-card transition-colors duration-150",
         chosenAndRight && "border-2 border-charcoal bg-studio",
         chosenAndWrong && "border-2 border-crimson bg-tint",
         revealedAnswer && "border-2 border-charcoal bg-studio",
         !revealed && checked && "border-2 border-crimson bg-tint",
         !revealed &&
           !checked &&
-          "border border-border bg-studio hover:border-crimson",
+          "border border-border bg-studio shadow-card hover:border-crimson",
         revealed && !checked && !isCorrect && "border border-border bg-studio",
       )}
     >
@@ -85,12 +88,13 @@ export function OptionRow({
         ) : null}
       </span>
 
+      <span className="w-6 shrink-0 type-label tnum text-muted">{letter}</span>
       <span className="type-body flex-1">{option.text}</span>
 
       {chosenAndRight ? (
         <span className="type-eyebrow shrink-0 text-charcoal">Correct</span>
       ) : chosenAndWrong ? (
-        <span className="type-eyebrow shrink-0">Not quite</span>
+        <span className="type-eyebrow shrink-0 text-crimson-ink">Not quite</span>
       ) : revealedAnswer ? (
         <span className="type-eyebrow shrink-0 text-charcoal">
           Correct answer

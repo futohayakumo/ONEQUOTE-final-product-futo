@@ -4,19 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   NEIGHBOUR_EDGES,
   NODES,
-  ROUTE_BY_NODE,
-  SPINE,
   SPINE_EDGES,
   STAGES,
 } from "@/lib/flow-data";
-import type { ComponentId, NodeId } from "@/types/flow";
-import { ComponentDetailCard } from "./ComponentDetailCard";
-import { DeepDiveIndex } from "./DeepDiveIndex";
+import type { NodeId } from "@/types/flow";
 import { FlowConnectors } from "./FlowConnectors";
 import { FlowLegend } from "./FlowLegend";
-import { NodeBrief } from "./NodeBrief";
-import { PlatformNote } from "./PlatformNote";
-import { RouteReadout } from "./RouteReadout";
 import { StageColumn } from "./StageColumn";
 import { useNodeGeometry } from "./useNodeGeometry";
 
@@ -35,8 +28,21 @@ const LEGACY_C_TO_NODE: Record<string, NodeId> = {
   "translation-api": "translation-api",
 };
 
-export function FlowExplorer() {
-  const [selected, setSelected] = useState<NodeId | null>(null);
+/**
+ * The diagram itself. Selection is a prop rather than local state: the rail,
+ * the timeline and the detail panel all have to agree on one selected node,
+ * and the only way three siblings agree is if none of them owns it.
+ */
+export function SystemMap({
+  selected,
+  route,
+  onSelect,
+}: {
+  selected: NodeId | null;
+  route: readonly NodeId[];
+  onSelect: (id: NodeId | null) => void;
+}) {
+
   const [peek, setPeek] = useState<NodeId | null>(null);
   const [focusNode, setFocusNode] = useState<NodeId>("new-request");
   const { containerRef, registerNode, rects, size } = useNodeGeometry();
@@ -55,26 +61,21 @@ export function FlowExplorer() {
           ? LEGACY_C_TO_NODE[c]
           : null;
     if (!resolved) return;
+    onSelect(resolved);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelected(resolved);
     setFocusNode(resolved);
+    // Hydrating the URL is a once-on-mount job. Re-running it when the parent
+    // re-creates onSelect would re-apply the query string over a live
+    // selection and snap the map back on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const select = useCallback((id: NodeId | null) => {
-    setSelected(id);
-    if (id) setFocusNode(id);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("c");
-    if (id) url.searchParams.set("n", id);
-    else url.searchParams.delete("n");
-    // replaceState, not router.push — no RSC round-trip per click, and Back
-    // leaves the page instead of walking every selection.
-    window.history.replaceState(null, "", url);
-  }, []);
-
-  const route = useMemo<readonly NodeId[]>(
-    () => (selected ? ROUTE_BY_NODE[selected] : SPINE),
-    [selected],
+  const select = useCallback(
+    (id: NodeId | null) => {
+      onSelect(id);
+      if (id) setFocusNode(id);
+    },
+    [onSelect],
   );
 
   const peekEdges = useMemo(() => (peek ? NEIGHBOUR_EDGES[peek] : []), [peek]);
@@ -128,10 +129,6 @@ export function FlowExplorer() {
       ?.focus();
   };
 
-  const detailComponent: ComponentId | null = selected
-    ? (NODES[selected].componentId ?? null)
-    : null;
-
   const announcement = selected
     ? `${NODES[selected].label} selected. Route, ${route.length} hops: ${route
         .map((id) => NODES[id].label)
@@ -146,12 +143,13 @@ export function FlowExplorer() {
           role="group"
           aria-label="System flow map. Use the arrow keys to move between components, and Enter to inspect one."
           onKeyDown={onKeyDown}
-          className="grid gap-6 lg:grid-cols-4"
+          className="grid gap-y-8 lg:grid-cols-4 lg:gap-x-0"
         >
-          {STAGES.map((stage) => (
+          {STAGES.map((stage, index) => (
             <StageColumn
               key={stage.id}
               stage={stage}
+              index={index}
               selected={selected}
               route={route}
               focusNode={focusNode}
@@ -171,33 +169,7 @@ export function FlowExplorer() {
         />
       </div>
 
-      <RouteReadout route={route} selected={selected} onSelect={select} />
-
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="lg:w-72 lg:shrink-0">
-          <FlowLegend />
-        </div>
-        <div className="min-w-0 flex-1">
-          <DeepDiveIndex onSelect={select} />
-        </div>
-      </div>
-
-      {selected && detailComponent ? (
-        <ComponentDetailCard id={detailComponent} />
-      ) : selected ? (
-        <NodeBrief id={selected} onOpenDeepDive={select} />
-      ) : (
-        <div className="border border-border bg-studio p-6 rounded-sharp">
-          <p className="max-w-[80ch] type-caption">
-            The crimson line is the route a request takes. Select any box to
-            re-route it and read what that component is, when it earns its
-            place, and how it is configured. Hovering a box shows only what it
-            connects to directly.
-          </p>
-        </div>
-      )}
-
-      <PlatformNote />
+      <FlowLegend />
 
       <p aria-live="polite" className="sr-only">
         {announcement}

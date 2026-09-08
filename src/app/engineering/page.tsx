@@ -1,38 +1,30 @@
-import { FlowExplorer } from "@/components/flow/FlowExplorer";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { PageTitle } from "@/components/ui/PageTitle";
-import { ScreenShell } from "@/components/ui/ScreenShell";
+import { EngineeringScreen } from "@/components/engineering/EngineeringScreen";
+import { PlatformNote } from "@/components/flow/PlatformNote";
+import { PageHeader } from "@/components/ui/PageHeader";
 
-export const metadata = { title: "System Flow Explorer" };
+export const metadata = {
+  title: "Engineering — the system behind every shipment",
+};
 
-export default function EngineeringJourneyPage() {
+export default function EngineeringPage() {
   return (
-    <ScreenShell backHref="/">
-      <div className="flex flex-col gap-6">
-        <Eyebrow>Engineering</Eyebrow>
-        <PageTitle className="max-w-[22ch]">System Flow Explorer</PageTitle>
-        <p className="type-body max-w-[58ch]">
-          Follow a request through the platform, from intake to fulfilment,
-          across every system and service it touches.
-        </p>
-        {/*
-          Say what level of abstraction this is. Calling it a C4 model outright
-          would overclaim — the four columns are delivery stages, not C4's
-          Context/Container/Component/Code levels — but the boxes in stages 02
-          to 04 are containers in the C4 sense, and stage 01 holds the external
-          actors. Naming that is more useful than either claiming or hiding it.
-        */}
-        <p className="type-caption max-w-[58ch]">
-          Roughly a container-level view: stage 01 holds the external actors and
-          channels, and everything to its right is a separately deployable unit.
-          Component-level detail lives in each deep dive rather than on the map,
-          so the map stays readable.
-        </p>
-      </div>
-
-      <div className="mt-12">
-        <FlowExplorer />
-      </div>
-    </ScreenShell>
+    <main className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-16">
+      <PageHeader
+        eyebrow="Engineering"
+        title="See the system behind every shipment."
+        lede="Trace one quotation request as it moves through the services, from the customer's input to the response that comes back."
+        note={
+          <>
+            Modular services
+            <br />
+            for a more
+            <br />
+            connected world
+          </>
+        }
+      />
+      <EngineeringScreen />
+      <PlatformNote />
+    </main>
   );
 }
