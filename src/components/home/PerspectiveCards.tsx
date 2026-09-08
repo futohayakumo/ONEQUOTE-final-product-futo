@@ -6,10 +6,19 @@ import { ArrowRight } from "../icons/ArrowRight";
 import { useT } from "../shell/LocaleProvider";
 import { SectionIntro } from "./SectionIntro";
 
+/*
+ * The process photograph is a JPEG and the other two are PNGs, deliberately.
+ *
+ * It arrived as a fresh 1448px source with no wordmark on the vest, so there
+ * is no generation loss to protect: 640px of JPEG at q85 is 50 kB against
+ * 378 kB for the same pixels as PNG, and lighter than either sibling while
+ * carrying 2.5x their resolution. The other two stay PNG because re-encoding
+ * a 260px image that is already lossy only trades size for artefacts.
+ */
 const ART: Record<PersonaId, string> = {
   business: "/assets/spot/10-perspective-business.png",
   engineering: "/assets/spot/11-perspective-engineering.png",
-  process: "/assets/spot/12-perspective-process.png",
+  process: "/assets/spot/12-perspective-process.jpg",
 };
 
 /**
