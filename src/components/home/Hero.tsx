@@ -1,9 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "../icons/ArrowRight";
+import { useT } from "../shell/LocaleProvider";
+import { Lines } from "../ui/Lines";
 
-const RAIL = ["People", "Systems", "Logistics", "A brighter", "Tomorrow"];
+const RAIL = [
+  "home.rail.people",
+  "home.rail.systems",
+  "home.rail.logistics",
+  "home.rail.brighter",
+  "home.rail.tomorrow",
+];
 
 export function Hero() {
+  const t = useT();
   return (
     <section className="relative isolate overflow-hidden bg-charcoal">
       {/*
@@ -29,20 +40,15 @@ export function Hero() {
       <div className="mx-auto flex max-w-[86rem] items-center px-6 py-28">
         <div className="max-w-[36rem]">
           <p className="type-eyebrow text-crimson-lift">
-            Logistics connects
-            <br />a more human tomorrow
+            <Lines text={t("home.hero.eyebrow")} />
           </p>
 
           <h1 className="mt-7 type-display text-studio">
-            From a quote
-            <br />
-            to a moving world.
+            <Lines text={t("home.hero.title")} />
           </h1>
 
           <p className="mt-8 max-w-[30rem] type-body text-border">
-            An interactive portfolio of one delivery programme — the pricing
-            logic, the services behind it, and the way the work itself is
-            organised.
+            {t("home.hero.body")}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-7">
@@ -50,7 +56,7 @@ export function Hero() {
               href="/business"
               className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3.5 type-label text-studio rounded-card shadow-none transition-colors duration-150 hover:border-studio hover:bg-studio hover:text-charcoal"
             >
-              Enter the portfolio
+              {t("home.hero.cta")}
               <ArrowRight size={18} />
             </Link>
 
@@ -67,7 +73,7 @@ export function Hero() {
                 </svg>
               </span>
               <span className="underline underline-offset-4 group-hover:text-crimson-lift">
-                Run the delivery simulation
+                {t("home.hero.play")}
               </span>
             </Link>
           </div>
@@ -80,12 +86,9 @@ export function Hero() {
           aria-hidden
           className="ml-auto hidden shrink-0 flex-col gap-2 pl-10 text-right lg:flex"
         >
-          {RAIL.map((word) => (
-            <li
-              key={word}
-              className="type-overline text-border"
-            >
-              {word}
+          {RAIL.map((key) => (
+            <li key={key} className="type-overline text-border">
+              {t(key)}
             </li>
           ))}
         </ul>

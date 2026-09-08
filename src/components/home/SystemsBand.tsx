@@ -1,6 +1,10 @@
+"use client";
+
+import { useT } from "../shell/LocaleProvider";
 import { SectionIntro } from "./SectionIntro";
 
 export function SystemsBand() {
+  const t = useT();
   return (
     <section className="relative isolate overflow-hidden border-t border-charcoal bg-charcoal">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -26,17 +30,11 @@ export function SystemsBand() {
         <SectionIntro
           tone="dark"
           no="03"
-          title={
-            <>
-              The systems and people
-              <br />
-              behind it.
-            </>
-          }
-          subtitle="Powered by systems and people"
-          body="Services running out of sight, and judgement on the floor. Neither one is sufficient, which is the whole design problem."
+          titleKey="home.03.title"
+          subtitleKey="home.03.subtitle"
+          bodyKey="home.03.body"
           href="/engineering"
-          linkLabel="Look inside the system"
+          linkKey="home.03.link"
         />
 
         {/* The band was one 432px text block in a 1376px container with no
@@ -44,14 +42,12 @@ export function SystemsBand() {
             actually shows, so the empty two-thirds now carries the promise the
             heading makes. */}
         <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-3">
-          {[
-            ["Four layers", "Client, edge, application, data — one request crosses all of them."],
-            ["Fifteen services", "Each with a stated job, and seven with the configuration that makes them work."],
-            ["One traced request", "Timed hop by hop, with the log the trace produced."],
-          ].map(([term, detail]) => (
-            <div key={term} className="border-t border-muted pt-4">
-              <dt className="type-label text-studio">{term}</dt>
-              <dd className="mt-2 type-caption text-border">{detail}</dd>
+          {["layers", "services", "traced"].map((k) => (
+            <div key={k} className="border-t border-muted pt-4">
+              <dt className="type-label text-studio">{t(`home.03.${k}`)}</dt>
+              <dd className="mt-2 type-caption text-border">
+                {t(`home.03.${k}Body`)}
+              </dd>
             </div>
           ))}
         </dl>

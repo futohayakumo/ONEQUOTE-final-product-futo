@@ -2,6 +2,7 @@
 
 import type { FlowStage, NodeId } from "@/types/flow";
 import { FlowNode } from "./FlowNode";
+import { useT } from "../shell/LocaleProvider";
 
 export function StageColumn({
   stage,
@@ -24,6 +25,7 @@ export function StageColumn({
   onPeek: (id: NodeId) => void;
   onPeekEnd: () => void;
 }) {
+  const t = useT();
   return (
     // No card, no tint. The comps separate the columns with a hairline and let
     // the node cards carry all the surface; a bordered column on top of
@@ -35,7 +37,7 @@ export function StageColumn({
     >
       {/* A label for the column, not a section heading. As an h3 between the
           page h1 and the first h2 it inverted the document outline. */}
-      <p className="type-overline text-muted">{stage.title}</p>
+      <p className="type-overline text-muted">{t(stage.titleKey)}</p>
 
       <ul className="flex flex-col gap-4">
         {stage.nodes.map((id) => {

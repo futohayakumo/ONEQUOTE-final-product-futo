@@ -1,12 +1,16 @@
+"use client";
+
+import { useT } from "../shell/LocaleProvider";
 import { SectionIntro } from "./SectionIntro";
 
 const STATS = [
-  { figure: "180+", label: "Countries & regions" },
-  { figure: "500+", label: "Ports" },
-  { figure: "Endless", label: "Opportunities" },
+  { figure: "180+", key: "home.02.countries" },
+  { figure: "500+", key: "home.02.ports" },
+  { figure: null, key: "home.02.opportunities" },
 ] as const;
 
 export function NetworkBand() {
+  const t = useT();
   return (
     <section className="relative isolate overflow-hidden border-y border-charcoal bg-charcoal">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -22,25 +26,19 @@ export function NetworkBand() {
         <SectionIntro
           tone="dark"
           no="02"
-          title={
-            <>
-              A connected
-              <br />
-              global supply chain.
-            </>
-          }
-          subtitle="A more connected world"
-          body="Ocean, land, systems and people. The network only works because every part of it agrees on the same facts."
+          titleKey="home.02.title"
+          subtitleKey="home.02.subtitle"
+          bodyKey="home.02.body"
           href="/engineering"
-          linkLabel="See the network"
+          linkKey="home.02.link"
         />
 
         <dl className="ml-auto flex shrink-0 flex-col gap-8 border-l border-muted pl-10">
           {STATS.map((stat) => (
-            <div key={stat.label}>
-              <dt className="type-caption text-border">{stat.label}</dt>
+            <div key={stat.key}>
+              <dt className="type-caption text-border">{t(stat.key)}</dt>
               <dd className="mt-1 type-section tnum text-studio">
-                {stat.figure}
+                {stat.figure ?? t("home.02.endless")}
               </dd>
             </div>
           ))}

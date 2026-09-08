@@ -5,12 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "../ui/Wordmark";
+import { LocalePicker } from "./LocalePicker";
+import { useT } from "./LocaleProvider";
 
 const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/business", label: "Business" },
-  { href: "/engineering", label: "Engineering" },
-  { href: "/process", label: "Process" },
+  { href: "/", key: "nav.home" },
+  { href: "/business", key: "nav.business" },
+  { href: "/engineering", key: "nav.engineering" },
+  { href: "/process", key: "nav.process" },
 ] as const;
 
 /**
@@ -21,6 +23,7 @@ const LINKS = [
  * to one screen, and stranding them there costs more than the tidiness gains.
  */
 export function SiteNav() {
+  const t = useT();
   const pathname = usePathname();
 
   return (
@@ -68,7 +71,7 @@ export function SiteNav() {
                     active ? "text-charcoal" : "text-muted hover:text-charcoal",
                   )}
                 >
-                  {link.label}
+                  {t(link.key)}
                   {active ? (
                     <span
                       aria-hidden
@@ -81,9 +84,10 @@ export function SiteNav() {
           })}
         </ul>
 
-        <span className="ml-auto hidden type-caption md:block">
-          {BRAND.tagline}
-        </span>
+        <div className="ml-auto flex items-center gap-6">
+          <span className="hidden type-caption lg:block">{t("nav.tagline")}</span>
+          <LocalePicker />
+        </div>
       </nav>
     </header>
   );

@@ -26,8 +26,8 @@ export const COMPONENT_CATALOG: Record<ComponentId, CatalogEntry> = {
     label: "Request Intake",
     nodeId: "request-intake",
     stage: "portal",
-    what: "The customer-facing application. It renders quotation forms and rate comparisons on the server, hydrates only the interactive parts, and holds no business rules of its own — pricing and eligibility always come from the service layer so a browser can never be the source of truth.",
-    when: "A customer opens a rate search from a slow mobile connection in a port city. Server rendering means the first meaningful paint carries real lane data rather than a spinner, and the interactive quote form hydrates afterwards without blocking the read.",
+    whatKey: "catalog.web-portal.what",
+    whenKey: "catalog.web-portal.when",
     how: {
       lang: "typescript — server-side rate fetch",
       code: `// Rendered on the server. The portal never prices anything itself.
@@ -51,8 +51,8 @@ export default async function LanePage({ params }: { params: { lane: string } })
     label: "Routing Gateway",
     nodeId: "routing-gateway",
     stage: "service",
-    what: "A layer-7 reverse proxy sitting in front of every service. It terminates TLS, enforces per-client rate limits, routes by path prefix, injects a trace header so one request can be followed end to end, and load-balances across replicas. It is also the cluster ingress.",
-    when: "The Campaign Cohort Hub launches a promotion and quote traffic spikes roughly eightfold within a minute. The gateway absorbs the burst, throttles the clients that are hammering the endpoint, and shifts traffic across healthy replicas — with no service redeploy and no code change.",
+    whatKey: "catalog.routing-gateway.what",
+    whenKey: "catalog.routing-gateway.when",
     how: {
       lang: "nginx.conf",
       code: `upstream quotation_service {
@@ -83,8 +83,8 @@ server {
     label: "Quotation Service",
     nodeId: "quotation-service",
     stage: "service",
-    what: "The Core Quotation Module. It resolves a lane to a base rate, converts cargo volume into container units, applies the type multiplier and surcharges, asks the Volume Loyalty Framework for the customer's discount, and reserves the resulting rate against the Legacy ERP Engine for a fixed validity window.",
-    when: "A customer requests a rate at 02:00 local time, outside any human desk's hours. The service prices the lane, holds it for 72 hours through the Quotation Flex Cart, and the customer books the next morning at the same number — no re-quote, no negotiation, no staff involved.",
+    whatKey: "catalog.quotation-service.what",
+    whenKey: "catalog.quotation-service.when",
     how: {
       lang: "typescript — pricing orchestration",
       code: `@Injectable()
@@ -118,8 +118,8 @@ export class QuotationService {
     label: "Campaign Service",
     nodeId: "campaign-service",
     stage: "service",
-    what: "The Campaign Cohort Hub. It segments customers into cohorts from booking history and accrued TEU, decides which offer each cohort should see, and emits targeting events. It reads from the Data Platform rather than the transactional store, so audience work can never slow down booking.",
-    when: "A lane is running under capacity for the next sailing window. The hub identifies customers who shipped that corridor in the last two quarters but not this one, and targets a time-boxed incentive at exactly that cohort instead of discounting the lane for everyone.",
+    whatKey: "catalog.campaign-service.what",
+    whenKey: "catalog.campaign-service.when",
     how: {
       lang: "typescript — cohort definition",
       code: `// Cohorts are declarative and versioned, so a campaign can be replayed
@@ -143,8 +143,8 @@ export const LAPSED_CORRIDOR_SHIPPER = defineCohort({
     label: "Feature Flag Service",
     nodeId: "feature-flags",
     stage: "service",
-    what: "A managed flag evaluation service. It decouples deploying code from releasing behaviour: a change ships dark, is switched on for a named slice of traffic, and can be switched off in seconds without a rollback, a redeploy, or a release window.",
-    when: "Rolling the Quotation Flex Cart multi-port hold out to the first 5% of Silver Sail customers. If rate-reservation latency against the Legacy ERP Engine degrades under the added load, the flag is killed immediately — the code stays deployed and nobody has to page a release engineer.",
+    whatKey: "catalog.feature-flags.what",
+    whenKey: "catalog.feature-flags.when",
     how: {
       lang: "typescript — guarded rollout",
       code: `const context = {
@@ -168,8 +168,8 @@ return this.flexCart.holdSinglePort(dto);`,
     label: "Lokalise",
     nodeId: "translation-api",
     stage: "service",
-    what: "Lokalise, the managed localisation platform this site actually runs on. Translation keys live outside the application build, so copy is corrected in any locale without shipping a release. `scripts/pull-locales.mjs` writes the bundles before the build and the app imports them, so the running site has no runtime token and no network dependency on a translation vendor. Any key missing from a locale falls back to the base rather than rendering blank.",
-    when: "A surcharge label reads ambiguously in one market and the local team wants it reworded before the next sailing. They edit the string in the platform, the next build picks it up, and no engineer touches the repository.",
+    whatKey: "catalog.translation-api.what",
+    whenKey: "catalog.translation-api.when",
     how: {
       lang: "typescript — locale bundle load",
       code: `// Pulled at build time and committed to the artefact, so a runtime
@@ -193,8 +193,8 @@ export async function loadMessages(locale: Locale) {
     label: "Data Platform",
     nodeId: "data-platform",
     stage: "platform",
-    what: "The relational analytics store. Booking and quotation events land here from the Legacy ERP Engine on a read replica, separated from the transactional primary so reporting load can never contend with booking writes.",
-    when: "The Lead Product Owner (LPO) needs monthly TEU accrual per customer to check that Volume Loyalty Framework milestones are firing correctly. That query scans a quarter of history — running it against the transactional primary would put booking latency at risk, so it runs here instead.",
+    whatKey: "catalog.data-platform.what",
+    whenKey: "catalog.data-platform.when",
     how: {
       lang: "sql — read replica",
       code: `-- TEU accrual this month, with the next Blue Wave milestone.
@@ -214,8 +214,8 @@ ORDER  BY teu_accrued DESC;`,
 };
 
 export const PLATFORM_NOTE = {
-  title: "Everything above runs on a managed cluster",
-  body: "Every service in stages 03 and 04 is a Deployment on a managed container platform. The Routing Gateway is the cluster ingress. The Quotation Service scales horizontally on p95 latency rather than CPU, because a slow rate reservation against the Legacy ERP Engine shows up as latency long before it shows up as load.",
+  titleKey: "platform.title",
+  bodyKey: "platform.body",
   code: {
     lang: "yaml — horizontal scaling policy",
     code: `apiVersion: autoscaling/v2

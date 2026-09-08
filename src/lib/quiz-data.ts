@@ -14,73 +14,62 @@ import type { QuizQuestion } from "@/types/quiz";
 export const QUIZ: readonly QuizQuestion[] = [
   {
     id: "q1",
-    prompt:
-      "Under the Agile Delivery Protocol, which commit message structure is mandatory?",
+    promptKey: "quiz.q1.prompt",
     options: [
-      { id: "a", text: "Free-form text describing the change" },
-      { id: "b", text: "type(scope): message, and nothing else" },
-      { id: "c", text: "The branch name repeated as the subject line" },
-      { id: "d", text: "[Ticket_ID] Commit Message" },
+      { id: "a", textKey: "quiz.q1.a" },
+      { id: "b", textKey: "quiz.q1.b" },
+      { id: "c", textKey: "quiz.q1.c" },
+      { id: "d", textKey: "quiz.q1.d" },
     ],
     correctId: "d",
-    whyItMatters:
-      "Every commit stays traceable to a ticket. Release notes and audit trails are generated from the tag, and the pre-receive hook rejects any subject line that does not open with the ticket id — so the convention is enforced by the repository, not by reviewer goodwill.",
+    whyKey: "quiz.q1.why",
   },
   {
     id: "q2",
-    prompt:
-      "At what TEU milestone interval does a Blue Wave customer earn a performance reward?",
+    promptKey: "quiz.q2.prompt",
     options: [
-      { id: "a", text: "Every 20 TEUs" },
-      { id: "b", text: "Every 10 TEUs" },
-      { id: "c", text: "Every 5 TEUs" },
-      { id: "d", text: "Every 1 TEU" },
+      { id: "a", textKey: "quiz.q2.a" },
+      { id: "b", textKey: "quiz.q2.b" },
+      { id: "c", textKey: "quiz.q2.c" },
+      { id: "d", textKey: "quiz.q2.d" },
     ],
     correctId: "c",
-    whyItMatters:
-      "Blue Wave is the entry tier and carries no rate discount at all — its entire value is the coupon granted every 5 TEUs of accrued volume. Get the interval wrong and the whole entry-tier incentive is mispriced.",
+    whyKey: "quiz.q2.why",
   },
   {
     id: "q3",
-    prompt:
-      "How many peer approvals must a Pull Request carry before it can be merged?",
+    promptKey: "quiz.q3.prompt",
     options: [
-      { id: "a", text: "Two or more approvals" },
-      { id: "b", text: "Exactly one approval" },
-      { id: "c", text: "None, provided the build is green" },
-      { id: "d", text: "Only the Technical Advisor (TA)'s approval" },
+      { id: "a", textKey: "quiz.q3.a" },
+      { id: "b", textKey: "quiz.q3.b" },
+      { id: "c", textKey: "quiz.q3.c" },
+      { id: "d", textKey: "quiz.q3.d" },
     ],
     correctId: "a",
-    whyItMatters:
-      "The Agile Delivery Protocol requires at least two independent approvals so that no single reviewer becomes a bottleneck or a single point of failure. Branch protection enforces it; a green build alone never unlocks the merge.",
+    whyKey: "quiz.q3.why",
   },
   {
     id: "q4",
-    prompt: "In ocean freight capacity, what does one TEU represent?",
+    promptKey: "quiz.q4.prompt",
     options: [
-      { id: "a", text: "One tonne of cargo" },
-      { id: "b", text: "One twenty-foot equivalent container unit" },
-      { id: "c", text: "One cubic metre of cargo volume" },
-      { id: "d", text: "One forty-foot high-cube container" },
+      { id: "a", textKey: "quiz.q4.a" },
+      { id: "b", textKey: "quiz.q4.b" },
+      { id: "c", textKey: "quiz.q4.c" },
+      { id: "d", textKey: "quiz.q4.d" },
     ],
     correctId: "b",
-    whyItMatters:
-      "TEU is the normalising unit for the entire Volume Loyalty Framework. A 40' High Cube counts as 2 TEU, so five of them accrue 10 TEU rather than 5 — misreading this doubles or halves every reward calculation downstream.",
+    whyKey: "quiz.q4.why",
   },
   {
     id: "q5",
-    prompt: "What is the Quotation Flex Cart responsible for?",
+    promptKey: "quiz.q5.prompt",
     options: [
-      { id: "a", text: "Issuing the final bill of lading" },
-      { id: "b", text: "Segmenting customers into marketing cohorts" },
-      {
-        id: "c",
-        text: "Holding short-term freight rates across multiple ports so a customer can compare and book later",
-      },
-      { id: "d", text: "Persisting booking records in the Legacy ERP Engine" },
+      { id: "a", textKey: "quiz.q5.a" },
+      { id: "b", textKey: "quiz.q5.b" },
+      { id: "c", textKey: "quiz.q5.c" },
+      { id: "d", textKey: "quiz.q5.d" },
     ],
     correctId: "c",
-    whyItMatters:
-      "The Quotation Flex Cart is a rate-hold layer, not a booking system. It keeps quotes valid for a fixed window across several lanes; the transaction is only committed once the Legacy ERP Engine confirms the booking.",
+    whyKey: "quiz.q5.why",
   },
 ] as const;

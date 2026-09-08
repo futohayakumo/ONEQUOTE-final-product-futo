@@ -1,7 +1,10 @@
+"use client";
+
 import { TransitionLink } from "../ui/TransitionLink";
 import { QUIZ } from "@/lib/quiz-data";
 import { CheckIcon, CrossIcon } from "../icons/quiz";
 import { SectionTitle } from "../ui/SectionTitle";
+import { useT } from "../shell/LocaleProvider";
 
 export function QuizResult({
   answers,
@@ -10,6 +13,7 @@ export function QuizResult({
   answers: (string | null)[];
   onRetake: () => void;
 }) {
+  const t = useT();
   const score = QUIZ.reduce(
     (n, q, i) => n + (answers[i] === q.correctId ? 1 : 0),
     0,
@@ -49,12 +53,12 @@ export function QuizResult({
                 {right ? <CheckIcon size={12} /> : <CrossIcon size={12} />}
               </span>
               <div className="flex flex-col gap-1">
-                <p className="type-label">{q.prompt}</p>
+                <p className="type-label">{t(q.promptKey)}</p>
                 <p className="type-caption">
                   <span className="sr-only">
                     {right ? "Correct. " : "Incorrect. "}
                   </span>
-                  Answer: {correct?.text}
+                  Answer: {correct ? t(correct.textKey) : ""}
                 </p>
               </div>
             </li>

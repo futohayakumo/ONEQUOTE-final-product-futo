@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "../icons/ArrowRight";
+import { useT } from "../shell/LocaleProvider";
+import { Lines } from "../ui/Lines";
 
 /**
  * The left column of every band on the home page: a number, a two-line
@@ -11,20 +15,20 @@ import { ArrowRight } from "../icons/ArrowRight";
  */
 export function SectionIntro({
   no,
-  title,
-  subtitle,
-  body,
+  titleKey,
+  subtitleKey,
+  bodyKey,
   href,
-  linkLabel,
+  linkKey,
   tone = "light",
   emphasis = "quiet",
 }: {
   no: string;
-  title: React.ReactNode;
-  subtitle: string;
-  body: React.ReactNode;
+  titleKey: string;
+  subtitleKey: string;
+  bodyKey: string;
   href: string;
-  linkLabel: string;
+  linkKey: string;
   tone?: "light" | "dark";
   /**
    * Only one band per page should carry the accent. Four crimson "See the X →"
@@ -32,6 +36,7 @@ export function SectionIntro({
    */
   emphasis?: "quiet" | "accent";
 }) {
+  const t = useT();
   const dark = tone === "dark";
   return (
     <div className="flex max-w-[27rem] flex-col">
@@ -41,15 +46,15 @@ export function SectionIntro({
       <h2
         className={`mt-5 type-page ${dark ? "text-studio" : "text-charcoal"}`}
       >
-        {title}
+        <Lines text={t(titleKey)} />
       </h2>
       <p
         className={`mt-3 type-overline ${dark ? "text-border" : "text-muted"}`}
       >
-        {subtitle}
+        {t(subtitleKey)}
       </p>
       <div className={`mt-7 type-body ${dark ? "text-border" : "text-muted"}`}>
-        {body}
+        {t(bodyKey)}
       </div>
       {/* Crimson as type, not as fill, so it takes the contrast-corrected
           pair: #E1127A is 4.39:1 on canvas and 3.88:1 on charcoal. */}
@@ -65,7 +70,7 @@ export function SectionIntro({
               : "text-muted hover:text-charcoal"
         }`}
       >
-        {linkLabel}
+        {t(linkKey)}
         <ArrowRight size={16} />
       </Link>
     </div>

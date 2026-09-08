@@ -3,6 +3,7 @@
 import type { QuizQuestion } from "@/types/quiz";
 import { OptionRow } from "./OptionRow";
 import { WhyItMatters } from "./WhyItMatters";
+import { useT } from "../shell/LocaleProvider";
 
 export function QuestionCard({
   question,
@@ -15,12 +16,13 @@ export function QuestionCard({
   revealed: boolean;
   onSelect: (optionId: string) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-6">
       {/* A real fieldset/legend, so the group and the "N of 4" position are
           announced. A div with onClick loses all of that. */}
       <fieldset className="flex flex-col gap-3 border-0 p-0">
-        <legend className="mb-5 type-section">{question.prompt}</legend>
+        <legend className="mb-5 type-section">{t(question.promptKey)}</legend>
         {question.options.map((option, i) => (
           <OptionRow
             key={option.id}
@@ -35,7 +37,7 @@ export function QuestionCard({
         ))}
       </fieldset>
 
-      {revealed ? <WhyItMatters>{question.whyItMatters}</WhyItMatters> : null}
+      {revealed ? <WhyItMatters>{t(question.whyKey)}</WhyItMatters> : null}
     </div>
   );
 }

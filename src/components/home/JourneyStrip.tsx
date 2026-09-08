@@ -1,28 +1,22 @@
+"use client";
+
+import { useT } from "../shell/LocaleProvider";
 import { SectionIntro } from "./SectionIntro";
 
-const STEPS = [
-  { label: "Quote", blurb: "Search the lane, the sailing and the rate." },
-  { label: "Booking", blurb: "Arrangements, filings and confirmation." },
-  { label: "Delivery", blurb: "Cargo creating value at the other end." },
-] as const;
+const STEPS = ["quote", "booking", "delivery"] as const;
 
 export function JourneyStrip() {
+  const t = useT();
   return (
     <section className="bg-studio">
       <div className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-24 lg:flex-row lg:items-center lg:gap-20">
         <SectionIntro
           no="01"
-          title={
-            <>
-              One quotation
-              <br />
-              sets the world moving.
-            </>
-          }
-          subtitle="A quote starts the journey"
-          body="Port to port. A single quotation commits a slot, a rate and a date — and everything downstream is bound by it."
+          titleKey="home.01.title"
+          subtitleKey="home.01.subtitle"
+          bodyKey="home.01.body"
           href="/business"
-          linkLabel="See the quotation flow"
+          linkKey="home.01.link"
           emphasis="accent"
         />
 
@@ -36,7 +30,7 @@ export function JourneyStrip() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/spot/quote-to-delivery.png"
-            alt="A quotation screen, then a container, then a truck leaving the terminal."
+            alt={t("home.01.alt")}
             className="w-full"
           />
 
@@ -45,9 +39,16 @@ export function JourneyStrip() {
               is scaled down on a phone. */}
           <ol className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-3">
             {STEPS.map((step) => (
-              <li key={step.label} className="flex flex-col border-t border-border pt-4">
-                <span className="type-overline text-charcoal">{step.label}</span>
-                <p className="mt-2 type-caption">{step.blurb}</p>
+              <li
+                key={step}
+                className="flex flex-col border-t border-border pt-4"
+              >
+                <span className="type-overline text-charcoal">
+                  {t(`home.01.${step}`)}
+                </span>
+                <p className="mt-2 type-caption">
+                  {t(`home.01.${step}Blurb`)}
+                </p>
               </li>
             ))}
           </ol>

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import en from "../locales/en.json" with { type: "json" };
 import { QUIZ } from "./quiz-data.ts";
+
+const copy = en as Record<string, string>;
 
 /**
  * Guards against the quiz becoming answerable without reading it. An earlier
@@ -31,14 +34,14 @@ test("every question is well formed", () => {
     );
     const ids = new Set(q.options.map((o) => o.id));
     assert.equal(ids.size, 4, `${q.id} has duplicate option ids`);
-    const texts = new Set(q.options.map((o) => o.text));
+    const texts = new Set(q.options.map((o) => copy[o.textKey]));
     assert.equal(texts.size, 4, `${q.id} has duplicate option text`);
     assert.ok(
-      q.prompt.trim().endsWith("?"),
+      copy[q.promptKey].trim().endsWith("?"),
       `${q.id} prompt must be a question`,
     );
     assert.ok(
-      q.whyItMatters.length > 80,
+      copy[q.whyKey].length > 80,
       `${q.id} explanation must say why, not just what`,
     );
   }
@@ -48,8 +51,8 @@ test("explanations do not simply restate the correct option", () => {
   for (const q of QUIZ) {
     const correct = q.options.find((o) => o.id === q.correctId)!;
     assert.notEqual(
-      q.whyItMatters.trim(),
-      correct.text.trim(),
+      copy[q.whyKey].trim(),
+      copy[correct.textKey].trim(),
       `${q.id} explanation is just the answer again`,
     );
   }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LocaleProvider } from "@/components/shell/LocaleProvider";
 import { SiteFooter } from "@/components/shell/SiteFooter";
 import { SiteNav } from "@/components/shell/SiteNav";
 import { inter, mono } from "./fonts";
@@ -36,10 +37,12 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <SiteNav />
+        <LocaleProvider>
+          <SiteNav />
         {/* Clips the route transition's sideways travel. See .app-shell. */}
         <div id="content" className="app-shell flex-1">{children}</div>
-        <SiteFooter />
+          <SiteFooter />
+        </LocaleProvider>
       </body>
     </html>
   );

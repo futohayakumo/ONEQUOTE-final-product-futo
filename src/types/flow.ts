@@ -31,7 +31,7 @@ export interface FlowNode {
   label: string;
   stage: StageId;
   /** One line, on EVERY node. There is never a dead click. */
-  role: string;
+  roleKey: string;
   /** Present only where a full what/when/how deep dive exists. */
   componentId?: ComponentId;
 }
@@ -39,7 +39,7 @@ export interface FlowNode {
 export interface FlowStage {
   id: StageId;
   no: string;
-  title: string;
+  titleKey: string;
   nodes: NodeId[];
 }
 
@@ -56,7 +56,7 @@ export interface CatalogEntry {
   /** The node highlighted when this component is selected. */
   nodeId: NodeId;
   stage: StageId;
-  what: string;
-  when: string;
+  whatKey: string;
+  whenKey: string;
   how: { lang: string; code: string };
 }

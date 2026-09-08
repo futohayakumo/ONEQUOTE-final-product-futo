@@ -6,9 +6,10 @@ import type { Trace } from "@/lib/trace";
 import type { NodeId } from "@/types/flow";
 import { CodeBlock } from "../ui/CodeBlock";
 import { RequestLog } from "./RequestLog";
+import { useT } from "../shell/LocaleProvider";
 
-function stageLabel(stage: string) {
-  return STAGES.find((s) => s.id === stage)?.title ?? stage;
+function stageKey(stage: string) {
+  return STAGES.find((s) => s.id === stage)?.titleKey ?? stage;
 }
 
 /**
@@ -27,6 +28,7 @@ export function ServiceDetail({
   route: readonly NodeId[];
   trace: Trace;
 }) {
+  const t = useT();
   const node = selected ? NODES[selected] : null;
   const entry = node?.componentId
     ? COMPONENT_CATALOG[node.componentId]
@@ -42,11 +44,11 @@ export function ServiceDetail({
         {node ? (
           <>
             <h2 className="type-section">{node.label}</h2>
-            <p className="type-body text-muted">{entry?.what ?? node.role}</p>
+            <p className="type-body text-muted">{entry ? t(entry.whatKey) : t(node.roleKey)}</p>
 
             <dl className="mt-2 flex flex-col">
               {[
-                ["Layer", stageLabel(node.stage)],
+                ["Layer", t(stageKey(node.stage))],
                 ["Deep dive", entry ? "Yes" : "Not documented"],
                 ["Hops on route", String(route.length)],
               ].map(([term, value]) => (
@@ -78,7 +80,7 @@ export function ServiceDetail({
         {entry ? (
           <div className="flex min-w-0 flex-col gap-3">
             <h3 className="type-label">When it earns its place</h3>
-            <p className="type-caption text-charcoal">{entry.when}</p>
+            <p className="type-caption text-charcoal">{t(entry.whenKey)}</p>
             <div className="mt-2">
               <CodeBlock lang={entry.how.lang} code={entry.how.code} />
             </div>

@@ -3,6 +3,7 @@
 import cn from "clsx";
 import type { QuizOption } from "@/types/quiz";
 import { CheckIcon, CrossIcon } from "../icons/quiz";
+import { useT } from "../shell/LocaleProvider";
 
 /**
  * Correct/incorrect is signalled by WEIGHT and MODE, never by hue.
@@ -38,6 +39,7 @@ export function OptionRow({
   isCorrect: boolean;
   onSelect: () => void;
 }) {
+  const t = useT();
   const chosenAndRight = revealed && checked && isCorrect;
   const chosenAndWrong = revealed && checked && !isCorrect;
   const revealedAnswer = revealed && !checked && isCorrect;
@@ -96,7 +98,7 @@ export function OptionRow({
       </span>
 
       <span className="w-6 shrink-0 type-label tnum text-muted">{letter}</span>
-      <span className="type-body flex-1">{option.text}</span>
+      <span className="type-body flex-1">{t(option.textKey)}</span>
 
       {chosenAndRight ? (
         <span className="type-eyebrow shrink-0 text-charcoal">Correct</span>

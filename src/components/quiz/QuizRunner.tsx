@@ -6,6 +6,7 @@ import { ArrowRight } from "../icons/ArrowRight";
 import { ProgressBar } from "../ui/ProgressBar";
 import { QuestionCard } from "./QuestionCard";
 import { QuizResult } from "./QuizResult";
+import { useT } from "../shell/LocaleProvider";
 
 const STORAGE_KEY = "portfolio.knowledge-check.v1";
 
@@ -22,6 +23,7 @@ const blank = (): Saved => ({
 });
 
 export function QuizRunner() {
+  const t = useT();
   const [state, setState] = useState<Saved>(blank);
   const [finished, setFinished] = useState(false);
 
@@ -121,7 +123,7 @@ export function QuizRunner() {
           ? state.answers[i] === question.correctId
             ? "Correct. The explanation is below, and the next question is ready."
             : `Not quite. The correct answer is ${
-                question.options.find((o) => o.id === question.correctId)?.text
+                t(question.options.find((o) => o.id === question.correctId)?.textKey ?? "")
               }. The explanation is below.`
           : ""}
       </p>

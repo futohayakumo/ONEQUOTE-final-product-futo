@@ -1,12 +1,12 @@
 export interface QuizOption {
   id: string;
-  text: string;
+  textKey: string;
 }
 
 export interface QuizQuestion {
   id: string;
-  prompt: string;
+  promptKey: string;
   options: QuizOption[];
   correctId: string;
-  whyItMatters: string;
+  whyKey: string;
 }

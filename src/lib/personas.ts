@@ -5,7 +5,7 @@ export interface Persona {
   no: string;
   title: string;
   href: string;
-  blurb: string;
+  blurbKey: string;
   /** Panel background — the three panels step through the neutral tokens. */
   surface: string;
 }
@@ -16,8 +16,7 @@ export const PERSONAS: readonly Persona[] = [
     no: "01",
     title: "BUSINESS",
     href: "/business",
-    blurb:
-      "Quoting logic, lane pricing, and how TEU volume turns into tiered rewards.",
+    blurbKey: "persona.business.blurb",
     surface: "bg-studio",
   },
   {
@@ -25,8 +24,7 @@ export const PERSONAS: readonly Persona[] = [
     no: "02",
     title: "ENGINEERING",
     href: "/engineering",
-    blurb:
-      "Service boundaries, request routing, and the trade-offs behind each layer.",
+    blurbKey: "persona.engineering.blurb",
     surface: "bg-tint",
   },
   {
@@ -34,8 +32,7 @@ export const PERSONAS: readonly Persona[] = [
     no: "03",
     title: "PROCESS",
     href: "/process",
-    blurb:
-      "Two delivery models compared, then a knowledge check on the team's rules.",
+    blurbKey: "persona.process.blurb",
     surface: "bg-canvas",
   },
 ] as const;
