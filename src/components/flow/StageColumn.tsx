@@ -33,9 +33,9 @@ export function StageColumn({
         index % 2 === 1 ? "sm:border-l sm:border-border" : ""
       } ${index > 0 ? "lg:border-l lg:border-border" : ""}`}
     >
-      <h3 className="type-overline text-muted">
-        {stage.title}
-      </h3>
+      {/* A label for the column, not a section heading. As an h3 between the
+          page h1 and the first h2 it inverted the document outline. */}
+      <p className="type-overline text-muted">{stage.title}</p>
 
       <ul className="flex flex-col gap-4">
         {stage.nodes.map((id) => {

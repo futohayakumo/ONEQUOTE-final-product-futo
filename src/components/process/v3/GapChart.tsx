@@ -60,18 +60,26 @@ export function GapChart() {
               y={y(maxY * f) + 4}
               textAnchor="end"
               fill="var(--color-muted)"
-              fontSize="10"
+              fontSize="12"
             >
               {Math.round(maxY * f)}
             </text>
           </g>
         ))}
 
+        {/*
+          The two series measure 1.04:1 against each other — in greyscale, in
+          print, or to a deuteranope they were the same line, and the caption
+          underneath restated the failure ("grey is traditional, crimson is
+          AI-driven") rather than fixing it. They now differ in dash, in width
+          and in marker shape, and each line is labelled where it ends.
+        */}
         <path
           d={path("trad")}
           fill="none"
           stroke="var(--color-muted)"
-          strokeWidth="2"
+          strokeWidth="2.5"
+          strokeDasharray="7 4"
         />
         <path
           d={path("ai")}
@@ -82,14 +90,21 @@ export function GapChart() {
 
         {rows.map((r, i) => (
           <g key={r.sp}>
-            <circle cx={x(i)} cy={y(r.trad)} r="3.5" fill="var(--color-muted)" />
+            {/* Square for traditional, round for AI — shape, not only fill. */}
+            <rect
+              x={x(i) - 3.5}
+              y={y(r.trad) - 3.5}
+              width="7"
+              height="7"
+              fill="var(--color-muted)"
+            />
             <circle cx={x(i)} cy={y(r.ai)} r="3.5" fill="var(--color-crimson)" />
             <text
               x={x(i)}
               y={H - PAD.bottom + 16}
               textAnchor="middle"
               fill="var(--color-muted)"
-              fontSize="10"
+              fontSize="12"
             >
               {r.sp}
             </text>
@@ -103,7 +118,7 @@ export function GapChart() {
             y={y(rows[i].trad) - 10}
             textAnchor={i === 0 ? "start" : "end"}
             fill="var(--color-charcoal)"
-            fontSize="11"
+            fontSize="13"
             fontWeight="600"
           >
             {rows[i].ratio.toFixed(1)}×

@@ -79,6 +79,7 @@ export function QuizRunner() {
   const i = state.index;
   const question = QUIZ[i];
   const revealed = state.revealed[i];
+  const chosen = state.answers[i] !== null;
   const isLast = i === QUIZ.length - 1;
 
   return (
@@ -99,15 +100,6 @@ export function QuizRunner() {
         </div>
         {/* Progress is restored from the session, so landing mid-quiz needs an
             obvious way back to the start. */}
-        {i > 0 || revealed ? (
-          <button
-            type="button"
-            onClick={() => persist(blank())}
-            className="shrink-0 type-caption text-muted underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
-          >
-            Start over
-          </button>
-        ) : null}
       </div>
 
       <QuestionCard
@@ -117,26 +109,67 @@ export function QuizRunner() {
         onSelect={(optionId) => {
           if (revealed) return;
           const answers = [...state.answers];
-          const rev = [...state.revealed];
           answers[i] = optionId;
-          rev[i] = true;
-          persist({ ...state, answers, revealed: rev });
+          persist({ ...state, answers });
         }}
       />
 
-      <div>
+      {/* Announced, not merely revealed. Focus does not move on answering, so
+          without this a screen-reader user gets no account of what happened. */}
+      <p aria-live="polite" className="sr-only">
+        {revealed
+          ? state.answers[i] === question.correctId
+            ? "Correct. The explanation is below, and the next question is ready."
+            : `Not quite. The correct answer is ${
+                question.options.find((o) => o.id === question.correctId)?.text
+              }. The explanation is below.`
+          : ""}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-6">
         <button
           type="button"
-          disabled={!revealed}
-          onClick={() => {
-            if (isLast) setFinished(true);
+          aria-disabled={!chosen}
+          onClick={(e) => {
+            // aria-disabled, not disabled: a native disabled button leaves the
+            // tab order, so a keyboard user tabbing forward never met the
+            // control and got no account of why the quiz had no next step.
+            if (!chosen) {
+              e.preventDefault();
+              return;
+            }
+            if (!revealed) {
+              const rev = [...state.revealed];
+              rev[i] = true;
+              persist({ ...state, revealed: rev });
+            } else if (isLast) setFinished(true);
             else persist({ ...state, index: i + 1 });
           }}
-          className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal disabled:cursor-not-allowed disabled:border-border disabled:bg-mist disabled:text-muted"
+          className={`inline-flex items-center gap-3 border px-7 py-3.5 type-label rounded-card transition-colors duration-150 ${
+            chosen
+              ? "border-crimson bg-crimson text-studio hover:border-charcoal hover:bg-charcoal"
+              : "cursor-not-allowed border-control bg-mist text-charcoal"
+          }`}
         >
-          {isLast ? "See results" : "Next question"}
+          {!chosen
+            ? "Choose an answer first"
+            : !revealed
+              ? "Check answer"
+              : isLast
+                ? "See results"
+                : "Next question"}
           <ArrowRight size={18} />
         </button>
+
+        {i > 0 || revealed ? (
+          <button
+            type="button"
+            onClick={() => persist(blank())}
+            className="type-caption text-muted underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
+          >
+            Start over
+          </button>
+        ) : null}
       </div>
     </div>
   );

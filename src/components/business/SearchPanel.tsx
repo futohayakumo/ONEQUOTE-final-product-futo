@@ -27,7 +27,7 @@ export interface SearchState {
 }
 
 const FIELD =
-  "w-full border border-border bg-studio px-4 py-3 type-label rounded-card";
+  "w-full border border-control bg-studio px-4 py-3 type-label rounded-card";
 
 export function SearchPanel({
   value,

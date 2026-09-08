@@ -28,9 +28,17 @@ export default function RootLayout({
       {/* No horizontal padding here — full-bleed bands must reach the viewport
           edges. Each page owns its own container. */}
       <body className="flex min-h-svh flex-col bg-canvas type-body">
+        {/* Six controls sat between every navigation and the page content,
+            re-traversed on every route. */}
+        <a
+          href="#content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60] focus:border focus:border-crimson focus:bg-studio focus:px-4 focus:py-2 focus:type-label focus:rounded-card"
+        >
+          Skip to content
+        </a>
         <SiteNav />
         {/* Clips the route transition's sideways travel. See .app-shell. */}
-        <div className="app-shell flex-1">{children}</div>
+        <div id="content" className="app-shell flex-1">{children}</div>
         <SiteFooter />
       </body>
     </html>

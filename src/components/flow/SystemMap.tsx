@@ -94,10 +94,8 @@ export function SystemMap({
   };
 
   const announcement = selected
-    ? `${NODES[selected].label} selected. Route, ${route.length} hops: ${route
-        .map((id) => NODES[id].label)
-        .join(", ")}.`
-    : "";
+    ? `${NODES[selected].label} selected. Route is now ${route.length} hops, ending at ${NODES[route[route.length - 1]].label}.`
+    : "Selection cleared. Showing the default route.";
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,7 +134,10 @@ export function SystemMap({
       {/* Describes three line styles; pointless when none are drawn. */}
       {isColumnar(rects) ? <FlowLegend /> : null}
 
-      <p aria-live="polite" className="sr-only">
+      {/* aria-atomic so a partial update is not read as a fragment, and a
+          sentence on deselect -- emptying a live region announces nothing, so
+          clearing the selection used to be silent. */}
+      <p aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </p>
     </div>

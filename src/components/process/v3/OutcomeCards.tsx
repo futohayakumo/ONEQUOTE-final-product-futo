@@ -104,10 +104,10 @@ export function OutcomeCards({
           <dl className="flex flex-wrap gap-x-10 gap-y-3">
             {card.split.map((s) => (
               <div key={s.label}>
-                <dt className={`type-label tnum ${s.ink}`}>
+                <dt className="type-caption">{s.label}</dt>
+                <dd className={`type-label tnum ${s.ink}`}>
                   {s.value.toFixed(2)} d
-                </dt>
-                <dd className="type-caption">{s.label}</dd>
+                </dd>
               </div>
             ))}
           </dl>

@@ -97,7 +97,7 @@ export function FlowNode({
           ? "border-2 border-crimson bg-tint shadow-raised"
           : onRoute
             ? "border-2 border-crimson bg-studio shadow-card"
-            : "border border-border bg-studio shadow-card hover:border-crimson",
+            : "border border-control bg-studio shadow-card hover:border-crimson",
       )}
     >
       {/* Reserved gutter — always present, so geometry never changes. */}

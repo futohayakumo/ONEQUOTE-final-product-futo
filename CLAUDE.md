@@ -15,9 +15,10 @@ Nine colours, and no others:
 | :--- | :--- | :--- |
 | `studio` | `#FFFFFF` | panels, card faces |
 | `canvas` | `#F8FAFC` | app background |
-| `border` | `#CBD5E1` | 1px outlines |
+| `border` | `#CBD5E1` | **decorative** hairlines: dividers, table rules |
+| `control` | `#818FA3` | **interactive** boundaries: inputs, buttons, selectable rows |
 | `charcoal` | `#0F172A` | headings, console background |
-| `muted` | `#64748B` | captions, metadata |
+| `muted` | `#617187` | captions, metadata |
 | `crimson` | `#E1127A` | accent — **under 10% of any screen** |
 | `tint` | `#FDF2F8` | active item background |
 | `console` | `#0F172A` | terminal background |
@@ -65,7 +66,17 @@ anything outside it emits nothing rather than erroring.
 | `shadow-raised` | 4px + 12px | the one hovered or selected card |
 | `shadow-none` | — | everywhere else |
 
-Borders stay 1px; active states may use 2px crimson. Elevation is measured off
+Borders stay 1px; active states may use 2px crimson. **A control's boundary
+takes `control`, not `border`.** WCAG 1.4.11 wants 3:1 where the boundary is
+what makes the control perceivable, and `#CBD5E1` measures 1.48:1 on studio —
+under half. Every input, select, button and selectable row on this site was
+identified by nothing else. `border` stays where the rule does not apply:
+dividers, table rules, the hairline under a heading.
+
+`muted` is `#617187`, not `#64748B`. The old value cleared 4.5 on studio and
+canvas and failed on `tint` at 4.36 — which is the active/selected ground, the
+row the reader is on. On `console` it measured 3.75 and is replaced there by
+`border`, which reads 12.02:1. Elevation is measured off
 the comps, where a card edge is a 1px rule with a short, very low-contrast ramp
 beneath it. **If you can point at it and call it a shadow, it is already too
 much.**

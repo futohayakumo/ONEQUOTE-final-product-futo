@@ -41,8 +41,10 @@ export function NetworkBand() {
         <dl className="ml-auto flex shrink-0 flex-col gap-8 border-l border-muted pl-10">
           {STATS.map((stat) => (
             <div key={stat.label}>
-              <dt className="type-section tnum text-studio">{stat.figure}</dt>
-              <dd className="mt-1 type-caption text-border">{stat.label}</dd>
+              <dt className="type-caption text-border">{stat.label}</dt>
+              <dd className="mt-1 type-section tnum text-studio">
+                {stat.figure}
+              </dd>
             </div>
           ))}
         </dl>

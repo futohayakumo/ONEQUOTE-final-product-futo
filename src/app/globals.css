@@ -29,9 +29,28 @@
 
   --color-studio: #ffffff; /* Studio White    — panels, card faces        */
   --color-canvas: #f8fafc; /* Clean Off-White — app background            */
-  --color-border: #cbd5e1; /* Neutral Border  — 1px outlines              */
+  --color-border: #cbd5e1; /* Neutral Border  — DECORATIVE hairlines only  */
+  /*
+   * Interactive boundaries.
+   *
+   * WCAG 1.4.11 wants 3:1 for the boundary of a control when that boundary is
+   * what makes the control perceivable, and #CBD5E1 measures 1.48:1 on studio,
+   * 1.42 on canvas and 1.36 on tint. Every input, select, button, radio row
+   * and sailing row on this site was identified by nothing else -- 33 elements
+   * across five routes, all under half the required ratio.
+   *
+   * Darkening `border` itself would have thickened every divider and table
+   * rule on the site to fix a rule that does not apply to them. This is the
+   * same slate hue, 72% of the way to `muted`, and it is for controls.
+   */
+  --color-control: #818fa3; /* 3.29 studio / 3.14 canvas / 3.01 tint      */
   --color-charcoal: #0f172a; /* Deep Charcoal   — headings, console bg      */
-  --color-muted: #64748b; /* Muted Slate     — captions, metadata        */
+  /*
+   * Nudged from #64748B, which cleared 4.5 on studio and canvas and failed on
+   * tint (4.36) -- the active/selected ground, i.e. the row being read. Three
+   * points of lightness; the difference is not visible and the failure was.
+   */
+  --color-muted: #617187; /* Muted Slate     — 4.98 / 4.76 / 4.56        */
   --color-crimson: #e1127a; /* Deep Crimson    — accent, <10% of screen    */
   --color-tint: #fdf2f8; /* Active Tint     — active item background    */
   --color-console: #0f172a; /* Dark Slate      — terminal background       */
@@ -395,6 +414,26 @@
 
 @utility animate-panel-enter {
   animation: panel-enter 180ms ease-out both;
+}
+
+/*
+ * A wrapper that shows the focus ring for a control nested inside it.
+ *
+ * Radios here are `sr-only`, clipped to a 1px box, so the global
+ * :focus-visible outline landed somewhere invisible — a sighted keyboard user
+ * had no indication of position in either radio group.
+ *
+ * `peer-focus-visible:` cannot do this. The peer variant compiles to a sibling
+ * combinator, and in these components the label WRAPS the input rather than
+ * following it, so the selector never matches. Writing outline in full also
+ * avoids Tailwind's `outline-<width>`, which defers the style to
+ * --tw-outline-style and paints nothing when that property is unset.
+ */
+@utility ring-on-focus {
+  &:has(:focus-visible) {
+    outline: 2px solid var(--color-crimson);
+    outline-offset: 2px;
+  }
 }
 
 /* Screen-reader-only, used for aria-live regions. */

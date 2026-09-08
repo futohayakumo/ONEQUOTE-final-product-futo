@@ -44,16 +44,18 @@ export function OptionRow({
 
   return (
     <label
+      /* `ring-on-focus`: the input is sr-only, so the ring goes on the label
+         that wraps it. See the utility for why peer-* cannot do this. */
       className={cn(
-        "flex cursor-pointer items-center gap-4 px-5 py-4 rounded-card transition-colors duration-150",
+        "ring-on-focus flex cursor-pointer items-center gap-4 px-5 py-4 rounded-card transition-colors duration-150",
         chosenAndRight && "border-2 border-charcoal bg-studio shadow-raised",
         chosenAndWrong && "border-2 border-crimson bg-tint shadow-raised",
         revealedAnswer && "border-2 border-charcoal bg-studio shadow-raised",
         !revealed && checked && "border-2 border-crimson bg-tint shadow-raised",
         !revealed &&
           !checked &&
-          "border border-border bg-studio shadow-card hover:border-crimson",
-        revealed && !checked && !isCorrect && "border border-border bg-studio",
+          "border border-control bg-studio shadow-card hover:border-crimson",
+        revealed && !checked && !isCorrect && "border border-control bg-studio",
       )}
     >
       <input
@@ -62,8 +64,13 @@ export function OptionRow({
         value={option.id}
         checked={checked}
         onChange={onSelect}
-        disabled={revealed}
-        className="peer sr-only"
+        /*
+         * Deliberately NOT `disabled`. Disabling the radio that currently holds
+         * focus drops focus to <body>, and every answer silently sent the user
+         * back to the top of the tab order. QuizRunner refuses a second answer
+         * on its own; disabling only made the refusal destructive.
+         */
+        className="sr-only"
       />
 
       <span
@@ -76,7 +83,7 @@ export function OptionRow({
               ? "border-crimson text-crimson"
               : checked
                 ? "border-crimson bg-crimson text-studio"
-                : "border-border text-transparent",
+                : "border-control text-transparent",
         )}
         /* A radio mark is a MARK, not a container — outside the 4px rule. */
         style={{ borderRadius: 9999 }}

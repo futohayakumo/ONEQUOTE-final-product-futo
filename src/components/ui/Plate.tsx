@@ -38,6 +38,7 @@ export function Plate({
 }) {
   return (
     <div
+      aria-hidden
       style={ratio ? { aspectRatio: ratio } : undefined}
       className={cn(
         "flex flex-col gap-1 border px-4",

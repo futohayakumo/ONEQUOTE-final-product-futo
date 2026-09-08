@@ -19,6 +19,7 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={max}
       aria-label={label}
+      aria-valuetext={label}
       className="h-1 w-full border border-border bg-canvas"
       style={{ borderRadius: 0 }}
     >

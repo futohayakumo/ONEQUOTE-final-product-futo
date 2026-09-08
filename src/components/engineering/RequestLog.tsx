@@ -16,7 +16,14 @@ export function RequestLog({ trace }: { trace: Trace }) {
         <span className="type-caption tnum">{trace.log.length} lines</span>
       </div>
 
-      <div className="overflow-x-auto bg-console p-5 rounded-card">
+      {/* tabIndex 0 + a role, or the 40% of this log that overflows on a
+          phone is reachable by pointer only. */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Request log, scrollable"
+        className="overflow-x-auto bg-console p-5 rounded-card"
+      >
         <table className="w-full type-console">
           <caption className="sr-only">
             Request log for the highlighted route
@@ -24,7 +31,7 @@ export function RequestLog({ trace }: { trace: Trace }) {
           <tbody>
             {trace.log.map((line, i) => (
               <tr key={i}>
-                <td className="pr-5 align-top whitespace-nowrap text-muted tnum">
+                <td className="pr-5 align-top whitespace-nowrap text-border tnum">
                   {line.at}
                 </td>
                 <td className="pr-5 align-top text-border">INFO</td>

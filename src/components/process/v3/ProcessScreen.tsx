@@ -118,7 +118,7 @@ export function ProcessScreen() {
                 onChange={(e) =>
                   setSp(Number(e.target.value) as StoryPoint)
                 }
-                className="w-28 border border-border bg-studio px-4 py-2.5 type-label tnum rounded-card shadow-card"
+                className="w-28 border border-control bg-studio px-4 py-2.5 type-label tnum rounded-card shadow-card"
               >
                 {STORY_POINTS.map((p) => (
                   <option key={p} value={p}>

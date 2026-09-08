@@ -41,16 +41,16 @@ export function SailingList({
               <li key={s.id}>
                 <label
                   className={cn(
-                    "flex cursor-pointer flex-wrap items-center gap-x-8 gap-y-4 px-6 py-5 rounded-card transition-colors duration-150",
+                    "ring-on-focus flex cursor-pointer flex-wrap items-center gap-x-8 gap-y-4 px-6 py-5 rounded-card transition-colors duration-150",
                     active
                       ? "border-2 border-crimson bg-tint shadow-raised"
-                      : "border border-border bg-studio shadow-card hover:border-crimson",
+                      : "border border-control bg-studio shadow-card hover:border-crimson",
                   )}
                 >
                   <input
                     type="radio"
                     name="sailing"
-                    className="peer sr-only"
+                    className="sr-only"
                     checked={active}
                     onChange={() => onSelect(s.id)}
                   />
@@ -58,7 +58,7 @@ export function SailingList({
                     aria-hidden
                     className={cn(
                       "flex h-5 w-5 shrink-0 items-center justify-center border-2 rounded-full",
-                      active ? "border-crimson" : "border-border",
+                      active ? "border-crimson" : "border-control",
                     )}
                   >
                     {active ? (
