@@ -56,7 +56,7 @@ widens from about 5x at 0.5 story points to about 14x at 8.
 **three.js is fenced in.** It may only be imported from
 `src/components/process/scene/**`, enforced by ESLint and by `check:tokens`.
 It loads as one lazy chunk on the process route and nowhere else. The 3D
-geometry is authored procedurally; `design/*.scad` are proportion sketches kept
+geometry is authored procedurally; the proportions were sketched offline and kept
 as a record of intent, not build inputs.
 
 **Both delivery rooms share one layout on purpose.** The five station slots,

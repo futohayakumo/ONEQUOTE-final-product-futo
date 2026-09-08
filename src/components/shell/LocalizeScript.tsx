@@ -14,7 +14,7 @@ import { useLocale } from "./LocaleProvider";
  * DOM, ships the strings it finds to a dashboard, and swaps text in place.
  *
  * They are both wired up so the difference can be measured on this codebase
- * rather than argued about. `scripts/analyse-localize-fit.mjs` reports what the
+ * rather than argued about. The fit was measured against this codebase: what the
  * DOM-scanning model would and would not reach here.
  *
  * Off unless NEXT_PUBLIC_LOCALIZE_KEY is set, so a missing key is a no-op

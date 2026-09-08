@@ -10,11 +10,9 @@
     "check:tokens": "bash scripts/check-tokens.sh",
     "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
     "verify": "pnpm check:tokens && pnpm exec tsc --noEmit && pnpm lint && pnpm test && pnpm build",
-    "demo:end": "bash scripts/end-demo.sh",
     "build:static": "STATIC_EXPORT=1 next build",
     "locales:pull": "node scripts/pull-locales.mjs",
-    "locales:check": "node --experimental-strip-types --test src/lib/i18n.test.ts",
-    "locales:fit": "node scripts/analyse-localize-fit.mjs"
+    "locales:check": "node --experimental-strip-types --test src/lib/i18n.test.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
