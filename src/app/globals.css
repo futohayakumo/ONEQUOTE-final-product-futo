@@ -39,6 +39,15 @@
 
   --color-mist: #e2e8f0; /* Mist            — inert fills, progress tracks  */
 
+  /* Crimson is an accent that works as a FILL and fails as TEXT. White on
+     #E1127A is 4.60:1 and passes, but #E1127A as type clears 4.5 on pure
+     white only -- 4.39 on canvas, 4.21 on tint, 3.88 on charcoal. These two
+     are the same hue moved just far enough to pass on the grounds it actually
+     lands on, and they are for TEXT ONLY. Fills, rules and borders stay
+     --color-crimson so the accent itself does not shift. */
+  --color-crimson-ink: #d81175; /* crimson type on light grounds (4.52-4.93) */
+  --color-crimson-lift: #e6388f; /* crimson type on charcoal      (4.53)      */
+
   /* 3. GEOMETRY — three legal radii, each with one job.
         Still a closed set: anything else emits nothing. */
   --radius-sharp: 4px; /* small chips, tags, inline marks   */
@@ -210,7 +219,7 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-crimson);
+  color: var(--color-crimson-ink);
 }
 
 /* Back navigation reverses the entrance. */
@@ -222,6 +231,26 @@
   .route-enter {
     animation: none !important;
   }
+}
+
+/* The lockup sits outside the reading scale on purpose: it is a mark, not
+   text, and it is the one place where letter-spacing is doing identity work
+   rather than legibility work. Bundled here so it stays greppable and cannot
+   drift into an arbitrary text-[15px] somewhere in a component. */
+@utility type-wordmark {
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@utility type-wordmark-sm {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 @utility tnum {
@@ -365,9 +394,16 @@
    leaves the picture side alone.
 
    So gradients are legal in exactly one place: over a photograph, in
-   charcoal, at a fixed set of directions. Never as a fill, never as a
-   button, never between two hues. If a gradient is not sitting on an
-   <img>, it is a mistake.
+   charcoal OR in studio white, at a fixed set of directions. Never as a
+   fill, never as a button, never between two hues. If a gradient is not
+   sitting on an <img>, it is a mistake.
+
+   Both directions are needed because the comps use both. Bands with light
+   type take a charcoal scrim; the systems band puts charcoal type over a
+   bright office floor and takes a white one. Without the light variant that
+   band has to be built either as dark type on an unmanaged photograph --
+   legible only as long as nobody swaps the picture -- or as light type on a
+   charcoal wash the comps do not have.
    ───────────────────────────────────────────────────────────── */
 
 @utility scrim-l {
@@ -384,6 +420,17 @@
     180deg,
     rgb(15 23 42 / 0) 40%,
     rgb(15 23 42 / 0.72) 100%
+  );
+}
+
+/* Light variants. Same geometry, opposite direction: these guarantee the type
+   side is bright enough for charcoal, rather than dark enough for studio. */
+@utility scrim-l-light {
+  background-image: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.92) 0%,
+    rgb(255 255 255 / 0.72) 42%,
+    rgb(255 255 255 / 0) 78%
   );
 }
 

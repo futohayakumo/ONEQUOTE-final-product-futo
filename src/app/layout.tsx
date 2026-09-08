@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { SiteFooter } from "@/components/shell/SiteFooter";
+import { SiteNav } from "@/components/shell/SiteNav";
 import { inter, mono } from "./fonts";
 import "./globals.css";
 
@@ -23,11 +25,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
-      {/* No horizontal padding here — the persona gateway must reach the
-          viewport edges. Each page owns its own container. */}
-      <body className="min-h-svh bg-canvas type-body">
+      {/* No horizontal padding here — full-bleed bands must reach the viewport
+          edges. Each page owns its own container. */}
+      <body className="flex min-h-svh flex-col bg-canvas type-body">
+        <SiteNav />
         {/* Clips the route transition's sideways travel. See .app-shell. */}
-        <div className="app-shell">{children}</div>
+        <div className="app-shell flex-1">{children}</div>
+        <SiteFooter />
       </body>
     </html>
   );

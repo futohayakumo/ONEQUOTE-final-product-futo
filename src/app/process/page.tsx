@@ -7,7 +7,7 @@ export const metadata = { title: "Process Comparison" };
 
 export default function ProcessJourneyPage() {
   return (
-    <ScreenShell backHref="/journeys">
+    <ScreenShell backHref="/">
       <div className="flex flex-col gap-6">
         <Eyebrow>Process comparison</Eyebrow>
         <PageTitle className="max-w-[24ch]">

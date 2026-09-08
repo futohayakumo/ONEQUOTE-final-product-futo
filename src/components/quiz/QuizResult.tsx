@@ -71,7 +71,7 @@ export function QuizResult({
           Retake
         </button>
         <TransitionLink
-          href="/journeys/process"
+          href="/process"
           direction="back"
           className="border border-border bg-studio px-6 py-3 type-label rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
         >

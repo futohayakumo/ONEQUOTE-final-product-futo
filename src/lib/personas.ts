@@ -15,7 +15,7 @@ export const PERSONAS: readonly Persona[] = [
     id: "business",
     no: "01",
     title: "BUSINESS",
-    href: "/journeys/business",
+    href: "/business",
     blurb:
       "Quoting logic, lane pricing, and how TEU volume turns into tiered rewards.",
     surface: "bg-studio",
@@ -24,7 +24,7 @@ export const PERSONAS: readonly Persona[] = [
     id: "engineering",
     no: "02",
     title: "ENGINEERING",
-    href: "/journeys/engineering",
+    href: "/engineering",
     blurb:
       "Service boundaries, request routing, and the trade-offs behind each layer.",
     surface: "bg-tint",
@@ -33,7 +33,7 @@ export const PERSONAS: readonly Persona[] = [
     id: "process",
     no: "03",
     title: "PROCESS",
-    href: "/journeys/process",
+    href: "/process",
     blurb:
       "Two delivery models compared, then a knowledge check on the team's rules.",
     surface: "bg-canvas",

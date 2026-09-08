@@ -7,7 +7,7 @@ export const metadata = { title: "Knowledge Check" };
 
 export default function QuizPage() {
   return (
-    <ScreenShell backHref="/journeys/process">
+    <ScreenShell backHref="/process">
       <div className="flex flex-col gap-6">
         <Eyebrow>Process quiz</Eyebrow>
         <PageTitle>Knowledge Check</PageTitle>

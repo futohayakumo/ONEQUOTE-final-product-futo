@@ -368,7 +368,7 @@ export function ProcessComparison() {
 
       <div>
         <TransitionLink
-          href="/journeys/process/quiz"
+          href="/process/quiz"
           className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3 type-label text-studio rounded-sharp transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
         >
           Take Quiz

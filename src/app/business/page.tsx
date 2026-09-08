@@ -7,7 +7,7 @@ export const metadata = { title: "Quotation Simulator" };
 
 export default function BusinessJourneyPage() {
   return (
-    <ScreenShell backHref="/journeys">
+    <ScreenShell backHref="/">
       <div className="flex flex-col gap-6">
         <Eyebrow>Business</Eyebrow>
         <PageTitle className="max-w-[20ch]">Quotation Simulator</PageTitle>

@@ -22,6 +22,17 @@ Nine colours, and no others:
 | `tint` | `#FDF2F8` | active item background |
 | `console` | `#0F172A` | terminal background |
 | `terminal` | `#34D399` | **console only** (1.75:1 on white) |
+| `mist` | `#E2E8F0` | inert fills, progress tracks |
+| `crimson-ink` | `#D81175` | crimson **type** on light grounds |
+| `crimson-lift` | `#E6388F` | crimson **type** on charcoal |
+
+**Crimson works as a fill and fails as type.** White on `#E1127A` is 4.60:1 and
+passes. `#E1127A` *as type* clears 4.5 on pure white only — 4.39 on `canvas`,
+4.21 on `tint`, 3.88 on `charcoal`. So text uses `crimson-ink` or
+`crimson-lift` depending on the ground, and fills, rules and borders keep
+`crimson` so the accent itself never shifts. Picking by eye will look right and
+measure wrong; the two variants exist because the difference is 4% of
+lightness.
 
 Type scale, as bundled utilities: `type-display` (56px, hero H1 and the three
 persona titles only), `type-page`, `type-section`, `type-body`, `type-label`,
@@ -45,12 +56,17 @@ the comps, where a card edge is a 1px rule with a short, very low-contrast ramp
 beneath it. **If you can point at it and call it a shadow, it is already too
 much.**
 
-**Gradients are legal in exactly one place**: a charcoal scrim over a
-photograph, spelled with `scrim-l`, `scrim-b` or `scrim-full`. Never as a fill,
-never on a button, never between two hues. If a gradient is not sitting on an
-`<img>`, it is a mistake. v2 banned them outright; the comps put type over
-full-bleed photography, and no flat overlay both darkens the type side enough
-and leaves the picture side alone.
+**Gradients are legal in exactly one place**: a scrim over a photograph,
+spelled with `scrim-l`, `scrim-b`, `scrim-full` (charcoal, for light type) or
+`scrim-l-light` (white, for charcoal type). Never as a fill, never on a button,
+never between two hues. If a gradient is not sitting on an `<img>`, it is a
+mistake. v2 banned them outright; the comps put type over full-bleed
+photography, and no flat overlay both pushes the type side far enough and
+leaves the picture side alone.
+
+Both directions exist because the comps use both, and picking the wrong one is
+not a style slip — it decides whether the copy can be read at all. A band whose
+type is charcoal must not sit on a charcoal scrim.
 
 **Crimson means "look here".** That covers both the active state and the
 invalid state, which is deliberate: an error needs the eye exactly as much as

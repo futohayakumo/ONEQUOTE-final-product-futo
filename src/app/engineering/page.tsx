@@ -7,7 +7,7 @@ export const metadata = { title: "System Flow Explorer" };
 
 export default function EngineeringJourneyPage() {
   return (
-    <ScreenShell backHref="/journeys">
+    <ScreenShell backHref="/">
       <div className="flex flex-col gap-6">
         <Eyebrow>Engineering</Eyebrow>
         <PageTitle className="max-w-[22ch]">System Flow Explorer</PageTitle>
