@@ -3,8 +3,15 @@
 import { useMemo, useState } from "react";
 import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
 import { quoteForSailing, sailingsFor } from "@/lib/sailings";
-import { INCOTERM_ORDER, INCOTERMS, type Incoterm } from "@/lib/charges";
+import {
+  INCOTERM_ORDER,
+  INCOTERMS,
+  accountTotal,
+  chargeSections,
+  type Incoterm,
+} from "@/lib/charges";
 import { useLocale, useT } from "../shell/LocaleProvider";
+import { QuoteSummaryBar } from "./QuoteSummaryBar";
 import { QuoteTicket } from "./QuoteTicket";
 import { SailingList } from "./SailingList";
 import { SearchPanel, type SearchState } from "./SearchPanel";
@@ -72,6 +79,24 @@ export function QuotationScreen() {
       s,
     ).total;
 
+  /*
+   * The payable total, computed here rather than read back out of the ticket.
+   *
+   * The summary bar and the ticket footer must never disagree, and the only way
+   * to guarantee that is one call site — the ticket derives the same figure
+   * from the same three functions.
+   */
+  const sections = chargeSections({
+    pol: query.pol,
+    pod: query.pod,
+    containerType: query.containerType,
+    units: quote.units,
+    oceanFreight: quote.oceanFreight * selected.rateFactor,
+    incoterm,
+  });
+  const yours = accountTotal(sections);
+  const payable = Math.round((yours - yours * quote.discountRate) * 100) / 100;
+
   return (
     <div className="flex flex-col gap-14">
       <SearchPanel
@@ -114,6 +139,13 @@ export function QuotationScreen() {
           </label>
         </div>
       </div>
+
+      <QuoteSummaryBar
+        reference={quote.quoteId}
+        incoterm={incoterm}
+        transitDays={selected.transitDays}
+        total={payable}
+      />
 
       <QuoteTicket
         quote={quote}
