@@ -7,16 +7,11 @@ import { Lines } from "../ui/Lines";
 
 /**
  * The left column of every band on the home page: a number, a two-line
- * heading, an all-caps subtitle, a paragraph, and one link out.
+ * heading, an all-caps English subtitle, a paragraph, and one link out.
  *
- * It repeats four times with nothing varying but the words, so it is one
- * component rather than four near-copies — the alternative is four places for
- * the rhythm to drift.
- *
- * The `tone="dark"` variant is gone with the two charcoal photo bands it
- * existed for. Every band is now a light ground, which is the point: a page
- * that changes its whole visual language every 800px reads as four posters
- * rather than one document.
+ * It repeats four times with nothing varying but the words and the tone, so it
+ * is one component rather than four near-copies — the alternative is four
+ * places for the rhythm to drift.
  */
 export function SectionIntro({
   no,
@@ -25,6 +20,7 @@ export function SectionIntro({
   bodyKey,
   href,
   linkKey,
+  tone = "light",
   emphasis = "quiet",
 }: {
   no: string;
@@ -33,6 +29,7 @@ export function SectionIntro({
   bodyKey: string;
   href: string;
   linkKey: string;
+  tone?: "light" | "dark";
   /**
    * Only one band per page should carry the accent. Four crimson "See the X →"
    * links of identical weight is four equal exits, which is none.
@@ -40,22 +37,37 @@ export function SectionIntro({
   emphasis?: "quiet" | "accent";
 }) {
   const t = useT();
+  const dark = tone === "dark";
   return (
     <div className="flex max-w-[27rem] flex-col">
-      <span className="type-eyebrow tnum">{no}</span>
-      <h2 className="mt-5 type-page">
+      <span className={`type-eyebrow tnum ${dark ? "text-crimson-lift" : ""}`}>
+        {no}
+      </span>
+      <h2
+        className={`mt-5 type-page ${dark ? "text-studio" : "text-charcoal"}`}
+      >
         <Lines text={t(titleKey)} />
       </h2>
-      <p className="mt-3 type-overline text-muted">{t(subtitleKey)}</p>
-      <div className="mt-7 type-body text-muted">{t(bodyKey)}</div>
+      <p
+        className={`mt-3 type-overline ${dark ? "text-border" : "text-muted"}`}
+      >
+        {t(subtitleKey)}
+      </p>
+      <div className={`mt-7 type-body ${dark ? "text-border" : "text-muted"}`}>
+        {t(bodyKey)}
+      </div>
       {/* Crimson as type, not as fill, so it takes the contrast-corrected
-          value: #E1127A measures 4.39:1 on canvas and fails. */}
+          pair: #E1127A is 4.39:1 on canvas and 3.88:1 on charcoal. */}
       <Link
         href={href}
         className={`mt-8 inline-flex items-center gap-2.5 type-label underline underline-offset-4 transition-colors duration-150 ${
           emphasis === "accent"
-            ? "text-crimson-ink hover:text-charcoal"
-            : "text-muted hover:text-charcoal"
+            ? dark
+              ? "text-crimson-lift hover:text-studio"
+              : "text-crimson-ink hover:text-charcoal"
+            : dark
+              ? "text-border hover:text-studio"
+              : "text-muted hover:text-charcoal"
         }`}
       >
         {t(linkKey)}

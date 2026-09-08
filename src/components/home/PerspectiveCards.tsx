@@ -15,29 +15,34 @@ import { SectionIntro } from "./SectionIntro";
  * carrying 2.5x their resolution. The other two stay PNG because re-encoding
  * a 260px image that is already lossy only trades size for artefacts.
  */
-const ART: Record<PersonaId, string> = {
-  business: "/assets/spot/10-perspective-business.png",
-  engineering: "/assets/spot/11-perspective-engineering.png",
-  process: "/assets/spot/12-perspective-process.jpg",
+const ART: Record<PersonaId, { src: string; alt: string }> = {
+  business: {
+    src: "/assets/spot/10-perspective-business.png",
+    alt: "An executive on a walkway above a container terminal at dusk.",
+  },
+  engineering: {
+    src: "/assets/spot/11-perspective-engineering.png",
+    alt: "A service mesh of lit nodes on a dark field.",
+  },
+  process: {
+    src: "/assets/spot/12-perspective-process.jpg",
+    alt: "A yard supervisor among stacked containers.",
+  },
 };
+
+
 
 /**
  * v2 gave the three perspectives a full screen of their own at /journeys. The
- * comps fold them into the home page as the closing band, which removes a click
- * without removing the choice, so the gateway route is gone and this replaces it.
- *
- * Two things changed when the rest of the page stopped being posters. The
- * persona title moved out of the photograph and into the card body, so the
- * three titles sit on one baseline instead of wherever each picture happened to
- * leave room. And the bare arrow disc became a labelled link: a circle in the
- * corner of a card is a decoration that happens to be clickable, which is not
- * the same as an affordance.
+ * comps fold them into the home page as the closing band, which removes a
+ * click without removing the choice, so the gateway route is gone and this is
+ * what replaces it.
  */
 export function PerspectiveCards() {
   const t = useT();
   return (
     <section className="bg-canvas">
-      <div className="mx-auto flex max-w-[86rem] flex-col gap-12 px-6 py-20 lg:flex-row lg:gap-20">
+      <div className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-24 lg:flex-row lg:gap-20">
         <SectionIntro
           no="04"
           titleKey="home.04.title"
@@ -54,24 +59,27 @@ export function PerspectiveCards() {
                 href={persona.href}
                 className="group flex h-full flex-col overflow-hidden border border-border bg-studio rounded-card shadow-card transition-shadow duration-150 hover:shadow-raised"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={ART[persona.id]}
-                  alt={t(`home.04.alt.${persona.id}`)}
-                  className="aspect-[4/3] w-full object-cover"
-                />
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ART[persona.id].src}
+                    alt={ART[persona.id].alt}
+                    className="aspect-[4/3] w-full object-cover"
+                  />
+                  <span aria-hidden className="absolute inset-0 scrim-b" />
+                  <span className="absolute bottom-4 left-4 type-section text-studio">
+                    {persona.title}
+                  </span>
+                </div>
 
-                <div className="flex flex-1 flex-col gap-2 border-t border-border p-5">
-                  <span className="type-overline text-muted">
-                    {persona.no} {persona.title}
-                  </span>
-                  <span className="type-label">
-                    {t(`home.04.${persona.id}`)}
-                  </span>
+                <div className="flex flex-1 flex-col gap-2 p-5">
+                  <span className="type-label">{t(`home.04.${persona.id}`)}</span>
                   <p className="type-caption">{t(persona.blurbKey)}</p>
-                  <span className="mt-auto inline-flex items-center gap-2 pt-4 type-caption text-crimson-ink underline underline-offset-4 transition-colors duration-150 group-hover:text-charcoal">
-                    {t("home.04.cardCta")}
-                    <ArrowRight size={14} />
+                  <span
+                    aria-hidden
+                    className="mt-auto flex h-9 w-9 items-center justify-center self-end border border-crimson text-crimson rounded-full transition-colors duration-150 group-hover:bg-crimson group-hover:text-studio"
+                  >
+                    <ArrowRight size={16} />
                   </span>
                 </div>
               </Link>
