@@ -5,7 +5,9 @@ import Link from "next/link";
 import { STORY_POINTS, compare } from "../model/processModel";
 import type { StoryPoint } from "@/types/process-scene";
 import { ArrowRight } from "../../icons/ArrowRight";
-import { useT } from "../../shell/LocaleProvider";
+import { formatDecimal } from "@/lib/localeFormat";
+import { useLocale, useT } from "../../shell/LocaleProvider";
+import { FlowLadder } from "./FlowLadder";
 import { GapChart } from "./GapChart";
 import { OutcomeCards } from "./OutcomeCards";
 import { QualityEvidence } from "./QualityEvidence";
@@ -24,10 +26,41 @@ const PROTOCOL = ["commit", "approvals", "branches"] as const;
 
 const WHY = ["handoffs", "gates", "stages"] as const;
 
+/** The four things a reader has to know before the numbers mean anything. */
+const READ = ["sp", "lead", "assume", "source"] as const;
+
 export function ProcessScreen() {
   const t = useT();
+  const { locale } = useLocale();
   const [sp, setSp] = useState<StoryPoint>(8);
   const result = useMemo(() => compare(sp), [sp]);
+  // One scale for both ladders. Two bars each fitted to their own width would
+  // be two charts, and the length difference is the entire finding.
+  const scaleDays = Math.max(
+    result.traditional.totalDays,
+    result.aiDriven.totalDays,
+  );
+
+  const trad = result.traditional;
+  const d1 = (n: number) => formatDecimal(n, locale, 1);
+  const whyCost: Record<string, Record<string, string | number>> = {
+    handoffs: {
+      gaps: trad.perStep.filter((step) => step.waitDays > 0).length,
+      sp,
+      days: d1(trad.waitDays),
+      total: d1(trad.totalDays),
+    },
+    // The approval queue is the wait in front of Deploy: two reviewers, two
+    // calendars, and the one gap the model prices differently from the rest.
+    gates: {
+      days: d1(
+        trad.perStep.find((step) => step.stepId === "deploy")?.waitDays ?? 0,
+      ),
+    },
+    stages: {
+      ratio: d1(trad.touchDays === 0 ? 0 : trad.waitDays / trad.touchDays),
+    },
+  };
 
   return (
     <div className="flex flex-col">
@@ -62,13 +95,60 @@ export function ProcessScreen() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/assets/scenes/01-team-planning-room.png"
-            alt={t("process.outcome.alt")}
-            className="w-full rounded-card"
-          />
+        {/*
+          The hero used to be a 3D-styled illustration of six people around a
+          planning board — the most generated-looking asset on the site, and
+          one that said nothing the heading had not already said. The same
+          space now carries the finding itself: two bars, one scale, straight
+          out of the model the rest of the page runs on.
+        */}
+        <div className="flex flex-col gap-6 border border-border bg-studio p-6 rounded-card shadow-card">
+          {(
+            [
+              ["traditional", "process.trad.title"],
+              ["ai-driven", "process.ai.title"],
+            ] as const
+          ).map(([mode, key]) => {
+            const schedule =
+              mode === "traditional" ? result.traditional : result.aiDriven;
+            return (
+              <div key={mode} className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <span className="type-label">{t(key)}</span>
+                  <span className="type-label tnum">
+                    {t("process.ladder.total", {
+                      days: formatDecimal(schedule.totalDays, locale, 1),
+                    })}
+                  </span>
+                </div>
+                <div className="flex h-6 w-full overflow-hidden border border-border bg-canvas rounded-sharp">
+                  <span
+                    className="bg-charcoal"
+                    style={{ width: `${(schedule.touchDays / scaleDays) * 100}%` }}
+                  />
+                  <span
+                    className="bg-mist"
+                    style={{ width: `${(schedule.waitDays / scaleDays) * 100}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-4">
+            <span className="flex items-center gap-2 type-caption">
+              <span aria-hidden className="h-3 w-3 bg-charcoal rounded-sharp" />
+              {t("process.outcome.work")}
+            </span>
+            <span className="flex items-center gap-2 type-caption">
+              <span aria-hidden className="h-3 w-3 bg-mist rounded-sharp" />
+              {t("process.outcome.waiting")}
+            </span>
+            <span className="ml-auto type-caption">
+              {t("process.ladder.scale", { sp })}
+            </span>
+          </div>
+
           <p className="border-l-2 border-charcoal pl-5 type-label">
             {t("process.hero.note")}
           </p>
@@ -106,49 +186,25 @@ export function ProcessScreen() {
           </div>
 
           <div className="grid gap-10 lg:grid-cols-2">
-            {[
-              {
-                titleKey: "process.trad.title",
-                blurbKey: "process.trad.blurb",
-                src: "/assets/scenes/traditional-desks.png",
-                alt: "Five desks in a row. A stack of work waits beside each one, and the fourth person is idle.",
-                footKey: "process.trad.foot",
-              },
-              {
-                titleKey: "process.ai.title",
-                blurbKey: "process.ai.blurb",
-                src: "/assets/scenes/ai-conveyor.png",
-                alt: "One conveyor carrying work past a single console, with nothing queued beside it.",
-                footKey: "process.ai.foot",
-              },
-            ].map((col) => (
-              <div key={col.titleKey} className="flex flex-col gap-5">
-                <div>
-                  <h3 className="type-section">{t(col.titleKey)}</h3>
-                  <p className="mt-1 type-caption">{t(col.blurbKey)}</p>
-                </div>
-                {/*
-                  One box, one scale. The two strips arrived at 3:1 and 1.78:1,
-                  so laid out at their natural sizes the desks rendered small
-                  and the conveyor large — a comparison whose two halves are
-                  not to scale is not a comparison. `object-contain` in a
-                  shared box makes the queues on the left and their absence on
-                  the right the only difference between them.
-                */}
-                <div className="flex aspect-[16/7] w-full items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={col.src}
-                    alt={col.alt}
-                    className="max-h-full w-full object-contain"
-                  />
-                </div>
-                {/* mt-auto so the two captions share a baseline whatever
-                    padding each illustration carries inside its own box. */}
-                <p className="mt-auto type-caption">{t(col.footKey)}</p>
-              </div>
-            ))}
+            <FlowLadder
+              mode="traditional"
+              sp={sp}
+              scaleDays={scaleDays}
+              titleKey="process.trad.title"
+              blurbKey="process.trad.blurb"
+              footKey="process.trad.foot"
+            />
+            <FlowLadder
+              mode="ai-driven"
+              sp={sp}
+              scaleDays={scaleDays}
+              titleKey="process.ai.title"
+              blurbKey="process.ai.blurb"
+              footKey="process.ai.foot"
+            />
           </div>
+
+          <p className="type-caption">{t("process.ladder.scale", { sp })}</p>
         </div>
       </section>
 
@@ -174,6 +230,17 @@ export function ProcessScreen() {
             </p>
           </div>
 
+          {/* A number with no stated unit, window or assumption is a
+              decoration. These four are what the cards below actually mean. */}
+          <dl className="grid gap-x-10 gap-y-6 border-y border-border py-8 sm:grid-cols-2 lg:grid-cols-4">
+            {READ.map((k) => (
+              <div key={k}>
+                <dt className="type-label">{t(`process.read.${k}`)}</dt>
+                <dd className="mt-2 type-caption">{t(`process.read.${k}Body`)}</dd>
+              </div>
+            ))}
+          </dl>
+
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
             <OutcomeCards
               traditional={result.traditional}
@@ -197,6 +264,10 @@ export function ProcessScreen() {
               {t("process.why.title")}
             </h2>
           </div>
+          {/* Each reason ends in what it costs, taken from the same schedule
+              the bars above are drawn from. "A queue forms at every boundary"
+              is a claim; "four boundaries hold the work for 21.8 of its 35.5
+              days" is the same claim with the receipt attached. */}
           <ul className="grid gap-8 sm:grid-cols-3">
             {WHY.map((k) => (
               <li
@@ -205,6 +276,9 @@ export function ProcessScreen() {
               >
                 <h3 className="type-label">{t(`process.why.${k}`)}</h3>
                 <p className="type-caption">{t(`process.why.${k}Body`)}</p>
+                <p className="mt-auto pt-2 type-caption tnum text-charcoal">
+                  {t(`process.why.${k}Cost`, whyCost[k])}
+                </p>
               </li>
             ))}
           </ul>
@@ -225,8 +299,17 @@ export function ProcessScreen() {
           </div>
           <dl className="grid gap-8 sm:grid-cols-3">
             {PROTOCOL.map((k) => (
-              <div key={k} className="flex flex-col gap-2">
+              <div
+                key={k}
+                className="flex flex-col gap-2 border border-border bg-studio p-5 rounded-card shadow-card"
+              >
                 <dt className="type-label">{t(`process.protocol.${k}`)}</dt>
+                {/* The rule as tooling sees it. A paragraph describing a
+                    convention is advice; the string a hook matches on is the
+                    convention, and it is what the quiz asks about. */}
+                <dd className="bg-console px-3 py-2 type-console text-border rounded-sharp">
+                  {t(`process.protocol.${k}Rule`)}
+                </dd>
                 <dd className="type-caption">{t(`process.protocol.${k}Body`)}</dd>
               </div>
             ))}
