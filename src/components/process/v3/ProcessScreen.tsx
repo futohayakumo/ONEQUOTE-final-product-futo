@@ -7,6 +7,7 @@ import type { StoryPoint } from "@/types/process-scene";
 import { ArrowRight } from "../../icons/ArrowRight";
 import { GapChart } from "./GapChart";
 import { OutcomeCards } from "./OutcomeCards";
+import { QualityEvidence } from "./QualityEvidence";
 import { SimulationPanel } from "./SimulationPanel";
 
 /**
@@ -187,6 +188,16 @@ export function ProcessScreen() {
               At {sp} story points the difference comes from waiting, not from
               typing — and the ratio is {result.ratio.toFixed(1)}×.
             </p>
+            {/* Said here rather than in a footnote. The queueing model is a
+                model; the measurements are in the section below it, and the
+                reader should know which they are looking at. */}
+            <p className="mt-3 max-w-[56ch] type-caption">
+              These figures come from a queueing model, not from a measurement.
+              The constants are stated in{" "}
+              <code className="type-console">processModel.ts</code> and chosen
+              to show the shape of the effect — a queue that grows with batch
+              size. The published measurements are in the next section.
+            </p>
           </div>
 
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
@@ -198,6 +209,8 @@ export function ProcessScreen() {
           </div>
         </div>
       </section>
+
+      <QualityEvidence />
 
       <SimulationPanel />
 

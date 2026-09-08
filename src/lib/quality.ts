@@ -1,0 +1,194 @@
+/**
+ * What AI assistance does to defect rate, and what it takes to get it back.
+ *
+ * The timing model next door was invented — the constants were chosen to make
+ * a curve, and nothing in it cited anything. That is a fair complaint about
+ * the strongest claim on the site, so the quality dimension is built the other
+ * way round: every constant here is a published measurement with its sample
+ * attached, and where the sources disagree the spread is shown rather than
+ * averaged away.
+ *
+ * The finding this model exists to carry is not "AI is faster". It is that AI
+ * assistance buys lead time and SELLS defect rate, and the trade is only worth
+ * taking if the review that would have caught those defects is automated too.
+ *
+ * Nothing here imports a value, so the node test runner executes it directly.
+ */
+
+export interface Evidence {
+  id: string;
+  /** What was measured. */
+  metric: string;
+  /** The measured multiplier against a non-AI baseline. 1.0 = no change. */
+  factor: number;
+  /** How it was reported, in the source's own units. */
+  reported: string;
+  sample: string;
+  source: string;
+  url: string;
+}
+
+/** Lead time. Every source agrees it improves; none of them says threefold. */
+export const SPEED_EVIDENCE: readonly Evidence[] = [
+  {
+    id: "codeninety-lead-time",
+    metric: "PR lead time, draft to review",
+    factor: 1 / (1 - 0.324),
+    reported: "−32.4%",
+    sample: "84 organisations, 14,200+ developers, 12 months",
+    source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
+    url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
+  },
+  {
+    id: "codeninety-guardrails",
+    metric: "PR lead time, organisations with review guardrails",
+    factor: 1 / (1 - 0.45),
+    reported: "−45.0%",
+    sample: "the high-maturity subset of the same cohort",
+    source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
+    url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
+  },
+  {
+    id: "uplevel-throughput",
+    metric: "PR throughput and cycle time",
+    factor: 1.0,
+    reported: "no significant change",
+    sample: "~800 developers, 3 months with and without Copilot",
+    source: "Uplevel Data Labs, Gen AI for Coding",
+    url: "https://uplevelteam.com/blog/ai-for-developer-productivity",
+  },
+] as const;
+
+/** Defect rate. Every source agrees it worsens; the spread is 1.09 to 1.68. */
+export const DEFECT_EVIDENCE: readonly Evidence[] = [
+  {
+    id: "codeninety-defects",
+    metric: "Defect injection rate",
+    factor: 4.8 / 3.2,
+    reported: "+50.0% — 3.2 to 4.8 bugs per 1,000 lines",
+    sample: "84 organisations, 14,200+ developers, 12 months",
+    source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
+    url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
+  },
+  {
+    id: "coderabbit-issues",
+    metric: "Issues raised per pull request",
+    factor: 10.83 / 6.45,
+    reported: "10.83 against 6.45 for human-only",
+    sample: "470 open-source pull requests",
+    source: "CodeRabbit, State of AI vs Human Code Generation",
+    url: "https://www.coderabbit.ai/blog/tackling-a-legacy-codebase-and-high-defect-rate-after-an-acquisition",
+  },
+  {
+    id: "uplevel-bugs",
+    metric: "Bugs introduced",
+    factor: 1.41,
+    reported: "+41%",
+    sample: "~800 developers, 3 months with and without Copilot",
+    source: "Uplevel Data Labs, Gen AI for Coding",
+    url: "https://uplevelteam.com/blog/ai-for-developer-productivity",
+  },
+  {
+    id: "sonar-bugs",
+    metric: "Bugs in AI-accelerated codebases",
+    factor: 1.09,
+    reported: "+9%, with pull requests 154% larger",
+    sample: "SonarSource telemetry",
+    url: "https://www.softwareseni.com/what-the-research-actually-shows-about-ai-coding-assistant-productivity/",
+    source: "SonarSource, via SoftwareSeni",
+  },
+] as const;
+
+/** What automated review recovers of the defect penalty. */
+export const RECOVERY_EVIDENCE: readonly Evidence[] = [
+  {
+    id: "codeninety-guardrails-recovery",
+    metric: "Defect and security penalty mitigated",
+    factor: 0.8,
+    reported: "80%+ mitigated, while still gaining 45% lead time",
+    sample: "the high-maturity subset of 84 organisations",
+    source: "Code Ninety, AI Coding Assistant Benchmarks 2026",
+    url: "https://codeninety.com/research/developer-productivity-and-ai-tech-debt-2026",
+  },
+  {
+    id: "coderabbit-catch",
+    metric: "Seeded defects caught before merge",
+    factor: 15 / 23,
+    reported: "15 of 23, with 6 false positives",
+    sample: "independent benchmark, 23 seeded bugs",
+    source: "CodeRabbit, independent evaluation",
+    url: "https://www.greptile.com/content-library/best-ai-code-review-tools",
+  },
+] as const;
+
+const mid = (xs: readonly Evidence[]) => {
+  const f = xs.map((e) => e.factor).sort((a, b) => a - b);
+  const m = Math.floor(f.length / 2);
+  return f.length % 2 ? f[m] : (f[m - 1] + f[m]) / 2;
+};
+
+/**
+ * The median of the published factors, not the mean.
+ *
+ * The mean would let one outlier move the headline; the median is the figure
+ * a sceptic can check by reading the table and counting.
+ */
+export const SPEED_FACTOR = mid(SPEED_EVIDENCE);
+export const DEFECT_FACTOR = mid(DEFECT_EVIDENCE);
+export const RECOVERY = mid(RECOVERY_EVIDENCE);
+
+/** Defects per thousand lines, without AI. Code Ninety's measured baseline. */
+export const BASELINE_DEFECTS_PER_KLOC = 3.2;
+
+export type QualityMode = "traditional" | "ai-assisted" | "ai-with-qa";
+
+export interface QualityOutcome {
+  mode: QualityMode;
+  /** Lead-time multiplier against the traditional baseline. Higher is faster. */
+  speed: number;
+  defectsPerKloc: number;
+  /** Share of injected defects caught before merge. */
+  caught: number;
+  /** What actually reaches production. */
+  escapedPerKloc: number;
+}
+
+export function quality(mode: QualityMode): QualityOutcome {
+  if (mode === "traditional") {
+    return {
+      mode,
+      speed: 1,
+      defectsPerKloc: BASELINE_DEFECTS_PER_KLOC,
+      caught: 0,
+      escapedPerKloc: BASELINE_DEFECTS_PER_KLOC,
+    };
+  }
+
+  const injected = BASELINE_DEFECTS_PER_KLOC * DEFECT_FACTOR;
+
+  if (mode === "ai-assisted") {
+    return {
+      mode,
+      speed: SPEED_FACTOR,
+      defectsPerKloc: injected,
+      caught: 0,
+      escapedPerKloc: injected,
+    };
+  }
+
+  // Automated review does not reduce what is written; it reduces what escapes.
+  // The distinction matters: the code is no better, the pipeline is.
+  return {
+    mode,
+    speed: SPEED_FACTOR,
+    defectsPerKloc: injected,
+    caught: RECOVERY,
+    escapedPerKloc: injected * (1 - RECOVERY),
+  };
+}
+
+export const QUALITY_MODES: readonly QualityMode[] = [
+  "traditional",
+  "ai-assisted",
+  "ai-with-qa",
+] as const;
