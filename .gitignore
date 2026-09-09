@@ -41,3 +41,4 @@ next-env.d.ts
 # Design input, not the application. Same reason intro.md and examples/ are
 # ignored: it is what the site is drawn FROM, and the repository ships the site.
 /DESIGN_BRIEF.md
+/DESIGN_PROMPT.md
