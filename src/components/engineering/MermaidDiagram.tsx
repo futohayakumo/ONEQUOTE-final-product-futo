@@ -21,6 +21,10 @@ function load() {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "strict",
+        /* "base" is the only built-in theme that reads themeVariables. Under
+           the default theme the overrides below are accepted and ignored, and
+           the diagrams render in mermaid's own lavender. */
+        theme: "base",
         fontFamily: "var(--font-inter), sans-serif",
         themeVariables: {
           background: "#FFFFFF",
@@ -28,6 +32,9 @@ function load() {
           primaryTextColor: "#0F172A",
           primaryBorderColor: "#818FA3",
           secondaryColor: "#FDF2F8",
+          /* Or the label sits on a pink lozenge: base derives this from
+             secondaryColor, and every edge label picks up the active tint. */
+          edgeLabelBackground: "#FFFFFF",
           tertiaryColor: "#FFFFFF",
           lineColor: "#818FA3",
           textColor: "#0F172A",
