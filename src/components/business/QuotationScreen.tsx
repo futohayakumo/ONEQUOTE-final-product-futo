@@ -3,8 +3,14 @@
 import { useMemo, useState } from "react";
 import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
 import { quoteForSailing, sailingsFor } from "@/lib/sailings";
-import { INCOTERM_ORDER, INCOTERMS, type Incoterm } from "@/lib/charges";
+import {
+  INCOTERM_ORDER,
+  INCOTERMS,
+  chargeSections,
+  type Incoterm,
+} from "@/lib/charges";
 import { useLocale, useT } from "../shell/LocaleProvider";
+import { QuoteDocument } from "./QuoteDocument";
 import { QuoteTicket } from "./QuoteTicket";
 import { SailingList } from "./SailingList";
 import { SearchPanel, type SearchState } from "./SearchPanel";
@@ -72,6 +78,23 @@ export function QuotationScreen() {
       s,
     ).total;
 
+  /*
+   * The charge sections, built here and passed to both renderings.
+   *
+   * The ticket derives them from the same three arguments, so a second call is
+   * not a second source of truth — but the document must be the SAME object
+   * the reader is looking at, not a re-derivation that could drift if the
+   * ticket's arguments ever change shape.
+   */
+  const sections = chargeSections({
+    pol: query.pol,
+    pod: query.pod,
+    containerType: query.containerType,
+    units: quote.units,
+    oceanFreight: quote.oceanFreight * selected.rateFactor,
+    incoterm,
+  });
+
   return (
     <div className="flex flex-col gap-14">
       <SearchPanel
@@ -123,6 +146,13 @@ export function QuotationScreen() {
         containerType={query.containerType}
         incoterm={incoterm}
         locale={locale}
+      />
+
+      <QuoteDocument
+        quote={quote}
+        sailing={selected}
+        sections={sections}
+        incoterm={incoterm}
       />
     </div>
   );

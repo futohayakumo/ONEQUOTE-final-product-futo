@@ -7,10 +7,11 @@ import { NODES, ROUTE_BY_NODE, SPINE } from "@/lib/flow-data";
 import { buildTrace } from "@/lib/trace";
 import type { NodeId } from "@/types/flow";
 import { SystemMap } from "../flow/SystemMap";
+import { C4View } from "./C4View";
 import { CategoryRail } from "./CategoryRail";
 import { RequestTrace } from "./RequestTrace";
 import { ServiceDetail } from "./ServiceDetail";
-import { ViewTabs } from "./ViewTabs";
+import { ViewTabs, type EngView } from "./ViewTabs";
 
 /**
  * Owns the one piece of state four panels have to agree on.
@@ -27,6 +28,7 @@ const LEGACY_C_TO_NODE: Record<string, NodeId> = Object.fromEntries(
 );
 
 export function EngineeringScreen() {
+  const [view, setView] = useState<EngView>("map");
   // Opens on the service the rest of the site keeps pointing at, rather than
   // on a 22px heading that announces absence. A portfolio's default state
   // should be its most interesting one.
@@ -79,19 +81,44 @@ export function EngineeringScreen() {
 
   return (
     <div className="flex flex-col gap-14">
-      <ViewTabs />
+      <ViewTabs view={view} onChange={setView} />
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
-        <CategoryRail selected={selected} onSelect={select} />
-        <div className="min-w-0">
-          <SystemMap selected={selected} route={route} onSelect={select} />
+      {/*
+        Both panels stay mounted and one is hidden, rather than being swapped.
+        The map measures its own nodes to draw the connectors; unmounting it
+        throws that measurement away, and the diagram redraws from zero every
+        time the reader looks at the C4 view and comes back.
+      */}
+      <div
+        role="tabpanel"
+        id="engpanel-map"
+        aria-labelledby="engtab-map"
+        hidden={view !== "map"}
+        className="flex flex-col gap-14"
+      >
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
+          <CategoryRail selected={selected} onSelect={select} />
+          <div className="min-w-0">
+            <SystemMap selected={selected} route={route} onSelect={select} />
+          </div>
         </div>
+
+        <hr className="border-border" />
+        <RequestTrace trace={trace} />
+        <hr className="border-border" />
+        <ServiceDetail selected={selected} route={route} trace={trace} />
       </div>
 
-      <hr className="border-border" />
-      <RequestTrace trace={trace} />
-      <hr className="border-border" />
-      <ServiceDetail selected={selected} route={route} trace={trace} />
+      <div
+        role="tabpanel"
+        id="engpanel-c4"
+        aria-labelledby="engtab-c4"
+        hidden={view !== "c4"}
+      >
+        {/* Mounted only once opened: mermaid is ~500 kB, and a reader who
+            never opens this tab should never download it. */}
+        {view === "c4" ? <C4View /> : null}
+      </div>
     </div>
   );
 }
