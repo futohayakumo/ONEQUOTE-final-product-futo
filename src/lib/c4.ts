@@ -1,11 +1,15 @@
 /**
  * The C4 model, for this system.
  *
- * Four levels, three of them drawn. Level 4 (Code) is deliberately not a
- * diagram: C4's own guidance is that class-level detail is better generated
- * from the code than drawn by hand, and a hand-drawn one is out of date the
- * day it is committed. The engineering screen already shows the real thing at
- * that level — the service's actual source.
+ * Four levels, three of them drawn. The scope, audience and definition of each
+ * are quoted from c4model.com rather than paraphrased — a shared notation is
+ * only worth having if everyone is using the same one, and a paraphrase is a
+ * second, slightly different notation.
+ *
+ * Level 4 is not drawn because the source says not to: "This level of detail is
+ * not recommended for anything but the most important or complex components …
+ * particularly for long-lived documentation, because most IDEs can generate
+ * this level of detail on demand."
  *
  * Node labels carry the technology in brackets, which is what makes a
  * container diagram a container diagram rather than a box drawing.
@@ -14,16 +18,26 @@ export interface C4Level {
   id: string;
   no: string;
   titleKey: string;
+  /** Verbatim from c4model.com. Rendered as a quotation, with attribution. */
+  quoteKey: string;
+  scopeKey: string;
+  audienceKey: string;
   bodyKey: string;
-  /** Undefined for Level 4, which is described rather than drawn. */
+  /** Undefined for Level 4, which the source says to generate, not to draw. */
   chart?: string;
 }
+
+/** Every quotation on this screen comes from here. */
+export const C4_SOURCE = "https://c4model.com/";
 
 export const C4_LEVELS: readonly C4Level[] = [
   {
     id: "context",
     no: "01",
     titleKey: "c4.context.title",
+    quoteKey: "c4.context.quote",
+    scopeKey: "c4.context.scope",
+    audienceKey: "c4.context.audience",
     bodyKey: "c4.context.body",
     chart: `flowchart TB
   customer["Customer<br/>books ocean freight"]
@@ -49,6 +63,9 @@ export const C4_LEVELS: readonly C4Level[] = [
     id: "container",
     no: "02",
     titleKey: "c4.container.title",
+    quoteKey: "c4.container.quote",
+    scopeKey: "c4.container.scope",
+    audienceKey: "c4.container.audience",
     bodyKey: "c4.container.body",
     chart: `flowchart TB
   customer["Customer"]
@@ -83,6 +100,9 @@ export const C4_LEVELS: readonly C4Level[] = [
     id: "component",
     no: "03",
     titleKey: "c4.component.title",
+    quoteKey: "c4.component.quote",
+    scopeKey: "c4.component.scope",
+    audienceKey: "c4.component.audience",
     bodyKey: "c4.component.body",
     chart: `flowchart TB
   gw["Routing Gateway<br/>[nginx]"]
@@ -113,6 +133,9 @@ export const C4_LEVELS: readonly C4Level[] = [
     id: "code",
     no: "04",
     titleKey: "c4.code.title",
+    quoteKey: "c4.code.quote",
+    scopeKey: "c4.code.scope",
+    audienceKey: "c4.code.audience",
     bodyKey: "c4.code.body",
   },
 ] as const;
