@@ -210,6 +210,27 @@ export function QualityEvidence() {
             })}
           </p>
         </div>
+        {/*
+          The hole in the argument, printed at the same size as the argument.
+
+          Two figures were measured on this team — throughput and defect rate —
+          and the third, what the automated gate actually caught on OUR
+          delivery, was never counted. Everything the cards above say about the
+          `ai-with-qa` column therefore comes from somebody else's catch rate
+          applied to our injection rate. That is an assumption doing the work
+          of a measurement, and burying it in a footnote would make this
+          section exactly the thing it was built to answer.
+        */}
+        <div className="flex flex-col gap-4 border border-charcoal p-6 rounded-card">
+          <h3 className="type-section">{t("quality.gap.title")}</h3>
+          <p className="max-w-[70ch] type-body">
+            {t("quality.gap.body", {
+              speed: INTERNAL.speed,
+              defects: INTERNAL.defects,
+              recovery: Math.round(RECOVERY * 100),
+            })}
+          </p>
+        </div>
       </div>
 
       <Modal

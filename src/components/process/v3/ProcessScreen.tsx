@@ -80,15 +80,14 @@ export function ProcessScreen() {
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="type-eyebrow">{t("process.two.eyebrow")}</p>
-              <h2 className="mt-5 type-page">{t("process.two.title")}</h2>
+              <h2 className="type-page">{t("process.two.title")}</h2>
               <p className="mt-3 max-w-[52ch] type-body text-muted">
                 {t("process.two.lede")}
               </p>
             </div>
 
             <label className="flex shrink-0 flex-col gap-2 border-l border-border pl-6">
-              <span className="type-overline text-muted">{t("process.storyPoints")}</span>
+              <span className="sr-only">{t("process.sp.a11y")}</span>
               <select
                 value={sp}
                 onChange={(e) =>
@@ -112,14 +111,12 @@ export function ProcessScreen() {
                 blurbKey: "process.trad.blurb",
                 src: "/assets/scenes/traditional-desks.png",
                 alt: "Five desks in a row. A stack of work waits beside each one, and the fourth person is idle.",
-                footKey: "process.trad.foot",
               },
               {
                 titleKey: "process.ai.title",
                 blurbKey: "process.ai.blurb",
                 src: "/assets/scenes/ai-conveyor.png",
                 alt: "One conveyor carrying work past a single console, with nothing queued beside it.",
-                footKey: "process.ai.foot",
               },
             ].map((col) => (
               <div key={col.titleKey} className="flex flex-col gap-5">
@@ -143,21 +140,23 @@ export function ProcessScreen() {
                     className="max-h-full w-full object-contain"
                   />
                 </div>
-                {/* mt-auto so the two captions share a baseline whatever
-                    padding each illustration carries inside its own box. */}
-                <p className="mt-auto type-caption">{t(col.footKey)}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Measured before modelled. The section below this one is a queueing
+          model whose constants were chosen rather than counted; this one is
+          the only part of the argument with sources on it, so it goes first
+          and the model is read as the mechanism behind it. */}
+      <QualityEvidence />
+
       {/* ── Outcome ──────────────────────────────────────────── */}
       <section id="outcome" className="border-t border-border">
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
           <div>
-            <p className="type-eyebrow">{t("process.outcome.eyebrow")}</p>
-            <h2 className="mt-5 type-page">
+            <h2 className="type-page">
               {t("process.outcome.title")}
             </h2>
             <p className="mt-3 max-w-[56ch] type-body text-muted">
@@ -167,7 +166,7 @@ export function ProcessScreen() {
               })}
             </p>
             {/* Said here rather than in a footnote. The queueing model is a
-                model; the measurements are in the section below it, and the
+                model; the measurements are in the section above it, and the
                 reader should know which they are looking at. */}
             <p className="mt-3 max-w-[56ch] type-caption">
               {t("process.outcome.caveat")}
@@ -183,8 +182,6 @@ export function ProcessScreen() {
           </div>
         </div>
       </section>
-
-      <QualityEvidence />
 
       <SimulationPanel />
 

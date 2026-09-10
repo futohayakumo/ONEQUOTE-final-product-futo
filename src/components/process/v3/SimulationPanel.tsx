@@ -63,13 +63,7 @@ export function SimulationPanel() {
           ) : null}
         </div>
 
-        {open ? (
-          <ProcessComparison />
-        ) : (
-          <p className="type-caption">
-            {t("process.sim.cost")}
-          </p>
-        )}
+        {open ? <ProcessComparison /> : null}
       </div>
     </section>
   );
