@@ -1,6 +1,7 @@
 "use client";
 
-import { TransitionLink } from "../ui/TransitionLink";
+import Link from "next/link";
+
 import { QUIZ } from "@/lib/quiz-data";
 import { CheckIcon, CrossIcon } from "../icons/quiz";
 import { SectionTitle } from "../ui/SectionTitle";
@@ -74,13 +75,12 @@ export function QuizResult({
         >
           {t("quiz.retake")}
         </button>
-        <TransitionLink
+        <Link
           href="/process"
-          direction="back"
           className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson"
         >
           {t("quiz.backToProcess")}
-        </TransitionLink>
+        </Link>
       </div>
     </div>
   );

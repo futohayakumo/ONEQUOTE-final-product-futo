@@ -120,23 +120,7 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  /*
-   * The route entrance translates the whole page 14px sideways, which
-   * overflows to the RIGHT and is therefore scrollable in a left-to-right
-   * document. Clipping on the animated element does nothing (it overflows its
-   * ancestor, not itself) and clipping on `body` does nothing either, because
-   * overflow on the body propagates to the viewport rather than clipping. So
-   * the clip lives on an ordinary wrapper between them.
-   *
-   * This is not only about the 420ms the animation runs: any time it is paused
-   * or slow — a backgrounded tab, a locked screen, a struggling device — the
-   * page sits on its first keyframe and shows a horizontal scrollbar the whole
-   * while. `clip` rather than `hidden` so no scroll container is created.
-   */
-  .app-shell {
-    overflow-x: clip;
-  }
-
+  
   body {
     background-color: var(--color-canvas);
     color: var(--color-charcoal);
@@ -295,15 +279,7 @@
 }
 
 /* Back navigation reverses the entrance. */
-:root[data-nav="back"] .route-enter {
-  animation-name: route-in-back;
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .route-enter {
-    animation: none !important;
-  }
-}
 
 /* The lockup sits outside the reading scale on purpose: it is a mark, not
    text, and it is the one place where letter-spacing is doing identity work
@@ -364,19 +340,6 @@
   }
 }
 
-@keyframes route-in-back {
-  from {
-    opacity: 0;
-    transform: translate3d(-88px, 0, 0) scale(0.975);
-  }
-  85% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 
 @keyframes route-pulse {
   to {
@@ -408,34 +371,7 @@
   animation: caret-blink 1s step-end infinite;
 }
 
-@utility route-enter {
-  /*
-   * 420ms, 88px, on a curve that actually spends the duration moving.
-   *
-   * Two earlier curves failed the same way. cubic-bezier(0.22, 1, 0.36, 1) was
-   * 81% opaque and 5px from rest by 90ms; the ease-out cubic that replaced it
-   * reached 9px and 97% opacity by 200ms. Both declared a duration roughly
-   * twice as long as the part anyone could see.
-   *
-   * This one is closer to symmetric: about a fifth of the travel is done at a
-   * quarter of the way through, and it is still visibly arriving at 300ms.
-   * Opacity is held to 85% of the timeline for the same reason — so the
-   * arrival is something you watch rather than something you infer.
-   *
-   * 88px is about 6% of a laptop viewport. That is deliberately more than the
-   * restraint elsewhere in this system would suggest: a page transition has to
-   * be noticed to do its job, and at 14px and 26px it simply was not.
-   */
-  animation: route-in-forward 420ms cubic-bezier(0.4, 0, 0.2, 1) both;
-  /* The entrance translates 14px sideways, which is 14px of transient
-     horizontal overflow on a phone — enough to flash a scrollbar. `clip`
-     rather than `hidden` so no scroll container is created. */
-  overflow-x: clip;
-}
 
-@utility animate-route-pulse {
-  animation: route-pulse 2600ms linear infinite;
-}
 
 @utility animate-line-in {
   animation: line-in 90ms linear both;

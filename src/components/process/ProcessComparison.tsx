@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import cn from "clsx";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -14,7 +16,6 @@ import { detectWebGL, useBrowserValue } from "@/lib/useBrowserValue";
 import { formatDecimal } from "@/lib/localeFormat";
 import { ArrowRight } from "../icons/ArrowRight";
 import { useLocale, useT } from "../shell/LocaleProvider";
-import { TransitionLink } from "../ui/TransitionLink";
 import { StationOverlay, type Anchor } from "./StationOverlay";
 import { ElapsedClock } from "./ElapsedClock";
 import { ModeBadgeRow } from "./ModeBadgeRow";
@@ -382,13 +383,13 @@ export function ProcessComparison() {
       <RunReadout runs={runs} />
 
       <div>
-        <TransitionLink
+        <Link
           href="/process/quiz"
           className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3 type-label text-studio rounded-sharp transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
         >
           {t("sim.takeQuiz")}
           <ArrowRight size={18} />
-        </TransitionLink>
+        </Link>
       </div>
 
       {/* Touch drag ghost. */}
