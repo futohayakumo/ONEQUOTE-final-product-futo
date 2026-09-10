@@ -57,7 +57,7 @@ function Sources({ rows }: { rows: readonly Evidence[] }) {
               href={e.url}
               target="_blank"
               rel="noreferrer"
-              className="underline underline-offset-4 hover:text-crimson-ink"
+              className="underline underline-offset-4 hover:text-crimson"
             >
               {e.source}
             </a>
@@ -120,7 +120,7 @@ export function QualityEvidence() {
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="type-caption text-crimson-ink underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
+              className="type-caption text-crimson underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
             >
               {t("quality.attr.link")}
             </button>
@@ -167,7 +167,7 @@ export function QualityEvidence() {
                       {t("quality.metric.escaped")}
                     </dt>
                     <dd
-                      className={`type-page tnum ${worse ? "text-crimson-ink" : ""}`}
+                      className={`type-page tnum ${worse ? "text-crimson" : ""}`}
                     >
                       {num(row.escapedPerKloc)}
                     </dd>

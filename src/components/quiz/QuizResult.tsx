@@ -46,7 +46,7 @@ export function QuizResult({
                 className={
                   right
                     ? "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-charcoal bg-charcoal text-studio"
-                    : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-crimson text-crimson-ink"
+                    : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-crimson text-crimson"
                 }
                 style={{ borderRadius: 9999 }}
               >
@@ -70,14 +70,14 @@ export function QuizResult({
         <button
           type="button"
           onClick={onRetake}
-          className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
+          className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson"
         >
           {t("quiz.retake")}
         </button>
         <TransitionLink
           href="/process"
           direction="back"
-          className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
+          className="border border-border bg-studio px-6 py-3 type-label rounded-card shadow-card transition-colors duration-150 hover:border-crimson hover:text-crimson"
         >
           {t("quiz.backToProcess")}
         </TransitionLink>

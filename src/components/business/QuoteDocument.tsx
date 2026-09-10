@@ -89,7 +89,7 @@ export function QuoteDocument(props: {
                 () => undefined,
               );
             }}
-            className="border border-control bg-studio px-4 py-2 type-caption text-charcoal rounded-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
+            className="border border-control bg-studio px-4 py-2 type-caption text-charcoal rounded-card transition-colors duration-150 hover:border-crimson hover:text-crimson"
           >
             {copied ? t("doc.copied") : t("doc.copy")}
           </button>

@@ -9,11 +9,11 @@ export function WhyItMatters({ children }: { children: string }) {
   const t = useT();
   return (
     <div className="animate-panel-enter flex gap-4 border border-border bg-tint p-6 rounded-card">
-      <span className="mt-0.5 shrink-0 text-crimson-ink">
+      <span className="mt-0.5 shrink-0 text-crimson">
         <LightbulbIcon size={24} />
       </span>
       <div className="flex flex-col gap-1.5">
-        <p className="type-label text-crimson-ink">{t("quiz.why")}</p>
+        <p className="type-label text-crimson">{t("quiz.why")}</p>
         <p className="type-body">{children}</p>
       </div>
     </div>

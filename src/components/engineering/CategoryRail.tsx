@@ -38,7 +38,7 @@ export function CategoryRail({
         className={cn(
           "px-4 py-2.5 text-left type-label rounded-card transition-colors duration-150",
           selected === null
-            ? "bg-tint text-crimson-ink"
+            ? "bg-tint text-crimson"
             : "text-muted hover:text-charcoal",
         )}
       >
@@ -63,7 +63,7 @@ export function CategoryRail({
             className={cn(
               "px-4 py-2.5 text-left type-label rounded-card transition-colors duration-150",
               active
-                ? "bg-tint text-crimson-ink"
+                ? "bg-tint text-crimson"
                 : "text-muted hover:text-charcoal",
             )}
           >

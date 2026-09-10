@@ -19,24 +19,28 @@ Nine colours, and no others:
 | `control` | `#818FA3` | **interactive** boundaries: inputs, buttons, selectable rows |
 | `charcoal` | `#0F172A` | headings, console background |
 | `muted` | `#617187` | captions, metadata |
-| `crimson` | `#E1127A` | accent — **under 10% of any screen** |
-| `tint` | `#FDF2F8` | active item background |
+| `crimson` | `#B01838` | accent — **under 10% of any screen**. Legible as fill AND as type |
+| `tint` | `#FDF2F3` | active item background |
 | `console` | `#0F172A` | terminal background |
 | `terminal` | `#34D399` | **console only** (1.75:1 on white) |
 | `mist` | `#E2E8F0` | inert fills, progress tracks, disabled controls |
-| `crimson-ink` | `#D81175` | crimson **type** on light grounds |
-| `crimson-lift` | `#E6388F` | crimson **type** on charcoal |
+| `crimson-lift` | `#E4606F` | accent **type** on charcoal (5.27) |
 
-**Crimson works as a fill and fails as type.** White on `#E1127A` is 4.60:1 and
-passes. `#E1127A` *as type* clears 4.5 on pure white only — 4.39 on `canvas`,
-4.21 on `tint`, 3.88 on `charcoal`. So text uses `crimson-ink` or
-`crimson-lift` depending on the ground, and fills, rules and borders keep
-`crimson` so the accent itself never shifts. Picking by eye will look right and
-measure wrong; the two variants exist because the difference is 4% of
-lightness.
+**The accent is one token, and it used to be three.** `#E1127A` worked as a
+fill and failed as type — 4.60 on studio, 4.39 on canvas, 4.21 on tint — so
+text took a darkened `crimson-ink` while fills kept the magenta. `#B01838` is
+darker to begin with and needs none of that: 6.92 / 6.62 / 6.34 as type on
+studio, canvas and tint, and 6.92 for white on it as a fill. `crimson-ink` is
+gone.
 
-Type scale, as bundled utilities: `type-display` (56px, reserved for the two
-screens that open with a statement — the home hero and the process hero),
+The one ground it cannot serve is `charcoal` (2.58). A dark band that wants
+accent type takes `crimson-lift`, the same hue lightened until it clears 4.5
+there. Picking by eye will look right and measure wrong.
+
+Type scale, as bundled utilities: `type-hero` (up to 120px at weight 900,
+**reserved for the home hero and nothing else** — the comp opens on two words
+running across a photograph, and that composition does not exist at 56px),
+`type-display` (56px, for the process hero),
 `type-page`, `type-section`, `type-body`, `type-label`, `type-caption`,
 `type-console`, `type-wordmark`.
 

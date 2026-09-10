@@ -51,7 +51,7 @@ export function Modal({
         <button
           type="button"
           onClick={onClose}
-          className="shrink-0 border border-control px-3 py-1.5 type-caption text-charcoal rounded-card transition-colors duration-150 hover:border-crimson hover:text-crimson-ink"
+          className="shrink-0 border border-control px-3 py-1.5 type-caption text-charcoal rounded-card transition-colors duration-150 hover:border-crimson hover:text-crimson"
         >
           {t("ui.close")}
         </button>

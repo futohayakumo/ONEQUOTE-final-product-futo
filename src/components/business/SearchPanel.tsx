@@ -48,7 +48,7 @@ export function SearchPanel({
   return (
     <section className="border border-border bg-studio p-6 rounded-card shadow-card sm:p-8">
       <div className="flex gap-7 border-b border-border">
-        <span className="relative pb-3 type-label text-crimson-ink">
+        <span className="relative pb-3 type-label text-crimson">
           {t("business.search.portToPort")}
           <span
             aria-hidden
@@ -160,7 +160,7 @@ export function SearchPanel({
       {error ? (
         <p
           role="alert"
-          className="mt-5 border-l-2 border-crimson bg-tint px-4 py-3 type-label text-crimson-ink"
+          className="mt-5 border-l-2 border-crimson bg-tint px-4 py-3 type-label text-crimson"
         >
           {error}
         </p>

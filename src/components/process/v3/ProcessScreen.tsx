@@ -39,7 +39,7 @@ export function ProcessScreen() {
             {t("process.title.a")}
             <br />
             {t("process.title.b")}{" "}
-            <span className="text-crimson-ink">{t("process.title.flow")}</span>.
+            <span className="text-crimson">{t("process.title.flow")}</span>.
           </h1>
           <p className="mt-7 max-w-[40ch] type-body text-muted">
             {t("process.lede")}
@@ -55,7 +55,7 @@ export function ProcessScreen() {
             </Link>
             <Link
               href="#simulation"
-              className="type-label underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
+              className="type-label underline underline-offset-4 transition-colors duration-150 hover:text-crimson"
             >
               {t("process.cta.sim")}
             </Link>
@@ -241,7 +241,7 @@ export function ProcessScreen() {
             <p className="type-eyebrow">{t("process.forward.eyebrow")}</p>
             <h2 className="mt-5 type-page">
               {t("process.forward.title.a")}{" "}
-              <span className="text-crimson-ink">
+              <span className="text-crimson">
                 {t("process.forward.title.b")}
               </span>
               .

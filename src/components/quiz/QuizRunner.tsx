@@ -170,7 +170,7 @@ export function QuizRunner() {
           <button
             type="button"
             onClick={() => persist(blank())}
-            className="type-caption text-muted underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
+            className="type-caption text-muted underline underline-offset-4 transition-colors duration-150 hover:text-crimson"
           >
             {t("quiz.startOver")}
           </button>

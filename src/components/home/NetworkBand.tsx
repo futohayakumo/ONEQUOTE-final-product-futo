@@ -1,18 +1,21 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowRight } from "../icons/ArrowRight";
 import { useT } from "../shell/LocaleProvider";
-import { SectionIntro } from "./SectionIntro";
 
-const STATS = [
-  { figure: "180+", key: "home.02.countries" },
-  { figure: "500+", key: "home.02.ports" },
-  { figure: null, key: "home.02.opportunities" },
-] as const;
-
+/**
+ * The one dark band, centred, over the night-side network photograph — the
+ * comp's fourth section, kept as it was drawn.
+ *
+ * The button is outlined rather than filled. A crimson fill on a charcoal
+ * ground would be the only warm mass on the page and would pull harder than
+ * the primary call to action twelve hundred pixels above it.
+ */
 export function NetworkBand() {
   const t = useT();
   return (
-    <section className="relative isolate overflow-hidden border-y border-charcoal bg-charcoal">
+    <section className="relative isolate overflow-hidden bg-charcoal">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/banners/03-global-network.png"
@@ -20,29 +23,19 @@ export function NetworkBand() {
         aria-hidden
         className="absolute inset-0 -z-20 h-full w-full object-cover"
       />
-      <div aria-hidden className="absolute inset-0 -z-10 scrim-l" />
+      <div aria-hidden className="absolute inset-0 -z-10 scrim-full" />
 
-      <div className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-24 lg:flex-row lg:items-center">
-        <SectionIntro
-          tone="dark"
-          no="02"
-          titleKey="home.02.title"
-          subtitleKey="home.02.subtitle"
-          bodyKey="home.02.body"
+      <div className="mx-auto flex max-w-[52rem] flex-col items-center gap-6 px-6 py-24 text-center">
+        <span aria-hidden className="block h-0.5 w-10 bg-crimson-lift" />
+        <h2 className="type-page text-studio">{t("home.net.title")}</h2>
+        <p className="max-w-[56ch] type-body text-border">{t("home.net.body")}</p>
+        <Link
           href="/engineering"
-          linkKey="home.02.link"
-        />
-
-        <dl className="ml-auto flex shrink-0 flex-col gap-8 border-l border-muted pl-10">
-          {STATS.map((stat) => (
-            <div key={stat.key}>
-              <dt className="type-caption text-border">{t(stat.key)}</dt>
-              <dd className="mt-1 type-section tnum text-studio">
-                {stat.figure ?? t("home.02.endless")}
-              </dd>
-            </div>
-          ))}
-        </dl>
+          className="mt-2 inline-flex items-center gap-3 border border-studio px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:bg-studio hover:text-charcoal"
+        >
+          {t("home.net.cta")}
+          <ArrowRight size={18} />
+        </Link>
       </div>
     </section>
   );

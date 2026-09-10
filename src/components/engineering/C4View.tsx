@@ -38,7 +38,7 @@ export function C4View() {
               <button
                 type="button"
                 onClick={() => setOpen(open === level.id ? null : level.id)}
-                className="mt-1 self-start type-caption text-crimson-ink underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
+                className="mt-1 self-start type-caption text-crimson underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
               >
                 {open === level.id ? t("c4.hideSource") : t("c4.showSource")}
               </button>

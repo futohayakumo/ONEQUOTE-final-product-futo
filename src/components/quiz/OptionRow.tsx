@@ -103,7 +103,7 @@ export function OptionRow({
       {chosenAndRight ? (
         <span className="type-eyebrow shrink-0 text-charcoal">{t("quiz.correct")}</span>
       ) : chosenAndWrong ? (
-        <span className="type-eyebrow shrink-0 text-crimson-ink">{t("quiz.notQuite")}</span>
+        <span className="type-eyebrow shrink-0 text-crimson">{t("quiz.notQuite")}</span>
       ) : revealedAnswer ? (
         <span className="type-eyebrow shrink-0 text-charcoal">
           {t("quiz.correctAnswer")}

@@ -70,7 +70,7 @@ export function SailingList({
 
                   <span className="flex min-w-[11rem] flex-col gap-1">
                     {s.recommended ? (
-                      <span className="mb-1 self-start bg-tint px-2.5 py-1 type-caption text-crimson-ink rounded-full">
+                      <span className="mb-1 self-start bg-tint px-2.5 py-1 type-caption text-crimson rounded-full">
                         {t("business.sailings.recommended")}
                       </span>
                     ) : null}

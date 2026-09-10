@@ -51,21 +51,29 @@
    * points of lightness; the difference is not visible and the failure was.
    */
   --color-muted: #617187; /* Muted Slate     — 4.98 / 4.76 / 4.56        */
-  --color-crimson: #e1127a; /* Deep Crimson    — accent, <10% of screen    */
-  --color-tint: #fdf2f8; /* Active Tint     — active item background    */
+  --color-crimson: #b01838; /* Accent          — <10% of screen. FILL AND TEXT */
+  --color-tint: #fdf2f3; /* Active Tint     — active item background    */
   --color-console: #0f172a; /* Dark Slate      — terminal background       */
   --color-terminal: #34d399; /* Terminal Green  — CONSOLE ONLY (1.75:1 on white) */
 
   --color-mist: #e2e8f0; /* Mist            — inert fills, progress tracks  */
 
-  /* Crimson is an accent that works as a FILL and fails as TEXT. White on
-     #E1127A is 4.60:1 and passes, but #E1127A as type clears 4.5 on pure
-     white only -- 4.39 on canvas, 4.21 on tint, 3.88 on charcoal. These two
-     are the same hue moved just far enough to pass on the grounds it actually
-     lands on, and they are for TEXT ONLY. Fills, rules and borders stay
-     --color-crimson so the accent itself does not shift. */
-  --color-crimson-ink: #d81175; /* crimson type on light grounds (4.52-4.93) */
-  --color-crimson-lift: #e6388f; /* crimson type on charcoal      (4.53)      */
+  /*
+   * The accent used to be #E1127A, and it needed two extra tokens to be
+   * legible: as TYPE it measured 4.60 on studio, 4.39 on canvas and 4.21 on
+   * tint -- passing on pure white and nowhere else -- so text took a darkened
+   * `crimson-ink` while fills kept the magenta.
+   *
+   * #B01838 is darker to begin with and needs none of that. As type it reads
+   * 6.92 / 6.62 / 6.34 on studio, canvas and tint; white on it as a fill reads
+   * 6.92. One token now does the job of three, which is the version of this
+   * palette that should have existed from the start.
+   *
+   * The one ground it cannot serve is charcoal (2.58), and a dark band that
+   * wants accent type takes `crimson-lift` -- the same hue lightened until it
+   * clears 4.5 there.
+   */
+  --color-crimson-lift: #e4606f; /* accent type on charcoal (5.27) */
 
   /* 3. GEOMETRY — three legal radii, each with one job.
         Still a closed set: anything else emits nothing. */
@@ -179,6 +187,27 @@
 /* 56px is the design size. It is clamped at the bottom because a single
    11-character word (ENGINEERING) at 56px overflows a 375px phone, and a
    fixed size that overflows is worse than a scaled one. */
+/*
+ * The one step above `display`, and it exists for exactly one element.
+ *
+ * The refreshed comp opens on two words set as large as the grid allows, half
+ * of the second one crossing onto a photograph. At 56px that composition does
+ * not exist -- the words simply sit in a corner. So the scale gained a step
+ * rather than the hero gaining an arbitrary `text-[7.5rem]`, which would have
+ * compiled to nothing and failed silently.
+ *
+ * 900 because the comp is set in a black weight and Inter is variable, so the
+ * weight costs no extra download. Reserved for the home hero. If it turns up
+ * on a second element, one of the two is wrong.
+ */
+@utility type-hero {
+  font-size: clamp(3rem, 9vw, 7.5rem);
+  line-height: 0.92;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--color-charcoal);
+}
+
 @utility type-display {
   font-size: clamp(2rem, 8vw, 56px);
   line-height: 1.05;
@@ -239,7 +268,7 @@
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-crimson-ink);
+  color: var(--color-crimson);
 }
 
 /*

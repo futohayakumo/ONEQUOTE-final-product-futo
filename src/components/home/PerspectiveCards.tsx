@@ -4,84 +4,62 @@ import Link from "next/link";
 import { PERSONAS, type PersonaId } from "@/lib/personas";
 import { ArrowRight } from "../icons/ArrowRight";
 import { useT } from "../shell/LocaleProvider";
-import { SectionIntro } from "./SectionIntro";
-
-/*
- * The process photograph is a JPEG and the other two are PNGs, deliberately.
- *
- * It arrived as a fresh 1448px source with no wordmark on the vest, so there
- * is no generation loss to protect: 640px of JPEG at q85 is 50 kB against
- * 378 kB for the same pixels as PNG, and lighter than either sibling while
- * carrying 2.5x their resolution. The other two stay PNG because re-encoding
- * a 260px image that is already lossy only trades size for artefacts.
- */
-const ART: Record<PersonaId, { src: string; alt: string }> = {
-  business: {
-    src: "/assets/spot/10-perspective-business.png",
-    alt: "An executive on a walkway above a container terminal at dusk.",
-  },
-  engineering: {
-    src: "/assets/spot/11-perspective-engineering.png",
-    alt: "A service mesh of lit nodes on a dark field.",
-  },
-  process: {
-    src: "/assets/spot/12-perspective-process.jpg",
-    alt: "A yard supervisor among stacked containers.",
-  },
-};
-
-
 
 /**
- * v2 gave the three perspectives a full screen of their own at /journeys. The
- * comps fold them into the home page as the closing band, which removes a
- * click without removing the choice, so the gateway route is gone and this is
- * what replaces it.
+ * Three tiles: a title and a line of copy above a circular photograph with the
+ * title repeated across it — the comp's sixth section.
+ *
+ * The comp sets the word on the picture twice at two sizes, which reads as a
+ * printing error. Here the circle carries the picture and nothing else, and
+ * the label sits under it where it can be read. Everything else — the tinted
+ * tile, the circle, the proportions — is as drawn.
  */
+const ART: Record<PersonaId, string> = {
+  business: "/assets/spot/10-perspective-business.png",
+  engineering: "/assets/spot/11-perspective-engineering.png",
+  process: "/assets/spot/12-perspective-process.jpg",
+};
+
 export function PerspectiveCards() {
   const t = useT();
   return (
-    <section className="bg-canvas">
-      <div className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-24 lg:flex-row lg:gap-20">
-        <SectionIntro
-          no="04"
-          titleKey="home.04.title"
-          subtitleKey="home.04.subtitle"
-          bodyKey="home.04.body"
-          href="/business"
-          linkKey="home.04.link"
-        />
+    <section className="border-t border-border bg-studio">
+      <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
+        <div className="max-w-[46rem]">
+          <span aria-hidden className="block h-0.5 w-10 bg-crimson" />
+          <h2 className="mt-5 type-page">{t("home.persp.title")}</h2>
+          <p className="mt-3 type-body text-muted">{t("home.persp.body")}</p>
+        </div>
 
-        <ul className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-3">
+        <ul className="grid gap-6 sm:grid-cols-3">
           {PERSONAS.map((persona) => (
             <li key={persona.id}>
               <Link
                 href={persona.href}
-                className="group flex h-full flex-col overflow-hidden border border-border bg-studio rounded-card shadow-card transition-shadow duration-150 hover:shadow-raised"
+                className="group flex h-full flex-col gap-5 bg-canvas p-6 rounded-card transition-colors duration-150 hover:bg-tint"
               >
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ART[persona.id].src}
-                    alt={ART[persona.id].alt}
-                    className="aspect-[4/3] w-full object-cover"
-                  />
-                  <span aria-hidden className="absolute inset-0 scrim-b" />
-                  <span className="absolute bottom-4 left-4 type-section text-studio">
-                    {persona.title}
-                  </span>
+                <div>
+                  <h3 className="type-section">
+                    {t(`home.persp.${persona.id}`)}
+                  </h3>
+                  <p className="mt-2 type-caption">
+                    {t(`home.persp.${persona.id}Body`)}
+                  </p>
                 </div>
 
-                <div className="flex flex-1 flex-col gap-2 p-5">
-                  <span className="type-label">{t(`home.04.${persona.id}`)}</span>
-                  <p className="type-caption">{t(persona.blurbKey)}</p>
-                  <span
-                    aria-hidden
-                    className="mt-auto flex h-9 w-9 items-center justify-center self-end border border-crimson text-crimson rounded-full transition-colors duration-150 group-hover:bg-crimson group-hover:text-studio"
-                  >
-                    <ArrowRight size={16} />
-                  </span>
+                <div className="mx-auto w-full max-w-[15rem] overflow-hidden rounded-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ART[persona.id]}
+                    alt=""
+                    className="aspect-square w-full object-cover"
+                  />
                 </div>
+
+                <span className="mt-auto inline-flex items-center gap-2 type-label text-crimson transition-colors duration-150 group-hover:text-charcoal">
+                  {t("home.persp.cardCta")}
+                  <ArrowRight size={16} />
+                </span>
               </Link>
             </li>
           ))}

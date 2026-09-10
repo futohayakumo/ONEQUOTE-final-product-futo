@@ -62,7 +62,7 @@ export function ViewTabs({
               onClick={() => onChange(tab.id)}
               className={cn(
                 "relative pb-3 type-label transition-colors duration-150",
-                active ? "text-crimson-ink" : "text-muted hover:text-charcoal",
+                active ? "text-crimson" : "text-muted hover:text-charcoal",
               )}
             >
               {t(tab.key)}
