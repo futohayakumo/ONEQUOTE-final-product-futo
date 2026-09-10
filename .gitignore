@@ -42,3 +42,4 @@ next-env.d.ts
 # ignored: it is what the site is drawn FROM, and the repository ships the site.
 /DESIGN_BRIEF.md
 /DESIGN_PROMPT.md
+/PROCESS_IMAGE_PROMPTS.md
