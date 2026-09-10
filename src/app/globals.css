@@ -498,6 +498,24 @@
    charcoal wash the comps do not have.
    ───────────────────────────────────────────────────────────── */
 
+/*
+ * The join between a photograph and the page above it.
+ *
+ * Same family as the scrims below, and legal for the same reason: a gradient
+ * on this site may only ever touch a photograph. The difference is what it is
+ * for. A scrim darkens a picture so type can sit on it; this one dissolves the
+ * picture's own top edge so a full-bleed band does not meet the page on a hard
+ * horizontal line.
+ *
+ * It stops at 16%. The closing poster carries its lettering from 20% down, and
+ * a fade that ran past that would eat the top of the letterforms — the seam
+ * would be gone and the word would be broken instead.
+ */
+@utility photo-join-t {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 16%);
+}
+
 @utility scrim-l {
   background-image: linear-gradient(
     90deg,

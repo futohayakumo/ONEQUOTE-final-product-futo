@@ -14,6 +14,9 @@ import { usePathname } from "next/navigation";
  * already in the nav and the footer as real links, and the alternative is
  * fighting a 2000px composition for the exact baseline the artwork already has.
  *
+ * Its top edge is dissolved into the footer rather than butted against it, so
+ * the sky emerges out of the page instead of starting on a rule.
+ *
  * It hangs below the footer, which is where the reference puts it: the columns
  * sit on paper and the plate runs underneath them. That means it lives in the
  * layout rather than in the page, and gates itself on the route — a brand
@@ -29,7 +32,7 @@ export function WordmarkBand() {
       <img
         src="/assets/banners/08-vessel-wordmark.jpg"
         alt="ONE QUOTE"
-        className="w-full object-cover"
+        className="w-full object-cover photo-join-t"
       />
     </section>
   );
