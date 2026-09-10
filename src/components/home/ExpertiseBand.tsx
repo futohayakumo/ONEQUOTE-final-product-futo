@@ -1,6 +1,5 @@
 "use client";
 
-import { Plate } from "../ui/Plate";
 import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
 
@@ -18,25 +17,26 @@ export function ExpertiseBand() {
     <section className="bg-studio">
       <div className="mx-auto grid max-w-[86rem] items-center gap-10 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
         <div className="relative isolate">
+          {/* The port, inside a vessel-shaped cut-out. It arrives with its
+              own alpha channel, so there is no mask to maintain here and no
+              clip path to keep in step with the artwork. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/spot/17-vessel-silhouette.png"
+            alt=""
+            className="w-full"
+          />
           {/*
-            The photograph this slot needs does not exist yet.
-            `banners/02-operations-floor.png` was standing in and cannot: it has
-            its own copy burnt into the pixels — LOGISTICS CONNECTS A MORE HUMAN
-            TOMORROW up the left wall and MOVING THE WORLD TOGETHER on the right
-            — which collides with the three words this band puts in the same
-            corner. Two headlines, one of them unremovable.
+            Placed in percentages, over the hull.
+
+            The cut-out has an alpha channel, so most of this box is the page
+            showing through and white type would simply vanish there. The band
+            from 5-35% across and 55-80% down is the containers and the hull:
+            98% opaque, mean luminance 63. Anchoring in percentages keeps the
+            words on that mass as the image scales, which a fixed bottom-left
+            offset did not — at this width it put them below the waterline.
           */}
-          <div
-            className="overflow-hidden"
-            style={{ clipPath: "polygon(0 0, 100% 0, 88% 100%, 0 100%)" }}
-          >
-            <Plate
-              label="Container terminal at work — cranes, stacks, a vessel alongside. NO type in the image."
-              spec="1800 × 1100"
-              className="h-[22rem] w-full lg:h-[26rem]"
-            />
-          </div>
-          <p className="absolute bottom-8 left-8 z-10 max-w-[14ch] type-page">
+          <p className="absolute left-[7%] top-[54%] z-10 max-w-[12ch] type-section text-studio sm:type-page">
             <Lines text={t("home.expertise.over")} />
           </p>
         </div>

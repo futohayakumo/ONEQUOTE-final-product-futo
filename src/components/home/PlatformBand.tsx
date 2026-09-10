@@ -25,15 +25,26 @@ export function PlatformBand() {
       <div className="mx-auto grid max-w-[86rem] items-center gap-14 px-6 py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-20">
         <div className="lg:pr-8" style={{ perspective: "1800px" }}>
           <div
-            className="overflow-hidden border border-border bg-studio rounded-card shadow-raised transform-gpu"
+            className="overflow-hidden border border-border bg-studio rounded-card transform-gpu"
             style={{
               /* The RIGHT edge goes back. Positive rotateY pushes +X away from
                  the viewer; the first pass had this negative and the panel
                  leaned the wrong way, with its far edge nearer than its near
                  one. Origin on the left so the near edge stays put and the
                  column keeps its left alignment with everything above it. */
-              transform: "rotateY(13deg)",
+              transform: "rotateY(24deg)",
               transformOrigin: "left center",
+              /*
+               * Thickness, as one shadow rather than a second element.
+               *
+               * The first two stops are a hard edge a few pixels down and
+               * right — the slab — and the third is the cast shadow it throws.
+               * A real extruded side would need a second rotated face and its
+               * own lighting, and would still be wrong the moment the panel
+               * animated. This reads as depth at every size and costs nothing.
+               */
+              boxShadow:
+                "2px 3px 0 rgb(203 213 225), 5px 7px 0 rgb(226 232 240), 18px 26px 44px rgb(15 23 42 / 0.16)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}

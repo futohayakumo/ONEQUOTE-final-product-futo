@@ -1,42 +1,36 @@
 "use client";
 
-import { BRAND } from "@/lib/brand";
-import { useT } from "../shell/LocaleProvider";
-import { Plate } from "../ui/Plate";
+import { usePathname } from "next/navigation";
 
 /**
- * The closing band: the wordmark across the full width, centred, over a vessel
- * under way in daylight, with one line beneath it.
+ * The closing poster: a vessel alongside in daylight with the wordmark set
+ * across the sky, supplied as one image.
  *
- * The comp ends this way and it is the right place for a poster — everything
- * that had to be argued has been argued, and the last thing a reader passes is
- * the name. The word is decorative here; the real wordmark is in the nav and
- * the footer, both of which are links, so this one stays out of the
- * accessibility tree rather than being read a third time.
+ * The lettering is part of the photograph rather than DOM type on top of it.
+ * That is the right call for this one element and the wrong call almost
+ * everywhere else — it cannot be translated, selected or resized, and it is
+ * the reason every other headline on this site is text. Here the word is the
+ * picture: it is a full-bleed brand plate at the foot of the page, the name is
+ * already in the nav and the footer as real links, and the alternative is
+ * fighting a 2000px composition for the exact baseline the artwork already has.
  *
- * The photograph does not exist. `banners/07-terminal-yard.png` was standing in
- * and is the wrong picture twice over: it is a yard rather than open water, it
- * is 935px wide against the ~2800 a full-bleed band wants, and its subject sits
- * hard right where the wordmark needs to run.
+ * It hangs below the footer, which is where the reference puts it: the columns
+ * sit on paper and the plate runs underneath them. That means it lives in the
+ * layout rather than in the page, and gates itself on the route — a brand
+ * poster under the quotation screen would be an advertisement at the end of a
+ * working page, which is the register change this site keeps getting wrong.
  */
 export function WordmarkBand() {
-  const t = useT();
-  return (
-    <section className="relative isolate flex min-h-[26rem] items-center overflow-hidden bg-charcoal">
-      <Plate
-        label="Container vessel under way, open water, bright daylight. Horizon low, sky clear across the top third, subject centre-left."
-        spec="2800 × 1000"
-        tone="dark"
-        align="corner"
-        className="absolute inset-0 -z-10"
-      />
+  if (usePathname() !== "/") return null;
 
-      <div className="mx-auto w-full max-w-[86rem] px-6 text-center">
-        <p aria-hidden className="type-hero text-studio">
-          {BRAND.full}
-        </p>
-        <p className="mt-6 type-overline text-border">{t("home.close.tag")}</p>
-      </div>
+  return (
+    <section className="bg-studio">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/banners/08-vessel-wordmark.jpg"
+        alt="ONE QUOTE"
+        className="w-full object-cover"
+      />
     </section>
   );
 }

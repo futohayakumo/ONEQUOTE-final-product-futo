@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { ArrowRight } from "../icons/ArrowRight";
-import { Plate } from "../ui/Plate";
 import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
 
@@ -15,24 +14,15 @@ import { Lines } from "../ui/Lines";
  * to two corners.
  */
 /*
- * The comp puts three photographs here — a phone mid-booking, a laptop showing
- * a confirmation, a container coming down onto a truck with a yard worker in
- * frame. Only the third exists. The other two were standing in as the flat
- * magenta-era illustrations, which read as clip art beside a photograph and
- * broke the row's one job: three pictures of the same kind.
+ * Three photographs of the same kind — a phone mid-quote, a laptop showing a
+ * confirmation, a yard worker among the stacks. The row's one job is that they
+ * read as one set, which is why the flat illustrations that stood in here
+ * before did not work beside the third.
  */
 const STEPS = [
-  {
-    id: "quote",
-    src: null,
-    want: "Hands on a phone, a rate request part-filled. Screen legible, no real brand.",
-  },
-  {
-    id: "booking",
-    src: null,
-    want: "A laptop on a desk showing a confirmation. Over the shoulder, shallow depth.",
-  },
-  { id: "delivery", src: "/assets/spot/12-perspective-process.jpg", want: null },
+  { id: "quote", src: "/assets/scenes/11-quote-phone.jpg" },
+  { id: "booking", src: "/assets/scenes/12-booking-laptop.jpg" },
+  { id: "delivery", src: "/assets/spot/12-perspective-process.jpg" },
 ] as const;
 
 export function JourneyStrip() {
@@ -50,16 +40,12 @@ export function JourneyStrip() {
           {STEPS.map((step) => (
             <li key={step.id} className="flex flex-col">
               <div className="overflow-hidden bg-studio rounded-t-full rounded-b-card shadow-card">
-                {step.src ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={step.src}
-                    alt=""
-                    className="aspect-[3/4] w-full object-cover"
-                  />
-                ) : (
-                  <Plate label={step.want ?? ""} spec="900 × 1200" ratio="3 / 4" />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={step.src}
+                  alt=""
+                  className="aspect-[3/4] w-full object-cover"
+                />
               </div>
               <h3 className="mt-5 type-section">{t(`home.journey.${step.id}`)}</h3>
               <p className="mt-2 type-caption">

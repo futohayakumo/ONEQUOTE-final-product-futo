@@ -34,32 +34,41 @@ export function PerspectiveCards() {
         <ul className="grid gap-6 sm:grid-cols-3">
           {PERSONAS.map((persona) => (
             <li key={persona.id}>
+              {/*
+                The card's foot is a half-round, and the photograph is a circle
+                seated in it — the shape from the reference. `rounded-b-full`
+                resolves from the same `--radius-full` the radio dots use, so
+                this is the third radius applied to two corners rather than a
+                fourth radius.
+              */}
               <Link
                 href={persona.href}
-                className="group flex h-full flex-col gap-5 bg-canvas p-6 rounded-card transition-colors duration-150 hover:bg-tint"
+                className="group flex h-full flex-col items-center gap-4 overflow-hidden bg-canvas pt-8 text-center rounded-t-card rounded-b-full transition-colors duration-150 hover:bg-tint"
               >
-                <div>
-                  <h3 className="type-section">
-                    {t(`home.persp.${persona.id}`)}
-                  </h3>
-                  <p className="mt-2 type-caption">
-                    {t(`home.persp.${persona.id}Body`)}
-                  </p>
-                </div>
-
-                <div className="mx-auto w-full max-w-[15rem] overflow-hidden rounded-full">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ART[persona.id]}
-                    alt=""
-                    className="aspect-square w-full object-cover"
-                  />
-                </div>
+                <h3 className="px-6 type-section">{t(`home.persp.${persona.id}`)}</h3>
+                <p className="max-w-[30ch] px-6 type-caption">
+                  {t(`home.persp.${persona.id}Body`)}
+                </p>
 
                 <span className="mt-auto inline-flex items-center gap-2 type-label text-crimson transition-colors duration-150 group-hover:text-charcoal">
                   {t("home.persp.cardCta")}
                   <ArrowRight size={16} />
                 </span>
+
+                {/*
+                  Full card width, no horizontal padding — the circle IS the
+                  foot. With `px-6` on the card the circle came out 48px
+                  narrower than the curve it was meant to sit in, which left a
+                  crescent of ground under it and read as a mistake.
+                */}
+                <div className="mt-6 w-full overflow-hidden rounded-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ART[persona.id]}
+                    alt=""
+                    className="aspect-square w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  />
+                </div>
               </Link>
             </li>
           ))}

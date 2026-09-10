@@ -15,18 +15,23 @@ import { useT } from "../shell/LocaleProvider";
 export function NetworkBand() {
   const t = useT();
   return (
-    <section className="relative isolate overflow-hidden bg-charcoal">
+    /*
+     * `group` + `overflow-hidden` is the whole trick: the picture scales
+     * inside a box that does not, so the band keeps its height and its
+     * neighbours never move. Scaling the section itself would reflow the
+     * page on a mouse-over.
+     */
+    <section className="group relative isolate overflow-hidden bg-charcoal">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/banners/03-global-network.png"
         alt=""
         aria-hidden
-        className="absolute inset-0 -z-20 h-full w-full object-cover"
+        className="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
       <div aria-hidden className="absolute inset-0 -z-10 scrim-full" />
 
       <div className="mx-auto flex max-w-[52rem] flex-col items-center gap-6 px-6 py-24 text-center">
-        <span aria-hidden className="block h-0.5 w-10 bg-crimson-lift" />
         <h2 className="type-page text-studio">{t("home.net.title")}</h2>
         <p className="max-w-[56ch] type-body text-border">{t("home.net.body")}</p>
         <Link

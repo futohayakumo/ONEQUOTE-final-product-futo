@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { t } from "@/lib/i18n";
 import { LocaleProvider } from "@/components/shell/LocaleProvider";
 import { LocalizeScript } from "@/components/shell/LocalizeScript";
+import { WordmarkBand } from "@/components/home/WordmarkBand";
 import { SiteFooter } from "@/components/shell/SiteFooter";
 import { SiteNav } from "@/components/shell/SiteNav";
 import { SkipLink } from "@/components/shell/SkipLink";
@@ -41,6 +42,7 @@ export default function RootLayout({
         {/* Clips the route transition's sideways travel. See .app-shell. */}
         <div id="content" className="app-shell flex-1">{children}</div>
           <SiteFooter />
+          <WordmarkBand />
         </LocaleProvider>
       </body>
     </html>

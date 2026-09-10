@@ -16,4 +16,12 @@ export const BRAND = {
   full: "ONE QUOTE",
   /** The line that sits beside the mark in the nav and footer. */
   tagline: "Logistics, reimagined.",
+  /*
+   * The copyright year, fixed rather than read from the clock.
+   *
+   * `new Date().getFullYear()` in a component is a hydration mismatch waiting
+   * for New Year's Eve, and in a statically exported page it would freeze at
+   * whatever year the build ran anyway. One constant, edited deliberately.
+   */
+  year: 2026,
 } as const;
