@@ -24,7 +24,7 @@ import { ModeToggle } from "./ModeToggle";
 import { ProcessSceneFallback } from "./ProcessSceneFallback";
 import { RunReadout, type RunRow } from "./RunReadout";
 import { StoryPointTray } from "./StoryPointTray";
-import { compare } from "./model/processModel";
+import { compare, stepsOf } from "./model/processModel";
 
 /**
  * `ssr: false` is only legal from a client component in the App Router, which
@@ -178,13 +178,13 @@ export function ProcessComparison() {
           const d = Math.hypot(a.x - local.x, a.y - local.y);
           if (!best || d < best.d) best = { id: a.id, d };
         }
-        place(held, (best?.id as StepId) ?? "po");
+        place(held, (best?.id as StepId) ?? stepsOf(mode)[0]);
       };
 
       target.addEventListener("pointermove", move);
       target.addEventListener("pointerup", up);
     },
-    [anchors, place],
+    [anchors, mode, place],
   );
 
   const hint = useMemo(
@@ -344,7 +344,7 @@ export function ProcessComparison() {
           // Keyboard / click path: arming then choosing a step, so the screen
           // is fully usable without ever performing a drag (WCAG 2.5.7).
           if (armed === sp) {
-            place(sp, "po");
+            place(sp, stepsOf(mode)[0]);
           } else {
             setArmed(sp);
             setAnnouncement(t("sim.announce.selected", { sp }));
@@ -372,7 +372,7 @@ export function ProcessComparison() {
           </span>
           <button
             type="button"
-            onClick={() => place(armed, "po")}
+            onClick={() => place(armed, stepsOf(mode)[0])}
             className="border border-border bg-studio px-3 py-2 type-caption rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
           >
             {t("sim.armed.start")}

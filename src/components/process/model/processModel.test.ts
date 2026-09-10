@@ -30,33 +30,46 @@ test("traditional totals match the published table", () => {
   }
 });
 
-test("ai-driven totals match the published table", () => {
-  const expected: Record<string, number> = {
-    "0.5": 0.78,
-    "1": 0.89,
-    "2": 1.12,
-    "3": 1.35,
-    "5": 1.81,
-    "8": 2.5,
-  };
+test("a Bolt lands inside the 24-72 hour window the lifecycle specifies", () => {
+  // Not a table of chosen constants any more: the endpoints are the process's
+  // own stated figure, and the smallest and largest items on the tray sit
+  // exactly on them.
   for (const sp of STORY_POINTS) {
-    near(buildSchedule("ai-driven", sp).totalDays, expected[String(sp)], 0.02);
+    const hours = buildSchedule("ai-dlc", sp).totalDays * 24;
+    assert.ok(hours >= 24 && hours <= 72, `${sp} sp ran ${hours} hours`);
   }
+  near(buildSchedule("ai-dlc", 0.5).totalDays * 24, 24, 0.01);
+  near(buildSchedule("ai-dlc", 8).totalDays * 24, 72, 0.01);
+});
+
+test("the four Bolt phases are the AI-DLC room, and the five roles are not", () => {
+  const bolt = buildSchedule("ai-dlc", 3).perStep.map((p) => p.stepId);
+  assert.deepEqual(bolt, ["inception", "construct", "verification", "bolt"]);
+
+  const scrum = buildSchedule("traditional", 3).perStep.map((p) => p.stepId);
+  assert.deepEqual(scrum, ["po", "design", "dev", "qa", "review"]);
+
+  // A station from the other room is not an entry point into this one; the
+  // run starts at the beginning rather than coming back empty.
+  assert.deepEqual(
+    buildSchedule("ai-dlc", 3, "dev").perStep.map((p) => p.stepId),
+    bolt,
+  );
 });
 
 test("the advantage GROWS with batch size — this is the whole argument", () => {
   const small = compare(0.5).ratio;
   const large = compare(8).ratio;
-  near(small, 4.9, 0.15);
-  near(large, 14.2, 0.3);
+  near(small, 3.8, 0.15);
+  near(large, 11.8, 0.3);
   assert.ok(large > small * 2.5, "ratio must widen sharply with story points");
 });
 
-test("wall clock spreads in traditional and stays flat in ai-driven", () => {
+test("wall clock spreads in traditional and stays flat in ai-dlc", () => {
   const tSmall = buildSchedule("traditional", 0.5).wallMs;
   const tLarge = buildSchedule("traditional", 8).wallMs;
-  const aSmall = buildSchedule("ai-driven", 0.5).wallMs;
-  const aLarge = buildSchedule("ai-driven", 8).wallMs;
+  const aSmall = buildSchedule("ai-dlc", 0.5).wallMs;
+  const aLarge = buildSchedule("ai-dlc", 8).wallMs;
 
   assert.ok(
     tLarge / tSmall >= 2.8,
@@ -64,23 +77,23 @@ test("wall clock spreads in traditional and stays flat in ai-driven", () => {
   );
   assert.ok(
     aLarge / aSmall <= 1.2,
-    `ai-driven spread ${aLarge / aSmall} > 1.2`,
+    `ai-dlc spread ${aLarge / aSmall} > 1.2`,
   );
 
-  // Every ai-driven run must last long enough for five station beats to be
+  // Every ai-dlc run must last long enough for five station beats to be
   // separately visible, and short enough to stay watchable.
   for (const sp of STORY_POINTS) {
-    const ms = buildSchedule("ai-driven", sp).wallMs;
+    const ms = buildSchedule("ai-dlc", sp).wallMs;
     assert.ok(
       ms >= 3600 && ms <= 4200,
-      `ai-driven ${sp}SP wall ${ms}ms out of range`,
+      `ai-dlc ${sp}SP wall ${ms}ms out of range`,
     );
   }
 
   // The traditional room must still take visibly longer at every size.
   for (const sp of STORY_POINTS) {
     const t = buildSchedule("traditional", sp).wallMs;
-    const a = buildSchedule("ai-driven", sp).wallMs;
+    const a = buildSchedule("ai-dlc", sp).wallMs;
     if (sp >= 2) {
       assert.ok(
         t > a,
@@ -90,10 +103,10 @@ test("wall clock spreads in traditional and stays flat in ai-driven", () => {
   }
 });
 
-test("traditional carries queue wait; ai-driven carries none", () => {
+test("traditional carries queue wait; ai-dlc carries none", () => {
   assert.ok(buildSchedule("traditional", 5).waitDays > 12);
-  assert.equal(buildSchedule("ai-driven", 5).waitDays, 0);
-  assert.equal(buildSchedule("ai-driven", 5).flowEfficiency, 1);
+  assert.equal(buildSchedule("ai-dlc", 5).waitDays, 0);
+  assert.equal(buildSchedule("ai-dlc", 5).flowEfficiency, 1);
 });
 
 test("entering later in the pipeline shortens the run, in BOTH rooms", () => {
@@ -103,9 +116,9 @@ test("entering later in the pipeline shortens the run, in BOTH rooms", () => {
 
   // The AI room used to return an identical total wherever you entered, which
   // made the advantage ratio move for a reason unrelated to the argument.
-  const aiFull = buildSchedule("ai-driven", 3, "po").totalDays;
-  const aiLate = buildSchedule("ai-driven", 3, "dev").totalDays;
-  assert.ok(aiLate < aiFull, `ai ${aiLate} should be under ${aiFull}`);
+  const boltFull = buildSchedule("ai-dlc", 3, "inception").totalDays;
+  const boltLate = buildSchedule("ai-dlc", 3, "verification").totalDays;
+  assert.ok(boltLate < boltFull, `${boltLate} should be under ${boltFull}`);
   assert.deepEqual(
     buildSchedule("traditional", 3, "dev").perStep.map((s) => s.stepId),
     ["dev", "qa", "review"],
@@ -118,7 +131,7 @@ test("wallSeconds is monotonic", () => {
 });
 
 test("a work segment reports transit before arrival and working after", () => {
-  for (const mode of ["traditional", "ai-driven"] as const) {
+  for (const mode of ["traditional", "ai-dlc"] as const) {
     const arrive = ARRIVAL_FRACTION[mode];
     assert.equal(phaseFor("work", 0, mode), "transit");
     assert.equal(phaseFor("work", arrive - 0.01, mode), "transit");
@@ -132,7 +145,7 @@ test("a work segment reports transit before arrival and working after", () => {
 test("phase is never absent mid-run", () => {
   // Folding transit in with "no phase" made the panel announce "Finished"
   // while the item was still moving — for 58% of every AI-driven segment.
-  for (const mode of ["traditional", "ai-driven"] as const) {
+  for (const mode of ["traditional", "ai-dlc"] as const) {
     for (let p = 0; p <= 1.0001; p += 0.02) {
       for (const kind of ["work", "wait"] as const) {
         const phase = phaseFor(kind, p, mode);

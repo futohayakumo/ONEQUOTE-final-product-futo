@@ -11,7 +11,7 @@ const OPTIONS: { id: ProcessMode; labelKey: string; subKey: string }[] = [
     subKey: "sim.mode.traditionalSub",
   },
   {
-    id: "ai-driven",
+    id: "ai-dlc",
     labelKey: "sim.mode.ai",
     subKey: "sim.mode.aiSub",
   },

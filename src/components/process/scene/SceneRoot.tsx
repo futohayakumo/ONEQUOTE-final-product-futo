@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { easing } from "maath";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
-import { STEP_IDS } from "../model/processModel";
+import { stepsOf } from "../model/processModel";
 import {
   BELT,
   CAMERA,
@@ -152,8 +152,9 @@ export function SceneRoot({
         const out: Anchor[] = [];
         const half = { w: size.width / 2, h: size.height / 2 };
 
-        STEP_IDS.forEach((step, i) => {
-          const p = mode === "traditional" ? workAnchor(i) : beltAnchor(i);
+        stepsOf(mode).forEach((step, i) => {
+          const p =
+            mode === "traditional" ? workAnchor(mode, i) : beltAnchor(i);
           projectV.set(p[0], p[1] + 0.5, p[2]).project(cam);
           out.push({
             id: step,
@@ -162,10 +163,11 @@ export function SceneRoot({
           });
         });
 
-        // Published in BOTH rooms. The AI room needs the same four positions
-        // so it can state, at the exact spot the other room has a pile, that
-        // there is no queue here. An empty space says nothing.
-        for (let i = 0; i < 4; i += 1) {
+        // Traditional only. The four gap cards mark its four hand-offs, and
+        // the AI-DLC room does not have four of anything to align them to —
+        // its whole claim is that there is no boundary inside a Bolt, which a
+        // row of "no queue here" labels would turn back into four boundaries.
+        for (let i = 0; mode === "traditional" && i < 4; i += 1) {
           const p = waitAnchor(i + 1);
           projectV.set(p[0], p[1] + 0.45, p[2]).project(cam);
           out.push({
@@ -188,11 +190,13 @@ export function SceneRoot({
       const group = itemsRef.current.get(item.id);
       if (!group) continue;
       const { seg, local, outbound, outboundLocal } = runtime.locate(item, now);
-      const index = Math.max(0, STEP_IDS.indexOf(seg.stepId));
+      const index = Math.max(0, stepsOf(item.mode).indexOf(seg.stepId));
 
       if (outbound) {
         // The visible ending: carried onto the pallet, or loaded into the truck.
-        const from = item.mode === "ai-driven" ? beltAnchor(4) : workAnchor(4);
+        const last = stepsOf(item.mode).length - 1;
+        const from =
+          item.mode === "ai-dlc" ? beltAnchor(last) : workAnchor(item.mode, last);
         const to = outboundAnchor(item.mode);
         scratchFrom.set(from[0], from[1], from[2]);
         scratchTo.set(to[0], to[1], to[2]);
@@ -200,7 +204,7 @@ export function SceneRoot({
         group.position.lerpVectors(scratchFrom, scratchTo, e);
         group.position.y += 0.45 * 4 * e * (1 - e);
         group.rotation.y = e * 0.8;
-      } else if (item.mode === "ai-driven") {
+      } else if (item.mode === "ai-dlc") {
         const from =
           index === 0
             ? [BELT.x0 + 1.2, BELT.y + 0.22, BELT.z]
@@ -226,7 +230,7 @@ export function SceneRoot({
       } else if (local < APPROACH_FRACTION) {
         // A short hand-off hop from the pile onto the desk.
         const from = waitAnchor(index);
-        const to = workAnchor(index);
+        const to = workAnchor(item.mode, index);
         scratchFrom.set(from[0], from[1] + 0.18, from[2]);
         scratchTo.set(to[0], to[1], to[2]);
         const e = easeInOutCubic(local / APPROACH_FRACTION);
@@ -235,7 +239,7 @@ export function SceneRoot({
         group.rotation.y = e * 0.5;
       } else {
         // Being worked on: STILL, on the desk, while the worker's arms move.
-        const p = workAnchor(index);
+        const p = workAnchor(item.mode, index);
         group.position.set(p[0], p[1], p[2]);
         group.rotation.y = 0.5;
       }
@@ -267,7 +271,7 @@ export function SceneRoot({
         isBusy={isBusy}
       />
 
-      <AIRoom visible={mode === "ai-driven"} isBusy={isBusy} />
+      <AIRoom visible={mode === "ai-dlc"} isBusy={isBusy} />
 
       {items.map((item) => (
         <group

@@ -20,7 +20,8 @@ export type Agency = "human" | "assisted" | "automated";
 
 export interface StationInfo {
   no: number;
-  agency: Record<ProcessMode, Agency>;
+  mode: ProcessMode;
+  agency: Agency;
 }
 
 /** The badge each agency carries. Shared with the mode legend above the floor. */
@@ -39,30 +40,41 @@ export const AGENCY_KEY: Record<Agency, string> = {
  * and the section further down this page says so. What the AI room changes is
  * what the two reviewers are handed, not whether they are asked.
  */
+/**
+ * Which room a station belongs to, its ordinal in that room, and how much of
+ * it a person does.
+ *
+ * `agency` used to be a record keyed by mode, because both rooms rendered the
+ * same five stations. They no longer do — a station exists in exactly one room
+ * — so it is a single value and the mode is a property of the station rather
+ * than an axis across it.
+ *
+ * The reviewers are the correction worth noting. That row used to appear in
+ * both rooms and go `automated` in the AI one, which quietly said the
+ * two-approval rule evaporates. It does not evaporate; it is replaced. Under
+ * AI-DLC the pull-request gate is not a shorter queue in front of two people,
+ * it is Verification — a bot suite that runs the moment the code exists. So
+ * the reviewers belong to the traditional room only, and what stands in their
+ * place has its own name.
+ */
 export const STATIONS: Record<StepId, StationInfo> = {
-  po: {
-    no: 1,
-    agency: { traditional: "human", "ai-driven": "assisted" },
-  },
-  design: {
-    no: 2,
-    agency: { traditional: "assisted", "ai-driven": "assisted" },
-  },
-  dev: {
-    no: 3,
-    agency: { traditional: "assisted", "ai-driven": "assisted" },
-  },
-  qa: {
-    no: 4,
-    agency: { traditional: "assisted", "ai-driven": "automated" },
-  },
-  review: {
-    no: 5,
-    agency: { traditional: "human", "ai-driven": "assisted" },
-  },
+  // Traditional scrum: five roles, and a hand-off between each pair.
+  po: { no: 1, mode: "traditional", agency: "human" },
+  design: { no: 2, mode: "traditional", agency: "assisted" },
+  dev: { no: 3, mode: "traditional", agency: "assisted" },
+  qa: { no: 4, mode: "traditional", agency: "human" },
+  review: { no: 5, mode: "traditional", agency: "human" },
+
+  // AI-DLC: one Bolt, four phases, and the two that keep a person are the two
+  // where something is decided rather than produced.
+  inception: { no: 1, mode: "ai-dlc", agency: "assisted" },
+  construct: { no: 2, mode: "ai-dlc", agency: "assisted" },
+  verification: { no: 3, mode: "ai-dlc", agency: "automated" },
+  bolt: { no: 4, mode: "ai-dlc", agency: "automated" },
 };
 
-/** What the pile between two stations represents — one key per gap. */
+/** What the pile between two stations represents — one key per gap. There are
+ *  no gaps in the AI-DLC room, so these are traditional-only. */
 export const GAP_REASON_KEYS: string[] = [
   "sim.gap.0",
   "sim.gap.1",

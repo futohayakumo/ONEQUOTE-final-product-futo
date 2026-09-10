@@ -9,7 +9,7 @@ import type {
 } from "@/types/process-scene";
 import {
   ARRIVAL_FRACTION,
-  STEP_IDS,
+  stepsOf,
   buildSchedule,
   phaseFor,
 } from "../model/processModel";
@@ -144,7 +144,11 @@ export class WorkItemRuntime {
   }
 
   spawn(sp: StoryPoint, step?: StepId): string {
-    const startStep = step ?? this.hoveredStep ?? "po";
+    // The rooms no longer share a station list, so a hovered step from the
+    // other one is not a valid entry point. buildSchedule falls back to the
+    // room's first station, which is the right behaviour for the AI-DLC side
+    // anyway: a Bolt is entered at its start, not somewhere along it.
+    const startStep = step ?? this.hoveredStep ?? stepsOf(this.mode)[0];
     const schedule = buildSchedule(this.mode, sp, startStep);
 
     const segments: Segment[] = [];
@@ -252,7 +256,7 @@ export class WorkItemRuntime {
           for (const i of this.items) {
             const { seg } = this.locate(i, now);
             if (seg.kind !== "wait") continue;
-            const gap = Math.max(0, STEP_IDS.indexOf(seg.stepId) - 1);
+            const gap = Math.max(0, stepsOf(this.mode).indexOf(seg.stepId) - 1);
             // Capped a little above the seed: the pile grows while you wait,
             // but it is illustrating a backlog, not racing to the ceiling.
             const cap = SEED_BACKLOG[gap] + 4;
@@ -312,7 +316,7 @@ export class WorkItemRuntime {
         const phase: ItemPhase = phaseFor(seg.kind, local, item.mode);
         const place: StationId =
           item.mode === "traditional" ? seg.stepId : "belt";
-        const gap = Math.max(0, STEP_IDS.indexOf(seg.stepId) - 1);
+        const gap = Math.max(0, stepsOf(this.mode).indexOf(seg.stepId) - 1);
 
         this.handlers.onItemProgress?.({
           itemId: item.id,

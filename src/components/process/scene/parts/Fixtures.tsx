@@ -268,7 +268,7 @@ export function AIGantry({
       >
         <Edges
           threshold={1}
-          color={agency === "automated" ? "#E1127A" : EDGE_COLOR}
+          color={agency === "automated" ? "#B01838" : EDGE_COLOR}
         />
       </mesh>
       <mesh

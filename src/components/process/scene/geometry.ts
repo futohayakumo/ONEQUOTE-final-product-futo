@@ -86,7 +86,7 @@ export function spLabelTexture(sp: StoryPoint): THREE.CanvasTexture | null {
   ctx.textBaseline = "alphabetic";
   ctx.fillText(String(sp), size / 2, size / 2 + 22);
 
-  ctx.fillStyle = "#64748B";
+  ctx.fillStyle = "#617187";
   ctx.font = "500 34px Inter, system-ui, sans-serif";
   ctx.fillText("SP", size / 2, size / 2 + 68);
 
@@ -117,14 +117,14 @@ export function screenTexture(kind: string): THREE.CanvasTexture | null {
   ctx.fillStyle = "#0F172A";
   ctx.fillRect(0, 0, w, h);
 
-  ctx.fillStyle = "#64748B";
+  ctx.fillStyle = "#617187";
   const rows = 7;
   for (let i = 0; i < rows; i += 1) {
     const y = 18 + i * 15;
     const len = 40 + ((i * 53 + kind.length * 17) % 120);
     ctx.fillRect(16, y, len, 5);
   }
-  ctx.fillStyle = "#E1127A";
+  ctx.fillStyle = "#B01838";
   ctx.fillRect(16, 18 + 3 * 15, 34, 5);
 
   const tex = new THREE.CanvasTexture(canvas);

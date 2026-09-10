@@ -231,7 +231,7 @@ export function Worker({
 
 /**
  * The reference render uses tan cardboard. Tan is not in the palette, so a box
- * is a WHITE body with a #CBD5E1 hairline and a #64748B lid seam. Its
+ * is a WHITE body with a #CBD5E1 hairline and a #617187 lid seam. Its
  * "cardboard-ness" is carried by the seam and the label, not by hue.
  */
 export function CardboardBox({

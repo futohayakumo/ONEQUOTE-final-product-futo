@@ -10,7 +10,7 @@ const BADGES: Record<ProcessMode, { key: string; ai: boolean }[]> = {
     { key: "sim.badge.humanWork", ai: false },
     { key: "sim.badge.aiLimited", ai: true },
   ],
-  "ai-driven": [
+  "ai-dlc": [
     { key: "sim.badge.humanDecision", ai: false },
     { key: "sim.badge.aiAutomation", ai: true },
     { key: "sim.badge.aiAssisted", ai: true },

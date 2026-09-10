@@ -1,7 +1,7 @@
 "use client";
 
 import type { StepId } from "@/types/process-scene";
-import { STEP_IDS } from "../../model/processModel";
+import { stepsOf } from "../../model/processModel";
 import {
   AI_CONSOLE_Z,
   BELT,
@@ -9,7 +9,7 @@ import {
   GAP_Z,
   GATE,
   PALLET_X,
-  STATION_X,
+  stationX,
   STATION_Z,
   TRUCK,
 } from "../layout";
@@ -24,7 +24,8 @@ import {
   StraightConveyor,
 } from "./Fixtures";
 
-const SCREEN_KIND: Record<StepId, string> = {
+/** Only the traditional room draws monitors, so only its five need a face. */
+const SCREEN_KIND: Partial<Record<StepId, string>> = {
   po: "po",
   design: "chart",
   dev: "code",
@@ -50,16 +51,16 @@ export function TraditionalRoom({
 }) {
   return (
     <group visible={visible}>
-      {STEP_IDS.map((step, i) => (
+      {stepsOf("traditional").map((step, i) => (
         <group key={step}>
-          <Desk position={[STATION_X[i], 0, STATION_Z]} />
+          <Desk position={[stationX("traditional", i), 0, STATION_Z]} />
           <Monitor
-            position={[STATION_X[i], 0.78, STATION_Z - 0.15]}
-            kind={SCREEN_KIND[step]}
+            position={[stationX("traditional", i), 0.78, STATION_Z - 0.15]}
+            kind={SCREEN_KIND[step] ?? "code"}
           />
-          <Chair position={[STATION_X[i], 0, STATION_Z - 0.85]} />
+          <Chair position={[stationX("traditional", i), 0, STATION_Z - 0.85]} />
           <Worker
-            position={[STATION_X[i], 0, STATION_Z - 0.85]}
+            position={[stationX("traditional", i), 0, STATION_Z - 0.85]}
             seed={i * 0.9}
             isBusy={() => isBusy(step)}
           />
@@ -100,13 +101,13 @@ export function AIRoom({
 
       {/* One gantry per station. A human-only step renders none at all, so the
           gaps in the row are themselves information. */}
-      {STEP_IDS.map((step, i) => (
+      {stepsOf("ai-dlc").map((step, i) => (
         <AIGantry
           key={step}
-          x={STATION_X[i]}
+          x={stationX("ai-dlc", i)}
           z={BELT.z}
           isActive={() => isBusy(step)}
-          agency={STATIONS[step].agency["ai-driven"]}
+          agency={STATIONS[step].agency}
         />
       ))}
 
@@ -121,11 +122,11 @@ export function AIRoom({
         The people did not vanish — they moved to the two steps that still need
         a decision.
       */}
-      {STEP_IDS.map((step, i) =>
-        STATIONS[step].agency["ai-driven"] === "assisted" ? (
+      {stepsOf("ai-dlc").map((step, i) =>
+        STATIONS[step].agency === "assisted" ? (
           <group
             key={`console-${step}`}
-            position={[STATION_X[i], 0, AI_CONSOLE_Z]}
+            position={[stationX("ai-dlc", i), 0, AI_CONSOLE_Z]}
           >
             <Desk position={[0, 0, 0]} />
             {/* Monitor pushed to one side of the desk. Centred, it sat directly

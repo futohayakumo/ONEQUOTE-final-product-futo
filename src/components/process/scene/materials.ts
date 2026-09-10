@@ -16,9 +16,9 @@ export const P = {
   offWhite: "#F8FAFC",
   border: "#CBD5E1",
   charcoal: "#0F172A",
-  slate: "#64748B",
-  crimson: "#E1127A",
-  tint: "#FDF2F8",
+  slate: "#617187",
+  crimson: "#B01838",
+  tint: "#FDF2F3",
 } as const;
 
 /*

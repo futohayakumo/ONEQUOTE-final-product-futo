@@ -1,13 +1,13 @@
-import type { ProcessMode, StepId } from "@/types/process-scene";
+import type { ProcessMode } from "@/types/process-scene";
 
 /**
  * Every coordinate and dimension for both rooms. One unit = one metre.
  *
- * Both rooms use the SAME five station positions on purpose. The comparison
- * only lands if the layouts are otherwise identical: same five steps, same
- * spacing, same camera — so the only visible differences are the ones that
- * matter (partition walls and queue piles on one side, a moving belt and AI
- * gantries on the other).
+ * The two rooms share the span and the camera, not the station count. Five
+ * roles with a queue between each pair on one side; four Bolt phases with
+ * nothing between them on the other. Everything else — spacing envelope,
+ * ground, lighting, angle — is held identical, so the differences that show
+ * are the ones being argued about.
  *
  * Proportions were settled by sketching the desk and worker in OpenSCAD and
  * orbiting the result; see design/. Nothing from there ships.
@@ -17,15 +17,25 @@ import type { ProcessMode, StepId } from "@/types/process-scene";
  *  BEHIND the desk — and the desk group is rotated, so that is +z. */
 export const GROUND = { w: 22.5, d: 6.6 } as const;
 
-export const STEP_ORDER: readonly StepId[] = [
-  "po",
-  "design",
-  "dev",
-  "qa",
-  "review",
-];
+/**
+ * Where each room's stations stand.
+ *
+ * The two rooms no longer hold the same number of them, so they cannot share
+ * one array. They still share the span: five roles at 3.6m spacing and four
+ * Bolt phases at 4.4m cover the same floor, so the camera does not move and
+ * the comparison stays a like-for-like read across the same width. Fewer,
+ * wider stations is itself the difference being shown.
+ */
+export const STATION_X: Record<ProcessMode, readonly number[]> = {
+  traditional: [-7.2, -3.6, 0, 3.6, 7.2],
+  "ai-dlc": [-6.6, -2.2, 2.2, 6.6],
+};
 
-export const STATION_X = [-7.2, -3.6, 0, 3.6, 7.2] as const;
+export function stationX(mode: ProcessMode, index: number): number {
+  const xs = STATION_X[mode];
+  return xs[Math.min(Math.max(index, 0), xs.length - 1)];
+}
+
 export const STATION_Z = -0.7;
 
 /** Gaps between consecutive stations — where work piles up. */
@@ -75,13 +85,16 @@ export const TRUCK = { x: 11.3, z: 0.35, rotY: -1.15, scale: 0.6 } as const;
 export const AI_CONSOLE_Z = -2.0;
 
 /** Where an item rests while a station works on it. */
-export function workAnchor(index: number): [number, number, number] {
-  return [STATION_X[index], 0.95, STATION_Z + 0.62];
+export function workAnchor(
+  mode: ProcessMode,
+  index: number,
+): [number, number, number] {
+  return [stationX(mode, index), 0.95, STATION_Z + 0.62];
 }
 
 /** Where an item sits while it waits. Index 0 is the pre-Intake inbox. */
 export function waitAnchor(index: number): [number, number, number] {
-  const x = index === 0 ? STATION_X[0] - 2.1 : GAP_X[index - 1];
+  const x = index === 0 ? STATION_X.traditional[0] - 2.1 : GAP_X[index - 1];
   return [x, 0.42, GAP_Z];
 }
 
@@ -89,17 +102,15 @@ export function waitAnchor(index: number): [number, number, number] {
  * Where a completed item ends up. The run needs a visible ending: previously
  * the box simply disappeared in mid-air at the last station.
  */
-export function outboundAnchor(
-  mode: "traditional" | "ai-driven",
-): [number, number, number] {
+export function outboundAnchor(mode: ProcessMode): [number, number, number] {
   return mode === "traditional"
     ? [PALLET_X, 0.32, STATION_Z]
     : [TRUCK.x - 1.1, 1.05, TRUCK.z];
 }
 
-/** Where an item rides in the AI room. */
+/** Where an item rides in the AI-DLC room. */
 export function beltAnchor(index: number): [number, number, number] {
-  return [STATION_X[index], BELT.y + 0.22, BELT.z];
+  return [stationX("ai-dlc", index), BELT.y + 0.22, BELT.z];
 }
 
 /**
@@ -127,7 +138,7 @@ export const CAMERA: Record<
     worldWidth: 22,
     worldHeight: 8.4,
   },
-  "ai-driven": {
+  "ai-dlc": {
     position: [4.4, 8.4, 17.4],
     target: [1.6, 1.15, 0],
     worldWidth: 22,

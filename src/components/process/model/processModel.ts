@@ -12,13 +12,22 @@ import type {
  */
 export const STORY_POINTS: readonly StoryPoint[] = [0.5, 1, 2, 3, 5, 8];
 
-export const STEP_IDS: readonly StepId[] = [
-  "po",
-  "design",
-  "dev",
-  "qa",
-  "review",
-];
+/**
+ * Which stations belong to which room. The one place that decides it.
+ */
+export const MODE_STEPS: Record<ProcessMode, readonly StepId[]> = {
+  traditional: ["po", "design", "dev", "qa", "review"],
+  "ai-dlc": ["inception", "construct", "verification", "bolt"],
+};
+
+export function stepsOf(mode: ProcessMode): readonly StepId[] {
+  return MODE_STEPS[mode];
+}
+
+/** Which room a station belongs to. Every station belongs to exactly one. */
+export function modeOfStep(step: StepId): ProcessMode {
+  return MODE_STEPS.traditional.includes(step) ? "traditional" : "ai-dlc";
+}
 
 /**
  * The five stations are ROLES, because a queue forms in front of a person and
@@ -36,6 +45,9 @@ export const STEP_IDS: readonly StepId[] = [
  * The Scrum Master is deliberately not a station. Work is never queued in
  * front of them — their job is to shrink the four queues that are drawn here,
  * which is a different thing from being one of them.
+ *
+ * The AI-DLC side is not roles at all, and that is the point: inside one Bolt
+ * there is nobody to hand to. The four names are the four phases of the cycle.
  */
 export const STEP_LABEL: Record<StepId, string> = {
   po: "Product Owner",
@@ -43,6 +55,10 @@ export const STEP_LABEL: Record<StepId, string> = {
   dev: "Developer",
   qa: "QA",
   review: "Reviewers",
+  inception: "Inception",
+  construct: "2-PC Construct",
+  verification: "Verification",
+  bolt: "The Bolt",
 };
 
 /**
@@ -69,6 +85,14 @@ export const MODEL = {
     dev: 2.2,
     qa: 1.4,
     review: 0.5,
+    // Inside a Bolt these split the cycle rather than the effort. Construct
+    // carries the most because it is two passes — the AI proposes a design, a
+    // person reads it, and only then is anything generated. Verification is
+    // wall-clock for a bot suite and almost no human minutes at all.
+    inception: 1.2,
+    construct: 1.6,
+    verification: 0.8,
+    bolt: 0.4,
   } as Record<StepId, number>,
 
   /** Days of hands-on work per unit of weight per story point. */
@@ -90,13 +114,18 @@ export const MODEL = {
   /** Superlinear: bigger batches wait disproportionately longer. */
   QUEUE_EXPONENT: 1.3,
 
-  /** AI-driven room. Continuous flow, so these are near-flat in sp. */
-  BELT_BASE: 0.4,
-  BELT_K: 0.14,
-  CHECKPOINT_DAYS: 0.02,
-  CHECKPOINT_COUNT: 3,
-  CONSOLE_BASE: 0.2,
-  CONSOLE_K: 0.09,
+  /**
+   * The Bolt, anchored to the window the lifecycle specifies rather than to
+   * constants picked to draw a curve.
+   *
+   * AI-DLC states one number about itself: requirements to production in 24 to
+   * 72 hours. So the smallest item takes a day and the largest takes three,
+   * and everything between is linear in batch size. It is still a model — the
+   * mapping from story points to hours is ours — but the endpoints belong to
+   * the process, which is one more thing on this page that was not invented.
+   */
+  BOLT_MIN_DAYS: 1.0,
+  BOLT_MAX_DAYS: 3.0,
 } as const;
 
 export function touchDays(step: StepId, sp: number): number {
@@ -111,16 +140,20 @@ export function queueDays(gapIndex: number, sp: number): number {
     : MODEL.PR_QUEUE_BASE + MODEL.PR_QUEUE_K * scaled;
 }
 
-export function beltDays(sp: number): number {
-  return MODEL.BELT_BASE + MODEL.BELT_K * sp;
-}
-
-export function checkpointDays(): number {
-  return MODEL.CHECKPOINT_DAYS * MODEL.CHECKPOINT_COUNT;
-}
-
-export function consoleDays(sp: number): number {
-  return MODEL.CONSOLE_BASE + MODEL.CONSOLE_K * sp;
+/**
+ * One Bolt, end to end, for a batch of `sp`.
+ *
+ * Linear between the two endpoints the lifecycle names: 24 hours for the
+ * smallest item on the tray, 72 for the largest. Nothing here is superlinear,
+ * because nothing inside a Bolt queues — that is the whole structural claim,
+ * and it is the reason the gap against the other room widens with batch size
+ * rather than staying flat.
+ */
+export function boltDays(sp: number): number {
+  const lo = STORY_POINTS[0];
+  const hi = STORY_POINTS[STORY_POINTS.length - 1];
+  const t = (sp - lo) / (hi - lo);
+  return MODEL.BOLT_MIN_DAYS + t * (MODEL.BOLT_MAX_DAYS - MODEL.BOLT_MIN_DAYS);
 }
 
 /**
@@ -130,7 +163,7 @@ export function consoleDays(sp: number): number {
  */
 export const ARRIVAL_FRACTION: Record<ProcessMode, number> = {
   traditional: 0.16,
-  "ai-driven": 0.58,
+  "ai-dlc": 0.58,
 };
 
 export type SegmentKind = "work" | "wait";
@@ -162,20 +195,28 @@ export interface Schedule {
   wallMs: number;
 }
 
-export function stepsFrom(startStep: StepId): StepId[] {
-  const i = STEP_IDS.indexOf(startStep);
-  return STEP_IDS.slice(i === -1 ? 0 : i) as StepId[];
+/**
+ * The stations still ahead of an item that enters at `startStep`.
+ *
+ * Takes the mode because the two rooms no longer run the same list, and a
+ * station id belongs to exactly one of them. A start step from the wrong room
+ * falls back to that room's first station rather than returning an empty run.
+ */
+export function stepsFrom(mode: ProcessMode, startStep: StepId): StepId[] {
+  const all = MODE_STEPS[mode];
+  const i = all.indexOf(startStep);
+  return all.slice(i === -1 ? 0 : i) as StepId[];
 }
 
 /**
  * Wall-clock compression, a PRESENTATION concern only. It never touches the
  * simulated day figures, which are what the screen actually argues with.
  *
- * Playing 35.5 days linearly would make the AI-driven run unwatchably short or
+ * Playing 35.5 days linearly would make the AI-DLC run unwatchably short or
  * the traditional one tediously long, so the mapping is compressed while the
  * proportions inside a single run stay faithful.
  *
- * The AI-driven room gets a floor. Its whole point is five stations passing in
+ * The AI-DLC room gets a floor. Its whole point is four phases passing in
  * quick succession, and at 2.6s each beat lasted about half a second — too
  * fast to see a station light up at all, which made the fast side look like a
  * box sliding along a rail. The contrast is carried by the day counts, not by
@@ -188,7 +229,7 @@ export function wallSeconds(
   mode: ProcessMode = "traditional",
 ): number {
   const raw = 0.9 + Math.pow(days, 0.62);
-  return mode === "ai-driven" ? Math.max(AI_MIN_PLAYBACK_SECONDS, raw) : raw;
+  return mode === "ai-dlc" ? Math.max(AI_MIN_PLAYBACK_SECONDS, raw) : raw;
 }
 
 export function buildSchedule(
@@ -196,8 +237,9 @@ export function buildSchedule(
   sp: StoryPoint,
   startStep: StepId = "po",
 ): Schedule {
-  const steps = stepsFrom(startStep);
-  const offset = STEP_IDS.indexOf(startStep);
+  const all = MODE_STEPS[mode];
+  const steps = stepsFrom(mode, startStep);
+  const offset = Math.max(0, all.indexOf(startStep));
 
   let perStep: PerStepTiming[];
 
@@ -210,26 +252,17 @@ export function buildSchedule(
     }));
   } else {
     /*
-     * Same steps, but on a moving belt with no queues.
+     * One Bolt. No queue anywhere in it, so every day here is a working day.
      *
-     * The belt and checkpoint costs scale with how much of the pipeline the
-     * item actually traverses. An earlier version computed one total for the
-     * whole line and merely redistributed it, so entering at Dev took exactly
-     * as long as entering at Intake — which is obviously wrong, and made the
-     * "faster by" ratio fall for a reason that had nothing to do with the
-     * argument.
+     * The cycle cost scales with how much of it the item actually traverses:
+     * dropping straight into Verification is not a whole Bolt. An earlier
+     * version computed one total for the whole line and merely redistributed
+     * it, so entering late took exactly as long as entering at the start,
+     * which made the ratio move for a reason unrelated to the argument.
      */
-    const fullWeight = STEP_IDS.reduce((a, s) => a + MODEL.STEP_WEIGHT[s], 0);
-    const weightSum = steps.reduce((a, s) => a + MODEL.STEP_WEIGHT[s], 0);
-    const share = weightSum / fullWeight;
-
-    const belt = beltDays(sp) * share;
-    const checkpoints =
-      MODEL.CHECKPOINT_DAYS *
-      Math.max(1, Math.round(MODEL.CHECKPOINT_COUNT * share));
-    // The decision is made once per item, wherever it enters.
-    const decision = consoleDays(sp);
-    const total = belt + checkpoints + decision;
+    const fullWeight = all.reduce((a, id) => a + MODEL.STEP_WEIGHT[id], 0);
+    const weightSum = steps.reduce((a, id) => a + MODEL.STEP_WEIGHT[id], 0);
+    const total = boltDays(sp) * (weightSum / fullWeight);
 
     perStep = steps.map((stepId) => ({
       stepId,
@@ -257,9 +290,17 @@ export function buildSchedule(
 }
 
 /** Both modes for the same story point — what the 2D readout displays. */
+/**
+ * Both rooms for the same story point — what the 2D readout displays.
+ *
+ * `startStep` belongs to one room only, and buildSchedule falls back to the
+ * first station of a room it does not belong to. That is the right reading:
+ * an item dropped at Dev is measured from Dev against a WHOLE Bolt, because
+ * there is no "halfway into a Bolt" to compare it to.
+ */
 export function compare(sp: StoryPoint, startStep: StepId = "po") {
   const traditional = buildSchedule("traditional", sp, startStep);
-  const aiDriven = buildSchedule("ai-driven", sp, startStep);
+  const aiDriven = buildSchedule("ai-dlc", sp, startStep);
   return {
     traditional,
     aiDriven,

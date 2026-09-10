@@ -4,7 +4,7 @@ import cn from "clsx";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
 import { formatDecimal } from "@/lib/localeFormat";
 import { useLocale, useT } from "../shell/LocaleProvider";
-import { STEP_IDS } from "./model/processModel";
+import { stepsOf } from "./model/processModel";
 import { AGENCY_KEY, GAP_REASON_KEYS, STATIONS } from "./scene/stations";
 
 /**
@@ -42,9 +42,9 @@ export function StationList({
 
   return (
     <ol className="flex flex-col gap-3 lg:hidden">
-      {STEP_IDS.map((step, i) => {
+      {stepsOf(mode).map((step, i) => {
         const info = STATIONS[step];
-        const agency = info.agency[mode];
+        const agency = info.agency;
         const isActive = activeStep === step;
         const waitingHere =
           mode === "traditional" &&
@@ -112,8 +112,8 @@ export function StationList({
                   {t(AGENCY_KEY[agency])}
                 </span>
               </div>
-              <p className="mt-1 type-label">{t(`station.${step}.name.${mode}`)}</p>
-              <p className="mt-1 type-caption">{t(`station.${step}.does.${mode}`)}</p>
+              <p className="mt-1 type-label">{t(`station.${step}.name`)}</p>
+              <p className="mt-1 type-caption">{t(`station.${step}.does`)}</p>
               {isActive && activePhase === "work" ? (
                 <p className="mt-2 border-t border-border pt-2 type-caption text-crimson">
                   {t("sim.workingNow")}

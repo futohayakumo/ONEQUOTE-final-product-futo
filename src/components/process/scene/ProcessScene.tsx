@@ -90,7 +90,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
      */
     const dropItem = useCallback(
       (sp: StoryPoint, step?: StepId) => {
-        const id = runtime.spawn(sp, step ?? "po");
+        const id = runtime.spawn(sp, step);
         invalidateRef.current();
         return id;
       },
@@ -180,7 +180,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
           <Canvas
             /*
              * `flat` is non-negotiable. R3F defaults to ACESFilmic tone mapping,
-             * which shifts #E1127A toward salmon and lifts #0F172A — the palette
+             * which shifts #B01838 toward salmon and lifts #0F172A — the palette
              * would break silently. `linear` is equally wrong in the other
              * direction, so neither is left to chance.
              */

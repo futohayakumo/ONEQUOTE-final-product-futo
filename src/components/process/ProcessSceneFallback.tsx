@@ -16,7 +16,7 @@ import type {
   StoryPoint,
   WorkItemResult,
 } from "@/types/process-scene";
-import { STEP_IDS, buildSchedule } from "./model/processModel";
+import { buildSchedule, stepsOf } from "./model/processModel";
 
 /**
  * The no-WebGL rendering. It implements the SAME props and handle as
@@ -155,7 +155,7 @@ export const ProcessSceneFallback = forwardRef<
         const t = now - f.startedAt;
         const m = f.marks.find((mm) => t >= mm.startMs && t < mm.endMs);
         if (m && t < m.startMs + m.wait) {
-          waitingGaps.add(STEP_IDS.indexOf(m.stepId) - 1);
+          waitingGaps.add(stepsOf(mode).indexOf(m.stepId) - 1);
         }
       }
       for (let g = 0; g < backlog.current.length; g += 1) {
@@ -189,7 +189,7 @@ export const ProcessSceneFallback = forwardRef<
           mode,
           station: m.stepId,
           place: mode === "traditional" ? m.stepId : "belt",
-          stepIndex: STEP_IDS.indexOf(m.stepId),
+          stepIndex: stepsOf(mode).indexOf(m.stepId),
           phase: waiting ? "waiting" : arrived ? "working" : "transit",
           overallProgress: t / f.totalWallMs,
           elapsedDays: s.totalDays * (t / f.totalWallMs),
@@ -216,7 +216,7 @@ export const ProcessSceneFallback = forwardRef<
 
   const dropItem = useCallback(
     (sp: StoryPoint, step?: StepId) => {
-      const startStep: StepId = step ?? hovered ?? "po";
+      const startStep: StepId = step ?? hovered ?? stepsOf(mode)[0];
       const s = buildSchedule(mode, sp, startStep);
 
       let acc = 0;
@@ -288,12 +288,12 @@ export const ProcessSceneFallback = forwardRef<
         <div
           className={cn(
             "absolute bottom-6 left-0 right-0 h-1",
-            mode === "ai-driven" ? "bg-border" : "bg-transparent",
+            mode === "ai-dlc" ? "bg-border" : "bg-transparent",
           )}
           aria-hidden
         />
 
-        {STEP_IDS.map((step, i) => {
+        {stepsOf(mode).map((step, i) => {
           const occupied = flights.filter((f) => {
             const t = now - f.startedAt;
             const m = f.marks.find((mm) => mm.stepId === step);
@@ -346,7 +346,7 @@ export const ProcessSceneFallback = forwardRef<
                 <span
                   className={cn(
                     "h-12 w-14 border bg-studio",
-                    mode === "ai-driven" ? "border-crimson" : "border-border",
+                    mode === "ai-dlc" ? "border-crimson" : "border-border",
                   )}
                 />
                 <span className="h-6 w-px bg-border" />

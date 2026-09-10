@@ -2,7 +2,7 @@
 
 import cn from "clsx";
 import type { ProcessMode, StepId, StoryPoint } from "@/types/process-scene";
-import { STEP_IDS } from "./model/processModel";
+import { stepsOf } from "./model/processModel";
 import { AGENCY_KEY, GAP_REASON_KEYS, STATIONS } from "./scene/stations";
 import { formatDecimal } from "@/lib/localeFormat";
 import { useLocale, useT } from "../shell/LocaleProvider";
@@ -75,11 +75,11 @@ export function StationOverlay({
 
   return (
     <div className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
-      {STEP_IDS.map((step) => {
+      {stepsOf(mode).map((step) => {
         const a = byId.get(step);
         if (!a) return null;
         const info = STATIONS[step];
-        const agency = info.agency[mode];
+        const agency = info.agency;
         const isHovered = hovered === step;
         const isActive = activeStep === step;
         const leader = Math.max(0, a.y - CARD_TOP - 132);
@@ -129,9 +129,9 @@ export function StationOverlay({
                 </span>
               </div>
 
-              <p className="mt-1 type-label">{t(`station.${step}.name.${mode}`)}</p>
+              <p className="mt-1 type-label">{t(`station.${step}.name`)}</p>
               <p className="mt-1 type-caption">
-                {t(`station.${step}.does.${mode}`)}
+                {t(`station.${step}.does`)}
               </p>
 
               {isActive && activePhase === "work" ? (
@@ -177,9 +177,9 @@ export function StationOverlay({
         const waitingHere =
           mode === "traditional" &&
           activePhase === "wait" &&
-          activeStep === STEP_IDS[i + 1];
+          activeStep === stepsOf(mode)[i + 1];
 
-        if (mode === "ai-driven") {
+        if (mode === "ai-dlc") {
           return (
             <div
               key={i}
