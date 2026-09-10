@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "../icons/ArrowRight";
+import { Plate } from "../ui/Plate";
 import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
 
@@ -13,10 +14,25 @@ import { Lines } from "../ui/Lines";
  * the radio dots use. It is not a fourth radius; it is the third one applied
  * to two corners.
  */
+/*
+ * The comp puts three photographs here — a phone mid-booking, a laptop showing
+ * a confirmation, a container coming down onto a truck with a yard worker in
+ * frame. Only the third exists. The other two were standing in as the flat
+ * magenta-era illustrations, which read as clip art beside a photograph and
+ * broke the row's one job: three pictures of the same kind.
+ */
 const STEPS = [
-  { id: "quote", src: "/assets/scenes/06-dashboard-display.png" },
-  { id: "booking", src: "/assets/scenes/08-document-sharing.png" },
-  { id: "delivery", src: "/assets/spot/12-perspective-process.jpg" },
+  {
+    id: "quote",
+    src: null,
+    want: "Hands on a phone, a rate request part-filled. Screen legible, no real brand.",
+  },
+  {
+    id: "booking",
+    src: null,
+    want: "A laptop on a desk showing a confirmation. Over the shoulder, shallow depth.",
+  },
+  { id: "delivery", src: "/assets/spot/12-perspective-process.jpg", want: null },
 ] as const;
 
 export function JourneyStrip() {
@@ -34,12 +50,16 @@ export function JourneyStrip() {
           {STEPS.map((step) => (
             <li key={step.id} className="flex flex-col">
               <div className="overflow-hidden bg-studio rounded-t-full rounded-b-card shadow-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={step.src}
-                  alt=""
-                  className="aspect-[3/4] w-full object-cover"
-                />
+                {step.src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={step.src}
+                    alt=""
+                    className="aspect-[3/4] w-full object-cover"
+                  />
+                ) : (
+                  <Plate label={step.want ?? ""} spec="900 × 1200" ratio="3 / 4" />
+                )}
               </div>
               <h3 className="mt-5 type-section">{t(`home.journey.${step.id}`)}</h3>
               <p className="mt-2 type-caption">

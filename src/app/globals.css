@@ -201,7 +201,7 @@
  * on a second element, one of the two is wrong.
  */
 @utility type-hero {
-  font-size: clamp(3rem, 9vw, 7.5rem);
+  font-size: clamp(3.5rem, 14vw, 13rem);
   line-height: 0.92;
   font-weight: 900;
   letter-spacing: -0.04em;

@@ -22,12 +22,17 @@ export function PlatformBand() {
   const t = useT();
   return (
     <section className="overflow-hidden border-t border-border bg-canvas">
-      <div className="mx-auto grid max-w-[86rem] items-center gap-12 px-6 py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,22rem)] lg:gap-16">
-        <div style={{ perspective: "1600px" }}>
+      <div className="mx-auto grid max-w-[86rem] items-center gap-14 px-6 py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-20">
+        <div className="lg:pr-8" style={{ perspective: "1800px" }}>
           <div
             className="overflow-hidden border border-border bg-studio rounded-card shadow-raised transform-gpu"
             style={{
-              transform: "rotateY(-14deg) rotateX(3deg) scale(1.02)",
+              /* The RIGHT edge goes back. Positive rotateY pushes +X away from
+                 the viewer; the first pass had this negative and the panel
+                 leaned the wrong way, with its far edge nearer than its near
+                 one. Origin on the left so the near edge stays put and the
+                 column keeps its left alignment with everything above it. */
+              transform: "rotateY(13deg)",
               transformOrigin: "left center",
             }}
           >

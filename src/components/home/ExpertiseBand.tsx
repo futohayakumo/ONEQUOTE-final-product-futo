@@ -1,5 +1,6 @@
 "use client";
 
+import { Plate } from "../ui/Plate";
 import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
 
@@ -17,21 +18,25 @@ export function ExpertiseBand() {
     <section className="bg-studio">
       <div className="mx-auto grid max-w-[86rem] items-center gap-10 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
         <div className="relative isolate">
+          {/*
+            The photograph this slot needs does not exist yet.
+            `banners/02-operations-floor.png` was standing in and cannot: it has
+            its own copy burnt into the pixels — LOGISTICS CONNECTS A MORE HUMAN
+            TOMORROW up the left wall and MOVING THE WORLD TOGETHER on the right
+            — which collides with the three words this band puts in the same
+            corner. Two headlines, one of them unremovable.
+          */}
           <div
             className="overflow-hidden"
             style={{ clipPath: "polygon(0 0, 100% 0, 88% 100%, 0 100%)" }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/assets/banners/02-operations-floor.png"
-              alt=""
-              className="h-[22rem] w-full object-cover lg:h-[26rem]"
+            <Plate
+              label="Container terminal at work — cranes, stacks, a vessel alongside. NO type in the image."
+              spec="1800 × 1100"
+              className="h-[22rem] w-full lg:h-[26rem]"
             />
-            {/* Type over a picture needs a ramp, not a flat wash: a wash dark
-                enough for the words would flatten the picture as well. */}
-            <div aria-hidden className="absolute inset-0 scrim-b" />
           </div>
-          <p className="absolute bottom-8 left-8 z-10 max-w-[14ch] type-page text-studio">
+          <p className="absolute bottom-8 left-8 z-10 max-w-[14ch] type-page">
             <Lines text={t("home.expertise.over")} />
           </p>
         </div>
