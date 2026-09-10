@@ -14,7 +14,6 @@ export default function EngineeringPage() {
         eyebrowKey="eng.eyebrow"
         titleKey="eng.title"
         ledeKey="eng.lede"
-        noteKey="eng.note"
       />
       <EngineeringScreen />
       <PlatformNote />

@@ -11,6 +11,7 @@ import {
 } from "@/lib/pricing";
 import type { ContainerType, LoyaltyTier, PortCode } from "@/types/quote";
 import { ArrowRight } from "../icons/ArrowRight";
+import { flagGlyph } from "../ui/Flag";
 import { useT } from "../shell/LocaleProvider";
 
 export interface SearchState {
@@ -71,7 +72,7 @@ export function SearchPanel({
           >
             {PORT_ORDER.map((p) => (
               <option key={p} value={p}>
-                {PORTS[p].city} ({p})
+                {flagGlyph(PORTS[p].country)} {PORTS[p].city} ({p})
               </option>
             ))}
           </select>
@@ -86,7 +87,7 @@ export function SearchPanel({
           >
             {PORT_ORDER.map((p) => (
               <option key={p} value={p}>
-                {PORTS[p].city} ({p})
+                {flagGlyph(PORTS[p].country)} {PORTS[p].city} ({p})
               </option>
             ))}
           </select>

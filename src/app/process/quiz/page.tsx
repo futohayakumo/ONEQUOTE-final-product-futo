@@ -16,7 +16,6 @@ export default function QuizPage() {
         eyebrowKey="quiz.eyebrow"
         titleKey="quiz.title"
         ledeKey="quiz.lede"
-        noteKey="quiz.note"
       />
 
       <div className="max-w-[54rem]">

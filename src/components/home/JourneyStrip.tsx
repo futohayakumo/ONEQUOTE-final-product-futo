@@ -9,11 +9,13 @@ import { Lines } from "../ui/Lines";
  * Three tall pills and one very large disc, the disc overlapping the third
  * pill and running off the right edge of the page.
  *
- * The disc is absolutely positioned rather than being the copy column's
- * background, because it has to be far wider than the column and to sit
- * *behind* the pill next to it. `left-[58%]` puts its own left edge back over
- * that pill; being square and `rounded-full` at 46rem, roughly a third of it
- * leaves the page on the right, which is what the reference draws.
+ * The disc is absolutely positioned on the section rather than being the copy
+ * column's background, because it has to be far wider than that column, to sit
+ * *behind* the pill next to it, and to leave the page on the right. Anchored
+ * 14rem past the right edge, roughly a third of it is always off-screen. It
+ * grows again at `xl`: anchored from the right, a fixed diameter drifts away
+ * from the pills as the viewport widens, and the overlap with the third one is
+ * the point of the arrangement.
  *
  * The copy is held to `28rem` and centred in the visible part. A circle
  * narrows towards its top and bottom, so a paragraph as wide as the disc's
@@ -30,13 +32,20 @@ export function JourneyStrip() {
   const t = useT();
   return (
     <section className="relative isolate overflow-hidden border-t border-border bg-studio">
-      <div className="relative mx-auto max-w-[86rem] px-6 py-20">
-        {/* Sits under everything in the band, including the third pill. */}
-        <div
-          aria-hidden
-          className="absolute top-1/2 left-[58%] -z-10 hidden h-[46rem] w-[46rem] -translate-y-1/2 bg-mist rounded-full lg:block"
-        />
+      {/*
+        On the SECTION, not inside the centred container.
 
+        It has to leave the page on the right, and a child of a `max-w-[86rem]`
+        box cannot: past 1600px the container stops short of the viewport and
+        the disc came to rest inside it as a floating circle with a gap beyond.
+        Anchored from the right edge instead, it bleeds at every width.
+      */}
+      <div
+        aria-hidden
+        className="absolute top-1/2 -right-[14rem] -z-10 hidden h-[46rem] w-[46rem] -translate-y-1/2 bg-mist rounded-full lg:block xl:h-[56rem] xl:w-[56rem]"
+      />
+
+      <div className="relative mx-auto max-w-[86rem] px-6 py-20">
         <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.95fr)_minmax(0,1fr)] lg:gap-6">
           <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
             {STEPS.map((step) => (

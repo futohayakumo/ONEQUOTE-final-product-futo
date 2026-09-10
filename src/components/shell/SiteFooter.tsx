@@ -61,7 +61,6 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-[86rem] gap-12 px-6 py-16 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-20">
         <div>
           <Wordmark />
-          <p className="mt-4 max-w-[38ch] type-caption">{t("footer.tagline")}</p>
 
           <ul className="mt-7 flex items-center gap-5">
             {SOCIAL.map((s) => (

@@ -15,7 +15,6 @@ export default function BusinessPage() {
           eyebrowKey="business.eyebrow"
           titleKey="business.title"
           ledeKey="business.lede"
-          noteKey="business.note"
         />
         <QuotationScreen />
       </div>

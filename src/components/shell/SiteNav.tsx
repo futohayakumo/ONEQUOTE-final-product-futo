@@ -85,7 +85,6 @@ export function SiteNav() {
         </ul>
 
         <div className="ml-auto flex items-center gap-6">
-          <span className="hidden type-caption lg:block">{t("nav.tagline")}</span>
           <LocalePicker />
         </div>
       </nav>

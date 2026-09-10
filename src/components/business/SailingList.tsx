@@ -5,7 +5,8 @@ import { formatDate, formatMoney, formatWeekday } from "@/lib/localeFormat";
 import { PORTS } from "@/lib/pricing";
 import { sailingAt, type Sailing } from "@/lib/sailings";
 import type { PortCode } from "@/types/quote";
-import { ArrowRight } from "../icons/ArrowRight";
+import { Flag } from "../ui/Flag";
+import { RouteLine } from "./RouteLine";
 import { useLocale, useT } from "../shell/LocaleProvider";
 
 export function SailingList({
@@ -29,9 +30,6 @@ export function SailingList({
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="type-section">{t("business.sailings.title")}</h2>
-        <p className="type-caption">
-          {t("business.sailings.lede", { count: sailings.length })}
-        </p>
       </div>
 
       <fieldset>
@@ -75,9 +73,7 @@ export function SailingList({
                       </span>
                     ) : null}
                     <span className="type-label">{s.vessel}</span>
-                    <span className="type-caption">
-                      {s.via ? t("quote.viaPort", { port: s.via }) : s.service}
-                    </span>
+                    <span className="type-caption">{s.service}</span>
                   </span>
 
                   <span className="flex flex-col gap-1">
@@ -86,13 +82,17 @@ export function SailingList({
                       {formatDate(sailingAt(s.departsInDays), locale)}
                     </span>
                     <span className="type-caption tnum">
-                      {formatWeekday(sailingAt(s.departsInDays), locale)} · {pol}
+                      {formatWeekday(sailingAt(s.departsInDays), locale)} ·{" "}
+                      <Flag country={PORTS[pol].country} /> {pol}
                     </span>
                   </span>
 
-                  <span aria-hidden className="text-muted">
-                    <ArrowRight size={18} />
-                  </span>
+                  <RouteLine
+                    pol={pol}
+                    pod={pod}
+                    via={s.via}
+                    transitDays={s.transitDays}
+                  />
 
                   <span className="flex flex-col gap-1">
                     <span className="type-caption">{t("business.sailings.arrival")}</span>
@@ -100,17 +100,8 @@ export function SailingList({
                       {formatDate(sailingAt(s.departsInDays + s.transitDays), locale)}
                     </span>
                     <span className="type-caption tnum">
-                      {formatWeekday(sailingAt(s.departsInDays + s.transitDays), locale)} · {pod}
-                    </span>
-                  </span>
-
-                  <span className="flex flex-col gap-1">
-                    <span className="type-caption">{t("business.sailings.transit")}</span>
-                    <span className="type-label tnum">
-                      {t("quote.transitDays", { days: s.transitDays })}
-                    </span>
-                    <span className="type-caption">
-                      {s.via ? t("business.sailings.stop") : t("quote.direct")}
+                      {formatWeekday(sailingAt(s.departsInDays + s.transitDays), locale)} ·{" "}
+                      <Flag country={PORTS[pod].country} /> {pod}
                     </span>
                   </span>
 
@@ -119,7 +110,8 @@ export function SailingList({
                       ${formatMoney(priceFor(s), locale)}
                     </span>
                     <span className="type-caption">
-                      {PORTS[pol].city} → {PORTS[pod].city}
+                      <Flag country={PORTS[pol].country} /> {PORTS[pol].city} →{" "}
+                      <Flag country={PORTS[pod].country} /> {PORTS[pod].city}
                     </span>
                   </span>
                 </label>

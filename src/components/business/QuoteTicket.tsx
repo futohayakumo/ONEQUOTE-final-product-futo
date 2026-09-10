@@ -17,6 +17,7 @@ import {
 } from "@/lib/charges";
 import { t, type Locale } from "@/lib/i18n";
 import { CONTAINERS, LOYALTY_TIERS, PORTS } from "@/lib/pricing";
+import { Flag } from "../ui/Flag";
 import {
   cutOffsFor,
   legsFor,
@@ -109,7 +110,8 @@ export function QuoteTicket({
             {formatDate(sailingAt(sailing.departsInDays), locale)}
           </span>
           <span className="type-caption tnum">
-            {formatWeekday(sailingAt(sailing.departsInDays), locale)} · {pol}
+            {formatWeekday(sailingAt(sailing.departsInDays), locale)} ·{" "}
+            <Flag country={PORTS[pol].country} /> {pol}
           </span>
         </div>
 
@@ -140,7 +142,8 @@ export function QuoteTicket({
           <span className="type-section">{PORTS[pod].city}</span>
           <span className="type-label tnum">{formatDate(sailingAt(arrival), locale)}</span>
           <span className="type-caption tnum">
-            {formatWeekday(sailingAt(arrival), locale)} · {pod}
+            {formatWeekday(sailingAt(arrival), locale)} ·{" "}
+            <Flag country={PORTS[pod].country} /> {pod}
           </span>
         </div>
       </div>

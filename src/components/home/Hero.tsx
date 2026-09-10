@@ -23,7 +23,17 @@ export function Hero() {
     <section className="relative isolate overflow-hidden bg-studio">
       <div
         aria-hidden
-        className="absolute inset-y-0 right-0 hidden w-[64%] lg:block"
+        /*
+          Anchored to the CONTAINER's centre line, not to a fraction of the
+          viewport.
+          
+          `w-[64%]` was viewport-relative while the headline is container-
+          relative and its size is capped, so past about 1600px the two drifted
+          apart: the seam kept marching right while the words stopped growing,
+          and at 1920 it fell past the end of PROGRESS. Starting 6rem left of
+          centre keeps the cut at the same point in the word at every width.
+        */
+        className="absolute inset-y-0 right-0 left-[calc(50%-6rem)] hidden lg:block"
         style={{ clipPath: "polygon(16% 0, 100% 0, 100% 100%, 0 100%)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

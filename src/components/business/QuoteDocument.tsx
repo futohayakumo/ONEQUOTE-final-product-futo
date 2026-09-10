@@ -48,7 +48,6 @@ export function QuoteDocument(props: {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="type-section">{t("doc.title")}</h2>
-          <p className="mt-1 max-w-[70ch] type-caption">{t("doc.lede")}</p>
         </div>
 
         <div className="flex items-center gap-3">
