@@ -19,6 +19,28 @@ const PROTOCOL = ["commit", "approvals", "branches"] as const;
 
 const WHY = ["handoffs", "gates", "stages"] as const;
 
+/**
+ * A heading with one accented word in it.
+ *
+ * The two headings on this screen were assembled in JSX — a fragment, a
+ * hard-coded space, a crimson span, a hard-coded full stop. That spells one
+ * language. Japanese wants no space before 流れ and wants 。 rather than .,
+ * and both were wrong at 56px where nothing is deniable. The sentence is now
+ * one string per locale with a {mark} hole in it, so where the accent sits,
+ * what touches it, and how the line ends are all decisions the translation
+ * makes.
+ */
+function Accented({ line, mark }: { line: string; mark: string }) {
+  const [before, ...rest] = line.split("{mark}");
+  return (
+    <>
+      {before}
+      <span className="text-crimson">{mark}</span>
+      {rest.join("{mark}")}
+    </>
+  );
+}
+
 export function ProcessScreen() {
   const t = useT();
 
@@ -31,8 +53,10 @@ export function ProcessScreen() {
           <h1 className="mt-6 type-display">
             {t("process.title.a")}
             <br />
-            {t("process.title.b")}{" "}
-            <span className="text-crimson">{t("process.title.flow")}</span>.
+            <Accented
+              line={t("process.title.b")}
+              mark={t("process.title.flow")}
+            />
           </h1>
           <p className="mt-7 max-w-[40ch] type-body text-muted">
             {t("process.lede")}
@@ -55,16 +79,13 @@ export function ProcessScreen() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/scenes/01-team-planning-room.png"
             alt={t("process.hero.alt")}
             className="w-full rounded-card"
           />
-          <p className="border-l-2 border-charcoal pl-5 type-label">
-            {t("process.hero.note")}
-          </p>
         </div>
       </section>
 
@@ -194,11 +215,10 @@ export function ProcessScreen() {
           <div className="min-w-0 flex-1">
             <p className="type-eyebrow">{t("process.forward.eyebrow")}</p>
             <h2 className="mt-5 type-page">
-              {t("process.forward.title.a")}{" "}
-              <span className="text-crimson">
-                {t("process.forward.title.b")}
-              </span>
-              .
+              <Accented
+                line={t("process.forward.title.a")}
+                mark={t("process.forward.title.b")}
+              />
             </h2>
             <p className="mt-3 max-w-[52ch] type-body text-muted">
               {t("process.forward.lede")}
