@@ -13,19 +13,36 @@ import type {
 export const STORY_POINTS: readonly StoryPoint[] = [0.5, 1, 2, 3, 5, 8];
 
 export const STEP_IDS: readonly StepId[] = [
-  "intake",
-  "analysis",
+  "po",
+  "design",
   "dev",
-  "test",
-  "deploy",
+  "qa",
+  "review",
 ];
 
+/**
+ * The five stations are ROLES, because a queue forms in front of a person and
+ * not in front of a verb.
+ *
+ * They used to be stages — Intake, Analysis, Dev, Test, Deploy — and that was
+ * wrong in a way worth recording. Nobody's job title is "intake", and "deploy"
+ * is a pipeline rather than a person, so a room with five desks and five
+ * seated workers was labelled with two things that never sit at a desk. On a
+ * scrum team the work is held, in turn, by the product owner, a designer, a
+ * developer, QA, and then by two other developers who have to read the pull
+ * request before it can merge. Those are the five hands it passes through, and
+ * every one of the four gaps between them is a real hand-off.
+ *
+ * The Scrum Master is deliberately not a station. Work is never queued in
+ * front of them — their job is to shrink the four queues that are drawn here,
+ * which is a different thing from being one of them.
+ */
 export const STEP_LABEL: Record<StepId, string> = {
-  intake: "Intake",
-  analysis: "Analysis",
-  dev: "Dev",
-  test: "Test",
-  deploy: "Deploy",
+  po: "Product Owner",
+  design: "Designer",
+  dev: "Developer",
+  qa: "QA",
+  review: "Reviewers",
 };
 
 /**
@@ -41,13 +58,17 @@ export const STEP_LABEL: Record<StepId, string> = {
  * asserted.
  */
 export const MODEL = {
-  /** Relative effort per step. Dev dominates; deploy is nearly free. */
+  /**
+   * Relative effort per role. The developer dominates; reading a pull request
+   * is the least of the five in hands-on minutes and, because it needs two
+   * people free at once, much the worst in waiting.
+   */
   STEP_WEIGHT: {
-    intake: 0.6,
-    analysis: 1.0,
+    po: 0.6,
+    design: 1.0,
     dev: 2.2,
-    test: 1.4,
-    deploy: 0.5,
+    qa: 1.4,
+    review: 0.5,
   } as Record<StepId, number>,
 
   /** Days of hands-on work per unit of weight per story point. */
@@ -58,10 +79,10 @@ export const MODEL = {
   QUEUE_K: 0.25,
 
   /**
-   * The last gap is the Pull Request gate. Under the Agile Delivery Protocol a
-   * merge needs two independent approvals, so this queue is both longer to
-   * start with and steeper in batch size — a big change is harder to get two
-   * people to read.
+   * The last gap is the queue in front of the reviewers. Under the Agile
+   * Delivery Protocol a merge needs two independent approvals, so this queue
+   * is both longer to start with and steeper in batch size — a big change is
+   * harder to get two people to read.
    */
   PR_QUEUE_BASE: 1.2,
   PR_QUEUE_K: 0.55,
@@ -173,7 +194,7 @@ export function wallSeconds(
 export function buildSchedule(
   mode: ProcessMode,
   sp: StoryPoint,
-  startStep: StepId = "intake",
+  startStep: StepId = "po",
 ): Schedule {
   const steps = stepsFrom(startStep);
   const offset = STEP_IDS.indexOf(startStep);
@@ -236,7 +257,7 @@ export function buildSchedule(
 }
 
 /** Both modes for the same story point — what the 2D readout displays. */
-export function compare(sp: StoryPoint, startStep: StepId = "intake") {
+export function compare(sp: StoryPoint, startStep: StepId = "po") {
   const traditional = buildSchedule("traditional", sp, startStep);
   const aiDriven = buildSchedule("ai-driven", sp, startStep);
   return {

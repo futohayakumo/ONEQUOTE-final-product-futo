@@ -1,13 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { STORY_POINTS, compare } from "../model/processModel";
-import type { StoryPoint } from "@/types/process-scene";
 import { ArrowRight } from "../../icons/ArrowRight";
 import { useT } from "../../shell/LocaleProvider";
-import { GapChart } from "./GapChart";
-import { OutcomeCards } from "./OutcomeCards";
 import { QualityEvidence } from "./QualityEvidence";
 import { SimulationPanel } from "./SimulationPanel";
 
@@ -26,8 +21,6 @@ const WHY = ["handoffs", "gates", "stages"] as const;
 
 export function ProcessScreen() {
   const t = useT();
-  const [sp, setSp] = useState<StoryPoint>(8);
-  const result = useMemo(() => compare(sp), [sp]);
 
   return (
     <div className="flex flex-col">
@@ -66,7 +59,7 @@ export function ProcessScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/scenes/01-team-planning-room.png"
-            alt={t("process.outcome.alt")}
+            alt={t("process.hero.alt")}
             className="w-full rounded-card"
           />
           <p className="border-l-2 border-charcoal pl-5 type-label">
@@ -78,30 +71,11 @@ export function ProcessScreen() {
       {/* ── Two ways ─────────────────────────────────────────── */}
       <section className="border-t border-border bg-studio">
         <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <h2 className="type-page">{t("process.two.title")}</h2>
-              <p className="mt-3 max-w-[52ch] type-body text-muted">
-                {t("process.two.lede")}
-              </p>
-            </div>
-
-            <label className="flex shrink-0 flex-col gap-2 border-l border-border pl-6">
-              <span className="sr-only">{t("process.sp.a11y")}</span>
-              <select
-                value={sp}
-                onChange={(e) =>
-                  setSp(Number(e.target.value) as StoryPoint)
-                }
-                className="w-28 border border-control bg-studio px-4 py-2.5 type-label tnum rounded-card shadow-card"
-              >
-                {STORY_POINTS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div>
+            <h2 className="type-page">{t("process.two.title")}</h2>
+            <p className="mt-3 max-w-[52ch] type-body text-muted">
+              {t("process.two.lede")}
+            </p>
           </div>
 
           <div className="grid gap-10 lg:grid-cols-2">
@@ -152,37 +126,6 @@ export function ProcessScreen() {
           and the model is read as the mechanism behind it. */}
       <QualityEvidence />
 
-      {/* ── Outcome ──────────────────────────────────────────── */}
-      <section id="outcome" className="border-t border-border">
-        <div className="mx-auto flex max-w-[86rem] flex-col gap-10 px-6 py-20">
-          <div>
-            <h2 className="type-page">
-              {t("process.outcome.title")}
-            </h2>
-            <p className="mt-3 max-w-[56ch] type-body text-muted">
-              {t("process.outcome.lede", {
-                sp,
-                ratio: result.ratio.toFixed(1),
-              })}
-            </p>
-            {/* Said here rather than in a footnote. The queueing model is a
-                model; the measurements are in the section above it, and the
-                reader should know which they are looking at. */}
-            <p className="mt-3 max-w-[56ch] type-caption">
-              {t("process.outcome.caveat")}
-            </p>
-          </div>
-
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
-            <OutcomeCards
-              traditional={result.traditional}
-              aiDriven={result.aiDriven}
-            />
-            <GapChart />
-          </div>
-        </div>
-      </section>
-
       <SimulationPanel />
 
       {/* ── Why waiting happens ──────────────────────────────── */}
@@ -194,14 +137,28 @@ export function ProcessScreen() {
               {t("process.why.title")}
             </h2>
           </div>
-          <ul className="grid gap-8 sm:grid-cols-3">
+          <ul className="grid gap-10 sm:grid-cols-3">
             {WHY.map((k) => (
-              <li
-                key={k}
-                className="flex flex-col gap-2 border-t border-border pt-5"
-              >
-                <h3 className="type-label">{t(`process.why.${k}`)}</h3>
-                <p className="type-caption">{t(`process.why.${k}Body`)}</p>
+              <li key={k} className="flex flex-col gap-4">
+                {/*
+                  A fixed box with `object-contain`, not a natural size. The
+                  three cut-outs came back at three different aspect ratios,
+                  and laid out at their own sizes the tallest one pushed its
+                  heading half a line below the other two — three cards that
+                  are the same card have to start on the same line.
+                */}
+                <div className="flex aspect-[4/3] w-full items-end justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/assets/scenes/why-${k}.png`}
+                    alt={t(`process.why.${k}Alt`)}
+                    className="max-h-full w-auto max-w-full object-contain"
+                  />
+                </div>
+                <div className="flex flex-col gap-2 border-t border-border pt-5">
+                  <h3 className="type-label">{t(`process.why.${k}`)}</h3>
+                  <p className="type-caption">{t(`process.why.${k}Body`)}</p>
+                </div>
               </li>
             ))}
           </ul>
@@ -247,6 +204,13 @@ export function ProcessScreen() {
               {t("process.forward.lede")}
             </p>
           </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/scenes/forward-deciding.png"
+            alt={t("process.forward.alt")}
+            className="w-52 shrink-0 lg:w-64"
+          />
+
           <Link
             href="/process/quiz"
             className="inline-flex items-center gap-3 border border-charcoal bg-charcoal px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-crimson hover:bg-crimson"

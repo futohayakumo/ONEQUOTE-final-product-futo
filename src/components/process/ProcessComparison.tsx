@@ -76,7 +76,7 @@ export function ProcessComparison() {
     waitElapsedDays: 0,
     elapsedDays: 0,
     sp: null,
-    startStep: "intake",
+    startStep: "po",
     queues: [3, 3, 3, 5],
   });
   const [announcement, setAnnouncement] = useState("");
@@ -178,7 +178,7 @@ export function ProcessComparison() {
           const d = Math.hypot(a.x - local.x, a.y - local.y);
           if (!best || d < best.d) best = { id: a.id, d };
         }
-        place(held, (best?.id as StepId) ?? "intake");
+        place(held, (best?.id as StepId) ?? "po");
       };
 
       target.addEventListener("pointermove", move);
@@ -212,7 +212,7 @@ export function ProcessComparison() {
             waitElapsedDays: 0,
             elapsedDays: 0,
             sp: null,
-            startStep: "intake",
+            startStep: "po",
             queues: [3, 3, 3, 5],
           });
         }}
@@ -317,6 +317,13 @@ export function ProcessComparison() {
         />
       </div>
 
+      {/* Why the floor is laid out by role rather than by stage. It sits here,
+          above the list of the five, because the first thing a reader does
+          with five desks is ask whose they are. */}
+      <p className="max-w-[80ch] border-l-2 border-charcoal pl-5 type-caption">
+        {t("sim.roles.note")}
+      </p>
+
       {/* Below lg the five cards cannot sit over the model without colliding,
           so the same content becomes a vertical list under it. */}
       <StationList
@@ -337,7 +344,7 @@ export function ProcessComparison() {
           // Keyboard / click path: arming then choosing a step, so the screen
           // is fully usable without ever performing a drag (WCAG 2.5.7).
           if (armed === sp) {
-            place(sp, "intake");
+            place(sp, "po");
           } else {
             setArmed(sp);
             setAnnouncement(t("sim.announce.selected", { sp }));
@@ -365,7 +372,7 @@ export function ProcessComparison() {
           </span>
           <button
             type="button"
-            onClick={() => place(armed, "intake")}
+            onClick={() => place(armed, "po")}
             className="border border-border bg-studio px-3 py-2 type-caption rounded-sharp transition-colors duration-150 hover:border-crimson hover:text-crimson"
           >
             {t("sim.armed.start")}

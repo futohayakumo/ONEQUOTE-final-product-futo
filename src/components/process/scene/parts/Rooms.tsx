@@ -25,11 +25,11 @@ import {
 } from "./Fixtures";
 
 const SCREEN_KIND: Record<StepId, string> = {
-  intake: "intake",
-  analysis: "chart",
+  po: "po",
+  design: "chart",
   dev: "code",
-  test: "check",
-  deploy: "cloud",
+  qa: "check",
+  review: "cloud",
 };
 
 /**

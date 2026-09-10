@@ -90,7 +90,7 @@ const ProcessScene = forwardRef<ProcessSceneHandle, ProcessSceneProps>(
      */
     const dropItem = useCallback(
       (sp: StoryPoint, step?: StepId) => {
-        const id = runtime.spawn(sp, step ?? "intake");
+        const id = runtime.spawn(sp, step ?? "po");
         invalidateRef.current();
         return id;
       },

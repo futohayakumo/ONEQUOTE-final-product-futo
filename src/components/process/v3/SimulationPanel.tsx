@@ -63,7 +63,22 @@ export function SimulationPanel() {
           ) : null}
         </div>
 
-        {open ? <ProcessComparison /> : null}
+        {/*
+          Before the chunk is asked for, the band shows what is inside it. A
+          section whose entire body is a button reads as a dead end, and the
+          floor plan is the argument anyway: five desks with work stacked
+          between them, one loop with none.
+        */}
+        {open ? (
+          <ProcessComparison />
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src="/assets/scenes/sim-floor-model.png"
+            alt={t("process.sim.alt")}
+            className="w-full"
+          />
+        )}
       </div>
     </section>
   );

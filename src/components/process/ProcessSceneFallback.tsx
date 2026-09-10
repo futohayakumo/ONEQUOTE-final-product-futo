@@ -216,7 +216,7 @@ export const ProcessSceneFallback = forwardRef<
 
   const dropItem = useCallback(
     (sp: StoryPoint, step?: StepId) => {
-      const startStep: StepId = step ?? hovered ?? "intake";
+      const startStep: StepId = step ?? hovered ?? "po";
       const s = buildSchedule(mode, sp, startStep);
 
       let acc = 0;

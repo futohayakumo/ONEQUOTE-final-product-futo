@@ -97,18 +97,18 @@ test("traditional carries queue wait; ai-driven carries none", () => {
 });
 
 test("entering later in the pipeline shortens the run, in BOTH rooms", () => {
-  const full = buildSchedule("traditional", 3, "intake").totalDays;
+  const full = buildSchedule("traditional", 3, "po").totalDays;
   const late = buildSchedule("traditional", 3, "dev").totalDays;
   assert.ok(late < full);
 
   // The AI room used to return an identical total wherever you entered, which
   // made the advantage ratio move for a reason unrelated to the argument.
-  const aiFull = buildSchedule("ai-driven", 3, "intake").totalDays;
+  const aiFull = buildSchedule("ai-driven", 3, "po").totalDays;
   const aiLate = buildSchedule("ai-driven", 3, "dev").totalDays;
   assert.ok(aiLate < aiFull, `ai ${aiLate} should be under ${aiFull}`);
   assert.deepEqual(
     buildSchedule("traditional", 3, "dev").perStep.map((s) => s.stepId),
-    ["dev", "test", "deploy"],
+    ["dev", "qa", "review"],
   );
 });
 

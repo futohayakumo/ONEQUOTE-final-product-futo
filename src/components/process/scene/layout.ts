@@ -18,11 +18,11 @@ import type { ProcessMode, StepId } from "@/types/process-scene";
 export const GROUND = { w: 22.5, d: 6.6 } as const;
 
 export const STEP_ORDER: readonly StepId[] = [
-  "intake",
-  "analysis",
+  "po",
+  "design",
   "dev",
-  "test",
-  "deploy",
+  "qa",
+  "review",
 ];
 
 export const STATION_X = [-7.2, -3.6, 0, 3.6, 7.2] as const;

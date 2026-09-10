@@ -14,7 +14,7 @@ export type ProcessMode = "traditional" | "ai-driven";
 
 export type StoryPoint = 0.5 | 1 | 2 | 3 | 5 | 8;
 
-export type StepId = "intake" | "analysis" | "dev" | "test" | "deploy";
+export type StepId = "po" | "design" | "dev" | "qa" | "review";
 
 /** Where a work item can physically be. Traditional uses the five steps; the
  *  AI-driven room uses the belt / checkpoint / console / truck stations. */

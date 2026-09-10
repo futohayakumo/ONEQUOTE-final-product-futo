@@ -30,12 +30,21 @@ export const AGENCY_KEY: Record<Agency, string> = {
   automated: "sim.badge.aiAutomation",
 };
 
+/**
+ * Five roles, not five stages — a queue forms in front of a person.
+ *
+ * The reviewers are the correction worth noting. This row used to be "deploy",
+ * automated in the AI room, which quietly said the approval rule goes away.
+ * It does not: the protocol requires two independent approvals in both rooms
+ * and the section further down this page says so. What the AI room changes is
+ * what the two reviewers are handed, not whether they are asked.
+ */
 export const STATIONS: Record<StepId, StationInfo> = {
-  intake: {
+  po: {
     no: 1,
-    agency: { traditional: "human", "ai-driven": "automated" },
+    agency: { traditional: "human", "ai-driven": "assisted" },
   },
-  analysis: {
+  design: {
     no: 2,
     agency: { traditional: "assisted", "ai-driven": "assisted" },
   },
@@ -43,13 +52,13 @@ export const STATIONS: Record<StepId, StationInfo> = {
     no: 3,
     agency: { traditional: "assisted", "ai-driven": "assisted" },
   },
-  test: {
+  qa: {
     no: 4,
     agency: { traditional: "assisted", "ai-driven": "automated" },
   },
-  deploy: {
+  review: {
     no: 5,
-    agency: { traditional: "human", "ai-driven": "automated" },
+    agency: { traditional: "human", "ai-driven": "assisted" },
   },
 };
 

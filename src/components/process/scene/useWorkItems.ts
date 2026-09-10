@@ -144,7 +144,7 @@ export class WorkItemRuntime {
   }
 
   spawn(sp: StoryPoint, step?: StepId): string {
-    const startStep = step ?? this.hoveredStep ?? "intake";
+    const startStep = step ?? this.hoveredStep ?? "po";
     const schedule = buildSchedule(this.mode, sp, startStep);
 
     const segments: Segment[] = [];

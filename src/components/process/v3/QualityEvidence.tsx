@@ -13,31 +13,11 @@ import {
   RECOVERY_EVIDENCE,
   SPEED_EVIDENCE,
   SPEED_GAP,
-  quality,
   type Evidence,
-  type QualityMode,
 } from "@/lib/quality";
 import { formatDecimal } from "@/lib/localeFormat";
 import { useLocale, useT } from "../../shell/LocaleProvider";
 import { Modal } from "../../ui/Modal";
-
-const MODES: readonly QualityMode[] = [
-  "traditional",
-  "ai-assisted",
-  "ai-with-qa",
-];
-
-function Bar({ value, max, tone }: { value: number; max: number; tone: string }) {
-  return (
-    <div className="h-2 w-full overflow-hidden bg-mist rounded-sharp">
-      <span
-        aria-hidden
-        className={tone}
-        style={{ width: `${(value / max) * 100}%`, display: "block", height: "100%" }}
-      />
-    </div>
-  );
-}
 
 function Sources({ rows }: { rows: readonly Evidence[] }) {
   const t = useT();
@@ -69,157 +49,118 @@ function Sources({ rows }: { rows: readonly Evidence[] }) {
 }
 
 /**
- * The trade, with its receipts.
+ * The trade, from one source only.
  *
- * The timing model on this page was invented — constants chosen to produce a
- * curve. This section is the answer to that, and it is deliberately not
- * flattering: the measured finding is that AI assistance buys lead time and
- * SELLS defect rate, and only the automated-review path beats the baseline on
- * both axes.
+ * This band had three cards on it — no assistant, assisted, assisted with an
+ * automated gate — reporting defects per thousand lines and a share caught
+ * before merge. Two of those columns were not ours. The per-kloc baseline came
+ * from a published benchmark and the catch rate from a review-tool evaluation,
+ * multiplied by our own factor, and the result was printed at the same size
+ * and in the same typeface as the two figures we actually measured. A reader
+ * had no way to tell which was which, and the honest answer to "where did
+ * 4.38 defects per thousand lines come from" is arithmetic, not a measurement.
  *
- * Two things are shown rather than smoothed. The sources disagree — the defect
- * penalty runs from 1.09× to 1.68× — so the spread is printed and the headline
- * is the median, which a reader can verify by counting rows. And nothing here
- * claims a threefold speed-up, because nothing measured one; the highest
- * published figure is about 1.8×.
+ * So the band now carries the internal report and nothing else: two measured
+ * multipliers, one figure derived from them by division, and a statement of
+ * what was never counted. Everything anybody else published — including the
+ * catch rates, which are genuinely interesting — sits behind the modal, where
+ * it is labelled as theirs.
  */
 export function QualityEvidence() {
   const t = useT();
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
-  const rows = MODES.map((mode) => quality(mode));
-  const maxEscape = Math.max(...rows.map((r) => r.escapedPerKloc));
-  const base = rows[0];
   const num = (n: number, digits = 2) => formatDecimal(n, locale, digits);
-  const pct = (n: number) => t("quality.pct", { n: Math.round(n * 100) });
+
+  /*
+   * All three are the internal figure or a consequence of it.
+   *
+   * The break-even catch rate is 1 - 1/5: if five times as many defects are
+   * written, a gate has to stop four of every five just to return the release
+   * to where it was without an assistant. No outside number enters that, which
+   * is why it can stand in this band — and it is a target, not an achievement.
+   */
+  const CARDS = [
+    {
+      key: "leadTime",
+      value: t("quality.times", { n: num(INTERNAL.speed) }),
+      params: {},
+    },
+    {
+      key: "defects",
+      value: t("quality.times", { n: num(INTERNAL.defects) }),
+      params: {},
+    },
+    {
+      key: "breakEven",
+      value: t("quality.pct", { n: Math.round(BREAK_EVEN_CATCH * 100) }),
+      params: { n: DEFECT_FACTOR },
+    },
+  ] as const;
 
   return (
     <section className="border-t border-border bg-studio">
       <div className="mx-auto flex max-w-[86rem] flex-col gap-12 px-6 py-20">
-        <div>
-          <p className="type-eyebrow">{t("quality.eyebrow")}</p>
-          <h2 className="mt-5 type-page">{t("quality.title")}</h2>
-          <p className="mt-3 max-w-[60ch] type-body text-muted">
-            {t("quality.lede")}
-          </p>
-          {/* The attribution is next to the claim, not in a footer. An internal
-              measurement is legitimate evidence and weaker evidence than a
-              multi-organisation study, and the reader should be able to weigh
-              it without going looking. */}
-          <p className="mt-4 max-w-[60ch] type-caption">
-            {t("quality.attr.pre", {
-              speed: INTERNAL.speed,
-              defects: INTERNAL.defects,
-            })}{" "}
-            <strong className="type-label">{t(INTERNAL.labelKey)}</strong>
-            {t("quality.attr.post", {
-              note: t(INTERNAL.noteKey),
-              pubSpeed: num(PUBLISHED_SPEED),
-              pubDefect: num(PUBLISHED_DEFECT),
-            })}{" "}
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="type-caption text-crimson underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
-            >
-              {t("quality.attr.link")}
-            </button>
-            .
-          </p>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {rows.map((row) => {
-            const worse = row.escapedPerKloc > base.escapedPerKloc;
-            return (
-              <div
-                key={row.mode}
-                className="flex flex-col gap-5 border border-border p-6 rounded-card shadow-card"
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-center">
+          <div>
+            <p className="type-eyebrow">{t("quality.eyebrow")}</p>
+            <h2 className="mt-5 type-page">{t("quality.title")}</h2>
+            <p className="mt-3 max-w-[60ch] type-body text-muted">
+              {t("quality.lede")}
+            </p>
+            {/* The attribution is next to the claim, not in a footer. One
+                source is named, and the fact that it is the ONLY source in
+                this band is part of the claim. */}
+            <p className="mt-4 max-w-[60ch] type-caption">
+              {t("quality.attr.pre", {
+                speed: INTERNAL.speed,
+                defects: INTERNAL.defects,
+              })}{" "}
+              <strong className="type-label">{t(INTERNAL.labelKey)}</strong>
+              {t("quality.attr.post", { note: t(INTERNAL.noteKey) })}{" "}
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="type-caption text-crimson underline underline-offset-4 transition-colors duration-150 hover:text-charcoal"
               >
-                <div>
-                  <h3 className="type-label">
-                    {t(`quality.mode.${row.mode}.title`)}
-                  </h3>
-                  <p className="mt-1 type-caption">
-                    {t(`quality.mode.${row.mode}.blurb`)}
-                  </p>
-                </div>
+                {t("quality.attr.link")}
+              </button>
+              .
+            </p>
+          </div>
 
-                <dl className="flex flex-col gap-4">
-                  <div>
-                    <dt className="type-caption">
-                      {t("quality.metric.leadTime")}
-                    </dt>
-                    <dd className="type-section tnum">
-                      {t("quality.times", { n: num(row.speed) })}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="type-caption">
-                      {t("quality.metric.written")}
-                    </dt>
-                    <dd className="type-label tnum">
-                      {num(row.defectsPerKloc)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="type-caption">
-                      {t("quality.metric.escaped")}
-                    </dt>
-                    <dd
-                      className={`type-page tnum ${worse ? "text-crimson" : ""}`}
-                    >
-                      {num(row.escapedPerKloc)}
-                    </dd>
-                    <dd className="mt-3">
-                      <Bar
-                        value={row.escapedPerKloc}
-                        max={maxEscape}
-                        tone={worse ? "bg-crimson" : "bg-charcoal"}
-                      />
-                    </dd>
-                  </div>
-                  {row.caught > 0 ? (
-                    <div>
-                      <dt className="type-caption">
-                        {t("quality.metric.caught")}
-                      </dt>
-                      <dd className="type-label tnum">{pct(row.caught)}</dd>
-                    </div>
-                  ) : null}
-                </dl>
-              </div>
-            );
-          })}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/scenes/quality-output-and-defect.png"
+            alt={t("quality.alt")}
+            className="w-full"
+          />
         </div>
 
-        <div className="flex flex-col gap-4 border-l-2 border-crimson pl-6">
-          <p className="max-w-[70ch] type-body">
-            {t("quality.body1", {
-              written: num(quality("ai-assisted").defectsPerKloc),
-              recovery: Math.round(RECOVERY * 100),
-            })}
-          </p>
-          <p className="max-w-[70ch] type-body">
-            <strong className="type-label">{t("quality.body2.strong")}</strong>{" "}
-            {t("quality.body2", {
-              factor: DEFECT_FACTOR,
-              breakEven: Math.round(BREAK_EVEN_CATCH * 100),
-              recovery: Math.round(RECOVERY * 100),
-              short: Math.round((BREAK_EVEN_CATCH - RECOVERY) * 100),
-            })}
-          </p>
+        <div className="grid gap-6 sm:grid-cols-3">
+          {CARDS.map((card) => (
+            <div
+              key={card.key}
+              className="flex flex-col gap-3 border border-border p-6 rounded-card shadow-card"
+            >
+              <h3 className="type-label">
+                {t(`quality.card.${card.key}.title`)}
+              </h3>
+              <p className="type-page tnum">{card.value}</p>
+              <p className="type-caption">
+                {t(`quality.card.${card.key}.body`, card.params)}
+              </p>
+            </div>
+          ))}
         </div>
+
         {/*
           The hole in the argument, printed at the same size as the argument.
 
-          Two figures were measured on this team — throughput and defect rate —
-          and the third, what the automated gate actually caught on OUR
-          delivery, was never counted. Everything the cards above say about the
-          `ai-with-qa` column therefore comes from somebody else's catch rate
-          applied to our injection rate. That is an assumption doing the work
-          of a measurement, and burying it in a footnote would make this
-          section exactly the thing it was built to answer.
+          Two things were measured on this team and a third never was: what the
+          automated gate actually stopped on our own delivery. Without it the
+          80% above is a target with nothing standing next to it, and saying so
+          here is cheaper than having a reader work it out.
         */}
         <div className="flex flex-col gap-4 border border-charcoal p-6 rounded-card">
           <h3 className="type-section">{t("quality.gap.title")}</h3>
@@ -227,7 +168,7 @@ export function QualityEvidence() {
             {t("quality.gap.body", {
               speed: INTERNAL.speed,
               defects: INTERNAL.defects,
-              recovery: Math.round(RECOVERY * 100),
+              breakEven: Math.round(BREAK_EVEN_CATCH * 100),
             })}
           </p>
         </div>
@@ -269,6 +210,27 @@ export function QualityEvidence() {
                 </span>
               </div>
             ))}
+          </div>
+
+          {/*
+            The catch-rate arithmetic lives in here rather than in the band,
+            because the catch rate is somebody else's measurement. It is stated
+            as a ratio so no invented per-thousand-line baseline is needed: at
+            a 5x injection rate a gate catching 73% still ships 1.37x what
+            writing the code by hand would have.
+          */}
+          <div className="flex flex-col gap-3 border-l-2 border-crimson pl-6">
+            <p className="max-w-[70ch] type-body">
+              <strong className="type-label">
+                {t("quality.modal.gate.strong")}
+              </strong>{" "}
+              {t("quality.modal.gate.body", {
+                factor: DEFECT_FACTOR,
+                breakEven: Math.round(BREAK_EVEN_CATCH * 100),
+                recovery: Math.round(RECOVERY * 100),
+                escape: num(DEFECT_FACTOR * (1 - RECOVERY)),
+              })}
+            </p>
           </div>
 
           <div
