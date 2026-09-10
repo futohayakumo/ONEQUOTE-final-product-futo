@@ -4,57 +4,71 @@ import Link from "next/link";
 import { ArrowRight } from "../icons/ArrowRight";
 import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
+import { QuoteGlance } from "./QuoteGlance";
 
-const RAIL = [
-  "home.rail.people",
-  "home.rail.systems",
-  "home.rail.logistics",
-  "home.rail.brighter",
-  "home.rail.tomorrow",
-];
-
+/**
+ * The statement on the left, the evidence for it on the right.
+ *
+ * The comp this follows put a container ship behind an angled edge on the right
+ * half, with the headline set large and dark on white to its left. That
+ * arrangement is kept, and so is the angle — it is the one strong geometric
+ * move on the page and it costs nothing but a clip.
+ *
+ * What changed is what sits in the right half. In the comp it was only the
+ * photograph, under the words MAKE PROGRESS. Neither says what this site does,
+ * and a hero that reads as an advertisement makes the real arithmetic further
+ * down the page read as decoration too. So the photograph stays as ground and a
+ * real quotation sits on it, priced on load from the same modules the business
+ * screen runs. Anyone can put a ship here. The card is the part that cannot be
+ * faked.
+ */
 export function Hero() {
   const t = useT();
   return (
-    <section className="relative isolate overflow-hidden bg-charcoal">
+    <section className="relative isolate overflow-hidden border-b border-border bg-studio">
       {/*
-        Plain <img>, not next/image: the app opts into a static export and has
-        no image optimiser at all, so the component would be a runtime this
-        build does not have.
+        The photograph, cut on the diagonal.
 
-        1672px wide against the ~2880 a full-bleed hero wants at 1440 CSS on a
-        2x screen. It will soften on a retina laptop. Flagged rather than
-        hidden — the alternative was leaving a grey plate here.
+        A clip, not a gradient — the one legal gradient on this site is a scrim
+        over a photograph, and this is an edge rather than a fade. Below `lg`
+        the angle is dropped and the picture goes full width behind the type,
+        because a 12-degree cut across a 375px viewport is a smudge.
       */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/assets/banners/01-port-vessel-berth.png"
-        alt=""
+      <div
         aria-hidden
-        className="absolute inset-0 -z-20 h-full w-full object-cover"
-      />
-      {/* Legible type over a photograph needs a ramp, not a flat wash: a flat
-          overlay dark enough for the copy would also flatten the picture. */}
-      <div aria-hidden className="absolute inset-0 -z-10 scrim-full" />
+        className="absolute inset-y-0 right-0 -z-20 hidden w-[56%] lg:block"
+        style={{ clipPath: "polygon(14% 0, 100% 0, 100% 100%, 0 100%)" }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/banners/01-port-vessel-berth.png"
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      </div>
 
-      <div className="mx-auto flex max-w-[86rem] items-center px-6 py-28">
-        <div className="max-w-[36rem]">
-          <p className="type-eyebrow text-crimson-lift">
+      <div className="mx-auto grid max-w-[86rem] items-center gap-12 px-6 py-16 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:gap-16 lg:py-24">
+        <div>
+          {/* A short crimson rule over the eyebrow. The comp opens every
+              section this way and it is the cheapest thing on it: one 2px
+              mark that tells the eye where a section starts. */}
+          <span aria-hidden className="block h-0.5 w-10 bg-crimson" />
+          <p className="mt-5 type-eyebrow">
             <Lines text={t("home.hero.eyebrow")} />
           </p>
 
-          <h1 className="mt-7 type-display text-studio">
+          <h1 className="mt-6 type-display">
             <Lines text={t("home.hero.title")} />
           </h1>
 
-          <p className="mt-8 max-w-[30rem] type-body text-border">
+          <p className="mt-7 max-w-[44ch] type-body text-muted">
             {t("home.hero.body")}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-7">
+          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
             <Link
               href="/business"
-              className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3.5 type-label text-studio rounded-card shadow-none transition-colors duration-150 hover:border-studio hover:bg-studio hover:text-charcoal"
+              className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3.5 type-label text-studio rounded-card shadow-none transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
             >
               {t("home.hero.cta")}
               <ArrowRight size={18} />
@@ -62,36 +76,19 @@ export function Hero() {
 
             <Link
               href="/process#simulation"
-              className="group inline-flex items-center gap-3 type-label text-studio"
+              className="inline-flex items-center gap-2.5 type-label underline underline-offset-4 transition-colors duration-150 hover:text-crimson-ink"
             >
-              <span
-                aria-hidden
-                className="flex h-9 w-9 items-center justify-center border-2 border-crimson rounded-full"
-              >
-                <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden>
-                  <path d="M0 0l10 6-10 6z" fill="var(--color-crimson)" />
-                </svg>
-              </span>
-              <span className="underline underline-offset-4 group-hover:text-crimson-lift">
-                {t("home.hero.play")}
-              </span>
+              {t("home.hero.play")}
+              <ArrowRight size={16} />
             </Link>
           </div>
         </div>
 
-        {/* The comps run a column of words up the right edge of the photograph.
-            It is texture, not navigation, so it is hidden rather than wrapped
-            once there is no room for it. */}
-        <ul
-          aria-hidden
-          className="ml-auto hidden shrink-0 flex-col gap-2 pl-10 text-right lg:flex"
-        >
-          {RAIL.map((key) => (
-            <li key={key} className="type-overline text-border">
-              {t(key)}
-            </li>
-          ))}
-        </ul>
+        {/* Sits over the seam on wide screens, and stands alone below `lg`
+            where the photograph is not drawn at all. */}
+        <div className="lg:justify-self-center">
+          <QuoteGlance />
+        </div>
       </div>
     </section>
   );
