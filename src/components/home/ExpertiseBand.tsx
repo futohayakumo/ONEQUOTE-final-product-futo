@@ -4,41 +4,38 @@ import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
 
 /**
- * A photograph cut on the opposite diagonal to the hero, with three words up
- * against its lower-left corner, and a dark label chip opening the copy on the
- * right. All three devices are from the comp.
+ * The port inside a vessel-shaped cut-out, and a dark label chip opening the
+ * copy beside it.
  *
- * The chip is the useful one: charcoal fill, studio type, and it gives a
- * heading a hard left edge to start from without inventing a rule weight.
+ * The three words that sat on the hull are gone. The chip is the device worth
+ * keeping: charcoal fill, studio type, and it gives a heading a hard left edge
+ * to start from without inventing a rule weight.
  */
 export function ExpertiseBand() {
   const t = useT();
   return (
-    <section className="bg-studio">
-      <div className="mx-auto grid max-w-[86rem] items-center gap-10 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
-        <div className="relative isolate">
-          {/* The port, inside a vessel-shaped cut-out. It arrives with its
-              own alpha channel, so there is no mask to maintain here and no
-              clip path to keep in step with the artwork. */}
+    <section className="overflow-hidden bg-studio">
+      <div className="mx-auto grid max-w-[86rem] items-center gap-10 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-12">
+        {/*
+          The cut-out runs off the left edge of the page.
+
+          `w-[125%]` with a matching negative margin is the whole mechanism: the
+          grid still reserves one column's worth of space, and the picture
+          simply draws wider than the box it was given. The section clips it, so
+          nothing scrolls sideways. The stern is the part that leaves — the
+          bridge, the cranes and the bow, which is everything worth looking at,
+          stay on the page.
+
+          It arrives with its own alpha channel, so there is no mask to maintain
+          here and no clip path to keep in step with the artwork.
+        */}
+        <div className="-ml-[18%] w-[118%] lg:-ml-[22%] lg:w-[125%]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/spot/17-vessel-silhouette.png"
             alt=""
             className="w-full"
           />
-          {/*
-            Placed in percentages, over the hull.
-
-            The cut-out has an alpha channel, so most of this box is the page
-            showing through and white type would simply vanish there. The band
-            from 5-35% across and 55-80% down is the containers and the hull:
-            98% opaque, mean luminance 63. Anchoring in percentages keeps the
-            words on that mass as the image scales, which a fixed bottom-left
-            offset did not — at this width it put them below the waterline.
-          */}
-          <p className="absolute left-[7%] top-[54%] z-10 max-w-[12ch] type-section text-studio sm:type-page">
-            <Lines text={t("home.expertise.over")} />
-          </p>
         </div>
 
         <div>

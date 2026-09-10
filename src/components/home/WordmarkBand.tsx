@@ -27,7 +27,20 @@ export function WordmarkBand() {
   if (usePathname() !== "/") return null;
 
   return (
-    <section className="bg-studio">
+    /*
+     * Pulled up under the footer rather than stacked below it.
+     *
+     * The top of the picture is transparent, so the footer's last rows read
+     * straight through it and the two do not so much meet as overlap. The
+     * negative margin is the whole mechanism: `relative` and a z-index are not
+     * needed, because a transparent pixel hides nothing.
+     *
+     * The section carries NO background of its own. It had `bg-studio`, which
+     * is an opaque white fill painted over the footer — so the picture's
+     * transparent top revealed that fill rather than the copyright line
+     * underneath it, and the overlap did nothing at all.
+     */
+    <section className="-mt-40 lg:-mt-52">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/banners/08-vessel-wordmark.jpg"

@@ -111,7 +111,15 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <p className="pb-10 text-center type-caption">
+      {/*
+        The line sits ON the poster's faded sky.
+
+        Which strip of the picture it lands on is (overlap − this padding), and
+        it has to come out inside the mask's ramp: past 19% the photograph is
+        opaque and the line simply disappears behind it, which is where the
+        first two attempts put it.
+      */}
+      <p className="pb-24 text-center type-caption lg:pb-32">
         {t("footer.copyright", { year: BRAND.year, brand: BRAND.full })}
       </p>
     </footer>

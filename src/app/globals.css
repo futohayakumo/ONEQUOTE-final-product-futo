@@ -507,13 +507,24 @@
  * picture's own top edge so a full-bleed band does not meet the page on a hard
  * horizontal line.
  *
- * It stops at 16%. The closing poster carries its lettering from 20% down, and
- * a fade that ran past that would eat the top of the letterforms — the seam
- * would be gone and the word would be broken instead.
+ * Two stops rather than one. The picture is invisible for the first 6%, which
+ * is the strip the footer is pulled down over, and then comes up to full by
+ * 19%. The closing poster carries its lettering from 20% down: the ramp has to
+ * finish before that or the seam is gone and the word is broken instead.
  */
 @utility photo-join-t {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 16%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 6%,
+    #000 19%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 6%,
+    #000 19%
+  );
 }
 
 @utility scrim-l {
