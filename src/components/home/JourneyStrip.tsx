@@ -6,23 +6,19 @@ import { useT } from "../shell/LocaleProvider";
 import { Lines } from "../ui/Lines";
 
 /**
- * Three photographs cut as pills, and a paragraph seated inside a large disc —
- * the comp's arrangement.
+ * Three tall pills and one very large disc, the disc overlapping the third
+ * pill and running off the right edge of the page.
  *
- * Both shapes are `rounded-full` resolving from the same `--radius-full` the
- * radio dots use. Nothing new: the pill is that radius on a 3:4 box, and the
- * disc is that radius on a square one.
+ * The disc is absolutely positioned rather than being the copy column's
+ * background, because it has to be far wider than the column and to sit
+ * *behind* the pill next to it. `left-[58%]` puts its own left edge back over
+ * that pill; being square and `rounded-full` at 46rem, roughly a third of it
+ * leaves the page on the right, which is what the reference draws.
  *
- * The disc sits UNDER the copy rather than beside it, and it is darker than
- * the page rather than lighter. The first cut had a studio disc on a canvas
- * ground — a shape lighter than what it sits on, which is a shape nobody can
- * see — and the paragraph fell outside it entirely.
- */
-/*
- * Three photographs of the same kind — a phone mid-quote, a laptop showing a
- * confirmation, a yard worker among the stacks. The row's one job is that they
- * read as one set, which is why the flat illustrations that stood in here
- * before did not work beside the third.
+ * The copy is held to `28rem` and centred in the visible part. A circle
+ * narrows towards its top and bottom, so a paragraph as wide as the disc's
+ * diameter would cross the curve and hang outside it — the one thing the
+ * reference is explicit about not wanting.
  */
 const STEPS = [
   { id: "quote", src: "/assets/scenes/11-quote-phone.jpg" },
@@ -34,46 +30,49 @@ export function JourneyStrip() {
   const t = useT();
   return (
     <section className="relative isolate overflow-hidden border-t border-border bg-studio">
-      <div className="mx-auto grid max-w-[86rem] items-center gap-12 px-6 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
-        <ol className="grid gap-6 sm:grid-cols-3">
-          {STEPS.map((step) => (
-            <li key={step.id} className="flex flex-col">
-              <div className="overflow-hidden bg-studio rounded-full shadow-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={step.src}
-                  alt=""
-                  className="aspect-[3/4] w-full object-cover"
-                />
-              </div>
-              <h3 className="mt-5 type-section">{t(`home.journey.${step.id}`)}</h3>
-              <p className="mt-2 type-caption">
-                {t(`home.journey.${step.id}Body`)}
-              </p>
-            </li>
-          ))}
-        </ol>
+      <div className="relative mx-auto max-w-[86rem] px-6 py-20">
+        {/* Sits under everything in the band, including the third pill. */}
+        <div
+          aria-hidden
+          className="absolute top-1/2 left-[58%] -z-10 hidden h-[46rem] w-[46rem] -translate-y-1/2 bg-mist rounded-full lg:block"
+        />
 
-        {/* The disc is the copy's own ground, so it moves with the column and
-            cannot drift off it at some width. `-inset-*` lets it bleed past
-            the text on every side without changing what the grid reserves. */}
-        <div className="relative isolate">
-          <div
-            aria-hidden
-            className="absolute -inset-x-10 -inset-y-16 -z-10 hidden bg-mist rounded-full lg:block"
-          />
-          <span aria-hidden className="block h-0.5 w-10 bg-crimson" />
-          <h2 className="mt-5 type-page">
-            <Lines text={t("home.journey.title")} />
-          </h2>
-          <p className="mt-4 type-body text-muted">{t("home.journey.body")}</p>
-          <Link
-            href="/business"
-            className="mt-6 inline-flex items-center gap-2.5 type-label text-crimson transition-colors duration-150 hover:text-charcoal"
-          >
-            {t("home.journey.link")}
-            <ArrowRight size={16} />
-          </Link>
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.95fr)_minmax(0,1fr)] lg:gap-6">
+          <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
+            {STEPS.map((step) => (
+              <li key={step.id} className="flex flex-col">
+                <div className="overflow-hidden bg-studio rounded-full shadow-card">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={step.src}
+                    alt=""
+                    className="aspect-[1/2] w-full object-cover"
+                  />
+                </div>
+                <h3 className="mt-6 type-section">
+                  {t(`home.journey.${step.id}`)}
+                </h3>
+                <p className="mt-2 type-caption">
+                  {t(`home.journey.${step.id}Body`)}
+                </p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="max-w-[28rem] lg:pl-6">
+            <span aria-hidden className="block h-0.5 w-10 bg-crimson" />
+            <h2 className="mt-5 type-page">
+              <Lines text={t("home.journey.title")} />
+            </h2>
+            <p className="mt-4 type-body text-muted">{t("home.journey.body")}</p>
+            <Link
+              href="/business"
+              className="mt-6 inline-flex items-center gap-2.5 type-label text-crimson transition-colors duration-150 hover:text-charcoal"
+            >
+              {t("home.journey.link")}
+              <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </div>
     </section>
