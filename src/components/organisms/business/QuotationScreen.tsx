@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { calculateQuote, validateQuote } from "@/lib/pricing";
+import { fetchQuotation, type RemoteQuotation } from "@/lib/quotationApi";
 import { sailingsFor } from "@/lib/sailings";
 import {
   INCOTERM_ORDER,
@@ -39,6 +40,16 @@ export function QuotationScreen() {
    */
   const t = useT();
   const { locale } = useLocale();
+
+  /*
+   * The service's answer for the same inputs, if the service is there.
+   *
+   * "unknown" until the first response or the first timeout; "offline" when
+   * nothing answered in time; otherwise the response. The ticket is drawn
+   * from the local calculation regardless — this only adds the ECB line and
+   * a note saying where the numbers came from.
+   */
+  const [remote, setRemote] = useState<RemoteQuotation | null | "unknown">("unknown");
 
   // pricing.ts owns the rules and the limit. The screen used to restate both,
   // so changing MAX_CBM moved the constant and the tested validator while the
@@ -97,6 +108,32 @@ export function QuotationScreen() {
    * the reader is looking at, not a re-derivation that could drift if the
    * ticket's arguments ever change shape.
    */
+  useEffect(() => {
+    const ctrl = new AbortController();
+    // Reset inside the promise chain rather than synchronously: the "unknown"
+    // state only needs to hold for as long as the request is in flight, and
+    // the lint rule is right that a sync setState here cascades.
+    Promise.resolve().then(() => {
+      if (!ctrl.signal.aborted) setRemote("unknown");
+    });
+    fetchQuotation(
+      {
+        pol: query.pol,
+        pod: query.pod,
+        cbm: query.cbm === "" ? 1 : query.cbm,
+        containerType: query.containerType,
+        tier: query.tier,
+        incoterm,
+        sailingId: selected.id,
+        alsoIn: ["JPY", "EUR"],
+      },
+      ctrl.signal,
+    ).then((r) => {
+      if (!ctrl.signal.aborted) setRemote(r);
+    });
+    return () => ctrl.abort();
+  }, [query, incoterm, selected.id]);
+
   const sections = chargeSections({
     pol: query.pol,
     pod: query.pod,
@@ -157,6 +194,7 @@ export function QuotationScreen() {
         containerType={query.containerType}
         incoterm={incoterm}
         locale={locale}
+        remote={remote}
       />
 
       <QuoteDocument

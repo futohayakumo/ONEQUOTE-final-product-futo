@@ -15,6 +15,7 @@ import {
   chargeSections,
   type Incoterm,
 } from "@/lib/charges";
+import type { RemoteQuotation } from "@/lib/quotationApi";
 import { t, type Locale } from "@/lib/i18n";
 import { CONTAINERS, LOYALTY_TIERS, PORTS } from "@/lib/pricing";
 import { Flag } from "../../atoms/Flag";
@@ -41,6 +42,50 @@ import type { ContainerType, PortCode, QuoteResult } from "@/types/quote";
  * hiding it would make the same shipment look cheaper under EXW than under DDP,
  * which is exactly the confusion Incoterms exist to prevent.
  */
+function RemoteLine({
+  remote,
+  allIn,
+  locale,
+}: {
+  remote: RemoteQuotation | null | "unknown";
+  allIn: number;
+  locale: Locale;
+}) {
+  if (remote === "unknown") return null;
+  if (remote === null) {
+    return (
+      <p className="border-t border-border pt-3 type-caption">
+        {t("quote.remote.offline", locale)}
+      </p>
+    );
+  }
+  const ccy = locale === "ja" ? "JPY" : "EUR";
+  const fx = remote.alsoIn[ccy];
+  const agrees = Math.abs(remote.selected.allIn - allIn) < 0.005;
+  return (
+    <div className="flex flex-col gap-1 border-t border-border pt-3">
+      {fx ? (
+        <p className="flex items-baseline justify-between gap-6">
+          <span className="type-caption">{t("quote.remote.alsoIn", locale, { ccy })}</span>
+          <span className="type-label tnum">
+            {ccy === "JPY"
+              ? `¥${formatMoney(Math.round(fx.value), locale).replace(/[.,]00$/, "")}`
+              : `€${formatMoney(fx.value, locale)}`}
+          </span>
+        </p>
+      ) : null}
+      <p className="type-caption">
+        {agrees
+          ? t("quote.remote.agrees", locale, { ref: remote.reference })
+          : t("quote.remote.differs", locale, { ref: remote.reference })}
+        {fx
+          ? " " + t("quote.remote.fx", locale, { asOf: fx.asOf, source: fx.source.toUpperCase() })
+          : ""}
+      </p>
+    </div>
+  );
+}
+
 export function QuoteTicket({
   quote,
   sailing,
@@ -49,6 +94,7 @@ export function QuoteTicket({
   containerType,
   incoterm,
   locale = "en",
+  remote = null,
 }: {
   quote: QuoteResult;
   sailing: Sailing;
@@ -57,6 +103,8 @@ export function QuoteTicket({
   containerType: ContainerType;
   incoterm: Incoterm;
   locale?: Locale;
+  /** The service's answer for the same inputs; null when it is not there. */
+  remote?: RemoteQuotation | null | "unknown";
 }) {
   const sections = chargeSections({
     pol,
@@ -303,6 +351,14 @@ export function QuoteTicket({
         <p className="type-caption">
           {t("quote.totalsNote", locale, { code: incoterm })}
         </p>
+
+        {/*
+          The one line the browser cannot produce on its own: the all-in total
+          in the reader's currency at a rate the ECB actually published, from
+          the quotation service. Absent when the service is not running, and
+          it says so rather than showing a rate it made up.
+        */}
+        <RemoteLine remote={remote} allIn={allIn} locale={locale} />
         <p className="type-caption tnum">
           {quote.teuAccrued} TEU ·{" "}
           {t("quote.nextMilestone", locale, { teu: quote.nextMilestoneTeu })}
