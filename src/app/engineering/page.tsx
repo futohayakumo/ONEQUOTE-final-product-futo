@@ -1,22 +1,25 @@
 import { DocumentLocale } from "@/components/shell/DocumentLocale";
 import { t } from "@/lib/i18n";
-import { EngineeringScreen } from "@/components/engineering/EngineeringScreen";
-import { PlatformNote } from "@/components/flow/PlatformNote";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { JourneyTrack } from "@/components/engineering/JourneyTrack";
+import { TechnicalDetail } from "@/components/engineering/TechnicalDetail";
+import { WhySplit } from "@/components/engineering/WhySplit";
 
 export const metadata = { title: `${t("meta.engineering")} — ${t("meta.site")}` };
 
+/**
+ * Story first, diagram after.
+ *
+ * The journey is full-bleed because it pins and slides; the other two bands
+ * carry their own container. No shared padded <main>, or the pinned viewport
+ * would be narrower than the window it is pinned to.
+ */
 export default function EngineeringPage() {
   return (
-    <main className="mx-auto flex max-w-[86rem] flex-col gap-14 px-6 py-16">
+    <main className="flex flex-col">
       <DocumentLocale titleKey="meta.engineering" />
-      <PageHeader
-        eyebrowKey="eng.eyebrow"
-        titleKey="eng.title"
-        ledeKey="eng.lede"
-      />
-      <EngineeringScreen />
-      <PlatformNote />
+      <JourneyTrack />
+      <WhySplit />
+      <TechnicalDetail />
     </main>
   );
 }

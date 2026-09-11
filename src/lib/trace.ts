@@ -55,6 +55,10 @@ export interface TraceHop {
   at: string;
   /** Time spent inside this service. */
   ms: number;
+  /** Entry, as milliseconds from the first entry. The journey track reads
+   *  this to run its clock, so it comes from the same walk as everything else
+   *  rather than being re-added from `ms` somewhere that forgets transport. */
+  offsetMs: number;
 }
 
 export interface LogLine {
@@ -97,7 +101,14 @@ export function buildTrace(
 
   route.forEach((id, i) => {
     if (i > 0) t += TRANSPORT_MS;
-    hops.push({ id, label: labelOf(id), hop: i + 1, at: clock(t), ms: serviceMs(id) });
+    hops.push({
+      id,
+      label: labelOf(id),
+      hop: i + 1,
+      at: clock(t),
+      ms: serviceMs(id),
+      offsetMs: t - start,
+    });
     log.push({
       at: clock(t),
       message: `Entering ${labelOf(id)}`,
