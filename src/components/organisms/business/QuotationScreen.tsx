@@ -1,118 +1,122 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { calculateQuote, validateQuote } from "@/lib/pricing";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { allInTotal, chargeSections } from "@/lib/charges";
+import { calculateQuote, emptyRow, validateQuote } from "@/lib/pricing";
 import { fetchQuotation, type RemoteQuotation } from "@/lib/quotationApi";
-import { sailingsFor } from "@/lib/sailings";
-import {
-  INCOTERM_ORDER,
-  INCOTERMS,
-  allInTotal,
-  chargeSections,
-  type Incoterm,
-} from "@/lib/charges";
+import { optionsFrom, scheduleFor, type Sailing } from "@/lib/sailings";
+import { NO_VAS, type VasSelection } from "@/lib/vas";
+import type { QuoteInput } from "@/types/quote";
+import { ArrowRight } from "../../atoms/icons/ArrowRight";
 import { useLocale, useT } from "../../providers/LocaleProvider";
+import { OptionsList } from "./OptionsList";
 import { QuoteDocument } from "./QuoteDocument";
 import { QuoteTicket } from "./QuoteTicket";
-import { SailingList } from "./SailingList";
 import { SearchPanel, type SearchState } from "./SearchPanel";
+import { VasPanel } from "./VasPanel";
+
+/**
+ * The three pages of the real ONE QUOTE flow, on one screen.
+ *
+ * Page one is the form. Page two, the options for the chosen departure,
+ * appears under it on search. Page three — the accepted option restated,
+ * the value-added services, the ticket and the document — appears under
+ * that on accept. One route, statically rendered, and a reader who lands
+ * here sees the form first, which is what the product does too.
+ */
 
 const INITIAL: SearchState = {
   pol: "JPYOK",
   pod: "SGSIN",
-  containerType: "20GP",
+  containers: [emptyRow("DRY20")],
+  commodity: "GENERAL",
   tier: "SILVER_SAIL",
-  cbm: 90 as number | "",
+  originScope: "CY",
+  destinationScope: "CY",
+  etdOffset: 0,
+};
+
+/** The form as a strict input, once validation has passed. */
+type Strict = QuoteInput & {
+  pol: Exclude<QuoteInput["pol"], "">;
+  pod: Exclude<QuoteInput["pod"], "">;
+  commodity: Exclude<QuoteInput["commodity"], "">;
+  tier: Exclude<QuoteInput["tier"], "">;
+  etdOffset: number;
 };
 
 export function QuotationScreen() {
   const [form, setForm] = useState<SearchState>(INITIAL);
-  const [query, setQuery] = useState<SearchState>(INITIAL);
-  const [sailingId, setSailingId] = useState<string>("");
-  const [incoterm, setIncoterm] = useState<Incoterm>("FOB");
-  /*
-   * The locale comes from the nav, not from this screen.
-   *
-   * There was a second <select> right here, which is how the site ended up
-   * with two language controls that disagreed: switching in the nav left the
-   * ticket English, and switching here left the rest of the page English.
-   * One control, one locale.
-   */
+  const [query, setQuery] = useState<Strict | null>(null);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [accepted, setAccepted] = useState(false);
+  const [vas, setVas] = useState<VasSelection>(NO_VAS);
+  const [remote, setRemote] = useState<RemoteQuotation | null | "unknown">("unknown");
   const t = useT();
   const { locale } = useLocale();
+  const optionsRef = useRef<HTMLDivElement | null>(null);
+  const confirmRef = useRef<HTMLDivElement | null>(null);
+
+  const errors = validateQuote(form);
+  const firstError =
+    errors.pol ?? errors.pod ?? errors.containers ?? errors.commodity ?? errors.tier ?? errors.etd ?? null;
+  const errorText = firstError ? t(firstError.key, firstError.vars) : null;
 
   /*
-   * The service's answer for the same inputs, if the service is there.
-   *
-   * "unknown" until the first response or the first timeout; "offline" when
-   * nothing answered in time; otherwise the response. The ticket is drawn
-   * from the local calculation regardless — this only adds the ECB line and
-   * a note saying where the numbers came from.
+   * The calendar's price chips: the cheapest all-in on a day, for the
+   * containers and scope as currently typed. Recomputed from the form, not
+   * the query, so the chips answer "what would this cost" before search.
    */
-  const [remote, setRemote] = useState<RemoteQuotation | null | "unknown">("unknown");
+  const formIsPriceable =
+    !!form.pol && !!form.pod && form.pol !== form.pod && !!form.commodity && !!form.tier;
+  const draft = formIsPriceable ? calculateQuote(form as Strict) : null;
+  const priceForDay = (etdOffset: number): number | null => {
+    if (!draft) return null;
+    const day = scheduleFor(draft.pol, draft.pod).filter((s) => s.etdOffset === etdOffset);
+    if (!day.length) return null;
+    return Math.min(
+      ...day.map((s) =>
+        allInTotal(
+          chargeSections({
+            pol: draft.pol,
+            pod: draft.pod,
+            rows: draft.rows,
+            originScope: draft.originScope,
+            destinationScope: draft.destinationScope,
+            oceanFreight: draft.oceanFreight * s.rateFactor,
+          }),
+        ),
+      ),
+    );
+  };
 
-  // pricing.ts owns the rules and the limit. The screen used to restate both,
-  // so changing MAX_CBM moved the constant and the tested validator while the
-  // two live copies -- this comparison and the input's max -- stayed at 2000.
-  const errors = validateQuote({ ...form, cbm: form.cbm === "" ? "" : form.cbm });
-  const error = errors.pod ?? errors.cbm ?? null;
-  const errorText = error ? t(error.key, error.vars) : null;
-
-  const sailings = useMemo(
-    () => sailingsFor(query.pol, query.pod),
-    [query.pol, query.pod],
-  );
-
-  const quote = useMemo(
-    () =>
-      calculateQuote({
-        pol: query.pol,
-        pod: query.pod,
-        cbm: query.cbm === "" ? 1 : query.cbm,
-        containerType: query.containerType,
-        tier: query.tier,
-      }),
+  const quote = useMemo(() => (query ? calculateQuote(query) : null), [query]);
+  const options = useMemo<Sailing[]>(
+    () => (query ? optionsFrom(query.pol, query.pod, query.etdOffset) : []),
     [query],
   );
-
-  // Falling back to the recommended sailing rather than storing it means a new
-  // search never leaves a selection pointing at a sailing on the old lane.
   const selected =
-    sailings.find((s) => s.id === sailingId) ??
-    sailings.find((s) => s.recommended) ??
-    sailings[0];
+    options.find((s) => s.id === selectedId) ?? options.find((s) => s.recommended) ?? options[0];
 
-  // The SAME figure the ticket prints as its all-in total, built by the same
-  // function from the same arguments. It used to be pricing.ts's `total` —
-  // freight, THC, documentation and BAF — while the ticket below itemised
-  // origin, ocean and destination in full, so a reader saw $4,008 on the
-  // card and $4,937 on the invoice for one sailing and had no way to know
-  // which was the price. Two formulas for one number is two numbers.
-  const priceFor = (s: (typeof sailings)[number]) =>
-    allInTotal(
-      chargeSections({
-        pol: query.pol,
-        pod: query.pod,
-        containerType: query.containerType,
-        units: quote.units,
-        oceanFreight: quote.oceanFreight * s.rateFactor,
-        incoterm,
-      }),
-    );
+  const sections = useMemo(
+    () =>
+      quote && selected
+        ? chargeSections({
+            pol: quote.pol,
+            pod: quote.pod,
+            rows: quote.rows,
+            originScope: quote.originScope,
+            destinationScope: quote.destinationScope,
+            oceanFreight: quote.oceanFreight * selected.rateFactor,
+          })
+        : null,
+    [quote, selected],
+  );
 
-  /*
-   * The charge sections, built here and passed to both renderings.
-   *
-   * The ticket derives them from the same three arguments, so a second call is
-   * not a second source of truth — but the document must be the SAME object
-   * the reader is looking at, not a re-derivation that could drift if the
-   * ticket's arguments ever change shape.
-   */
+  // The service's answer for the accepted option, when the service is there.
   useEffect(() => {
+    if (!query || !selected || !accepted) return;
     const ctrl = new AbortController();
-    // Reset inside the promise chain rather than synchronously: the "unknown"
-    // state only needs to hold for as long as the request is in flight, and
-    // the lint rule is right that a sync setState here cascades.
     Promise.resolve().then(() => {
       if (!ctrl.signal.aborted) setRemote("unknown");
     });
@@ -120,11 +124,14 @@ export function QuotationScreen() {
       {
         pol: query.pol,
         pod: query.pod,
-        cbm: query.cbm === "" ? 1 : query.cbm,
-        containerType: query.containerType,
+        containers: query.containers,
+        commodity: query.commodity,
         tier: query.tier,
-        incoterm,
+        originScope: query.originScope,
+        destinationScope: query.destinationScope,
+        etdOffset: query.etdOffset,
         sailingId: selected.id,
+        vas,
         alsoIn: ["JPY", "EUR"],
       },
       ctrl.signal,
@@ -132,77 +139,81 @@ export function QuotationScreen() {
       if (!ctrl.signal.aborted) setRemote(r);
     });
     return () => ctrl.abort();
-  }, [query, incoterm, selected.id]);
+  }, [query, selected, accepted, vas]);
 
-  const sections = chargeSections({
-    pol: query.pol,
-    pod: query.pod,
-    containerType: query.containerType,
-    units: quote.units,
-    oceanFreight: quote.oceanFreight * selected.rateFactor,
-    incoterm,
-  });
+  const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) =>
+    requestAnimationFrame(() =>
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
 
   return (
     <div className="flex flex-col gap-14">
       <SearchPanel
         value={form}
         error={errorText}
-        onChange={setForm}
-        onSearch={() => {
-          if (error) return;
-          setQuery(form);
-          setSailingId("");
+        onChange={(next) => {
+          setForm(next);
         }}
+        onSearch={() => {
+          if (firstError) return;
+          setQuery(form as Strict);
+          setSelectedId("");
+          setAccepted(false);
+          setVas(NO_VAS);
+          scrollTo(optionsRef);
+        }}
+        priceForDay={priceForDay}
       />
 
-      <SailingList
-        sailings={sailings}
-        pol={query.pol}
-        pod={query.pod}
-        selectedId={selected.id}
-        priceFor={priceFor}
-        onSelect={setSailingId}
-      />
-
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <h2 className="type-section">{t("business.quotation")}</h2>
-
-        <div className="flex flex-wrap items-end gap-6">
-          <label className="flex flex-col gap-2">
-            <span className="type-caption">{t("quote.incoterm")}</span>
-            <select
-              value={incoterm}
-              onChange={(e) => setIncoterm(e.target.value as Incoterm)}
-              className="w-72 border border-control bg-studio px-4 py-2.5 type-label rounded-card"
-            >
-              {INCOTERM_ORDER.map((term) => (
-                <option key={term} value={term}>
-                  {term} — {t(INCOTERMS[term].glossKey)}
-                </option>
-              ))}
-            </select>
-          </label>
+      {quote && options.length ? (
+        <div ref={optionsRef} className="scroll-mt-20">
+          <OptionsList
+            quote={quote}
+            options={options}
+            selectedId={selected?.id ?? ""}
+            onSelect={setSelectedId}
+            onAccept={() => {
+              setAccepted(true);
+              scrollTo(confirmRef);
+            }}
+          />
         </div>
-      </div>
+      ) : null}
 
-      <QuoteTicket
-        quote={quote}
-        sailing={selected}
-        pol={query.pol}
-        pod={query.pod}
-        containerType={query.containerType}
-        incoterm={incoterm}
-        locale={locale}
-        remote={remote}
-      />
+      {quote && selected && sections && accepted ? (
+        <div ref={confirmRef} className="flex scroll-mt-20 flex-col gap-10">
+          <div>
+            <p className="type-eyebrow">{t("confirm.eyebrow")}</p>
+            <h2 className="mt-4 type-page">{t("confirm.title")}</h2>
+            <p className="mt-3 max-w-[60ch] type-body text-muted">{t("confirm.lede")}</p>
+          </div>
 
-      <QuoteDocument
-        quote={quote}
-        sailing={selected}
-        sections={sections}
-        incoterm={incoterm}
-      />
+          <VasPanel value={vas} units={quote.units} onChange={setVas} />
+
+          <QuoteTicket
+            quote={quote}
+            sailing={selected}
+            sections={sections}
+            vas={vas}
+            locale={locale}
+            remote={remote}
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-6 border border-border bg-studio p-6 rounded-card">
+            <p className="max-w-[60ch] type-caption">{t("confirm.bookingNote")}</p>
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center gap-3 border border-charcoal bg-charcoal px-6 py-3 type-label text-studio rounded-card opacity-60"
+            >
+              {t("confirm.book")}
+              <ArrowRight size={18} />
+            </button>
+          </div>
+
+          <QuoteDocument quote={quote} sailing={selected} sections={sections} vas={vas} />
+        </div>
+      ) : null}
     </div>
   );
 }

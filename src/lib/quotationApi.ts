@@ -1,5 +1,5 @@
-import type { Incoterm } from "./charges";
-import type { ContainerType, LoyaltyTier, PortCode } from "@/types/quote";
+import type { VasSelection } from "./vas";
+import type { Commodity, ContainerRow, LoyaltyTier, PortCode, Scope } from "@/types/quote";
 
 /**
  * The quotation service, when it is there.
@@ -31,7 +31,7 @@ export interface Sourced<T> {
 
 export interface RemoteQuotation {
   reference: string;
-  selected: { sailingId: string; allIn: number };
+  selected: { sailingId: string; allIn: number; payable: number };
   alsoIn: Record<string, Sourced<number>>;
   provenance: { pricing: { source: string }; exchangeRates: { source: string } };
 }
@@ -40,11 +40,14 @@ export async function fetchQuotation(
   req: {
     pol: PortCode;
     pod: PortCode;
-    cbm: number;
-    containerType: ContainerType;
+    containers: ContainerRow[];
+    commodity: Commodity;
     tier: LoyaltyTier;
-    incoterm: Incoterm;
+    originScope: Scope;
+    destinationScope: Scope;
+    etdOffset: number;
     sailingId: string;
+    vas: VasSelection;
     alsoIn: string[];
   },
   signal?: AbortSignal,

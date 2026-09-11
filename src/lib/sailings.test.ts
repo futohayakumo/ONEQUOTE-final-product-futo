@@ -1,78 +1,59 @@
 import assert from "node:assert/strict";
-import test from "node:test";
-import { calculateQuote, CONTAINERS } from "./pricing.ts";
-import { quoteForSailing, sailingsFor } from "./sailings.ts";
+import { test } from "node:test";
+import {
+  SCHEDULE_DAYS,
+  availableEtdOffsets,
+  cutOffsFor,
+  optionsFrom,
+  scheduleFor,
+  timelineFor,
+} from "./sailings.ts";
 
-/**
- * The list and the breakdown render the same total from the same function.
- * This test is the reason that function exists: before it, each computed the
- * number its own way and they agreed only by luck.
- */
-test("every sailing prices identically wherever it is rendered", () => {
-  const quote = calculateQuote({
-    pol: "JPYOK",
-    pod: "SGSIN",
-    cbm: 90,
-    containerType: "20GP",
-    tier: "SILVER_SAIL",
-  });
-  const args = {
-    ...quote,
-    containerLabel: CONTAINERS[quote.containerType].label,
-  };
-
-  for (const sailing of sailingsFor("JPYOK", "SGSIN")) {
-    const priced = quoteForSailing(args, sailing);
-    const sum = priced.lines.reduce((n, l) => n + l.amount, 0);
-    assert.equal(
-      Math.round(sum * 100) / 100,
-      priced.subtotal,
-      `${sailing.id}: lines must add up to the subtotal`,
-    );
-    assert.equal(
-      Math.round((priced.subtotal - priced.discount) * 100) / 100,
-      priced.total,
-      `${sailing.id}: subtotal minus discount must be the total`,
-    );
-  }
+test("a lane's schedule covers the window with three services and is sorted by departure", () => {
+  const s = scheduleFor("JPYOK", "SGSIN");
+  assert.ok(s.length >= 8 + 8 + 4);
+  assert.ok(s.every((x) => x.etdOffset >= 0 && x.etdOffset < SCHEDULE_DAYS));
+  for (let i = 1; i < s.length; i += 1) assert.ok(s[i].etdOffset >= s[i - 1].etdOffset);
+  assert.deepEqual([...new Set(s.map((x) => x.serviceId))].sort(), ["direct", "express", "transship"]);
 });
 
-test("the recommended sailing costs what the base quote costs", () => {
-  const quote = calculateQuote({
-    pol: "JPYOK",
-    pod: "SGSIN",
-    cbm: 90,
-    containerType: "20GP",
-    tier: "SILVER_SAIL",
-  });
-  const recommended = sailingsFor("JPYOK", "SGSIN").find((s) => s.recommended)!;
-  assert.equal(recommended.rateFactor, 1);
-  const priced = quoteForSailing(
-    { ...quote, containerLabel: CONTAINERS[quote.containerType].label },
-    recommended,
-  );
-  assert.equal(priced.total, quote.total);
+test("the schedule is the same whichever way the lane is written", () => {
+  assert.deepEqual(scheduleFor("JPYOK", "SGSIN").map((s) => s.id), scheduleFor("SGSIN", "JPYOK").map((s) => s.id));
 });
 
-test("a cheaper sailing is cheaper and a faster one is dearer", () => {
-  const quote = calculateQuote({
-    pol: "JPYOK",
-    pod: "SGSIN",
-    cbm: 90,
-    containerType: "20GP",
-    tier: "SILVER_SAIL",
-  });
-  const args = {
-    ...quote,
-    containerLabel: CONTAINERS[quote.containerType].label,
-  };
-  const [direct, transship, express] = sailingsFor("JPYOK", "SGSIN");
-  assert.ok(
-    quoteForSailing(args, transship).total < quoteForSailing(args, direct).total,
-  );
-  assert.ok(
-    quoteForSailing(args, express).total > quoteForSailing(args, direct).total,
-  );
-  assert.ok(transship.transitDays > direct.transitDays);
-  assert.ok(express.transitDays < direct.transitDays);
+test("the calendar marks only days something sails, and options start from the chosen day", () => {
+  const days = availableEtdOffsets("JPYOK", "SGSIN");
+  assert.ok(days.includes(0) && days.includes(3) && days.includes(7));
+  assert.ok(!days.includes(1));
+  const opts = optionsFrom("JPYOK", "SGSIN", 7);
+  assert.ok(opts.length > 0);
+  assert.ok(opts.every((o) => o.etdOffset >= 7 && o.etdOffset < 21));
+  assert.equal(opts.filter((o) => o.recommended).length, 1);
+  assert.equal(opts.find((o) => o.recommended)!.status, "available");
+});
+
+test("the express is faster and dearer; the transhipment slower and cheaper", () => {
+  const s = scheduleFor("JPTYO", "NLRTM");
+  const direct = s.find((x) => x.serviceId === "direct")!;
+  const express = s.find((x) => x.serviceId === "express")!;
+  const tranship = s.find((x) => x.serviceId === "transship")!;
+  assert.ok(express.transitDays < direct.transitDays && express.rateFactor > direct.rateFactor);
+  assert.ok(tranship.transitDays > direct.transitDays && tranship.rateFactor < direct.rateFactor);
+  assert.ok(tranship.via);
+});
+
+test("cut-offs count back from departure in the order the detail panel lists them", () => {
+  const s = scheduleFor("JPYOK", "SGSIN").find((x) => x.etdOffset === 7)!;
+  assert.deepEqual(cutOffsFor(s).map((c) => [c.id, c.offsetDays]), [["documentation", 4], ["cy", 5], ["vgm", 6]]);
+});
+
+test("the timeline runs cut-offs, departure, transhipment if any, arrival", () => {
+  const s = scheduleFor("JPYOK", "SGSIN");
+  const direct = s.find((x) => x.serviceId === "direct")!;
+  const via = s.find((x) => x.serviceId === "transship")!;
+  assert.deepEqual(timelineFor(direct, "JPYOK", "SGSIN").map((e) => e.id), ["cutoff-documentation", "cutoff-cy", "cutoff-vgm", "departure", "arrival"]);
+  const t = timelineFor(via, "JPYOK", "SGSIN");
+  assert.equal(t[4].id, "transhipment");
+  assert.equal(t[4].place, via.via);
+  assert.equal(t.at(-1)!.offsetDays, via.etdOffset + via.transitDays);
 });

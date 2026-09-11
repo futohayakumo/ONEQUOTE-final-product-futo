@@ -27,6 +27,7 @@
     "../src/lib/charges.ts",
     "../src/lib/sailings.ts",
     "../src/lib/quoteDocument.ts",
+    "../src/lib/vas.ts",
     "../src/types/quote.ts"
   ]
 }

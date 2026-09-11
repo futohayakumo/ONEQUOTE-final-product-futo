@@ -1,8 +1,9 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { allInTotal, chargeSections, type Incoterm } from "../../../src/lib/charges.ts";
-import { CONTAINERS, calculateQuote, validateQuote } from "../../../src/lib/pricing.ts";
+import { allInTotal, chargeSections } from "../../../src/lib/charges.ts";
+import { calculateQuote, validateQuote } from "../../../src/lib/pricing.ts";
 import { quoteDocument } from "../../../src/lib/quoteDocument.ts";
-import { cutOffsFor, sailingAt, sailingsFor } from "../../../src/lib/sailings.ts";
+import { availableEtdOffsets, cutOffsFor, optionsFrom, sailingAt, timelineFor } from "../../../src/lib/sailings.ts";
+import { NO_VAS, vasLines, vasTotal, type VasSelection } from "../../../src/lib/vas.ts";
 import { PrismaService } from "../prisma/prisma.service.ts";
 import type { QuotationRequestDto } from "./quotation.dto.ts";
 
@@ -15,57 +16,66 @@ export interface Sourced<T> {
   url: string;
 }
 
+const money = (x: number) => Math.round(x * 100) / 100;
+
 /**
  * Prices a shipment with the site's own pure functions, then adds what the
  * browser cannot: the exchange rate the ECB actually published, with its
  * date, and a stored record of the quotation.
  *
- * Deliberately no new arithmetic. The site and the service share
- * `src/lib/pricing.ts` and `src/lib/charges.ts` by import, so a price the
- * browser computes offline and a price this service returns are the same
- * number for the same inputs. What differs is the provenance block.
+ * Deliberately no new arithmetic. The site and the service share the pricing
+ * modules by import, so a price the browser computes offline and a price this
+ * service returns are the same number for the same inputs.
  */
 @Injectable()
 export class QuotationsService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async quote(req: QuotationRequestDto) {
-    const errors = validateQuote({
+    const input = {
       pol: req.pol,
       pod: req.pod,
-      cbm: req.cbm,
-      containerType: req.containerType,
+      containers: req.containers,
+      commodity: req.commodity,
       tier: req.tier,
-    });
+      originScope: req.originScope ?? ("CY" as const),
+      destinationScope: req.destinationScope ?? ("CY" as const),
+      etdOffset: req.etdOffset,
+    };
+    const errors = validateQuote(input);
+    if (!availableEtdOffsets(req.pol, req.pod).includes(req.etdOffset)) {
+      errors.etd = { key: "quote.error.etd" };
+    }
     if (Object.keys(errors).length) {
       throw new BadRequestException({ message: "The request cannot be priced", errors });
     }
 
-    const incoterm: Incoterm = req.incoterm ?? "FOB";
-    const quote = calculateQuote({
-      pol: req.pol,
-      pod: req.pod,
-      cbm: req.cbm,
-      containerType: req.containerType,
-      tier: req.tier,
-    });
-    const sailings = sailingsFor(req.pol, req.pod);
+    const quote = calculateQuote(input);
+    const options = optionsFrom(req.pol, req.pod, req.etdOffset);
     const sailing =
-      sailings.find((s) => s.id === req.sailingId) ??
-      sailings.find((s) => s.recommended) ??
-      sailings[0];
+      options.find((s) => s.id === req.sailingId) ??
+      options.find((s) => s.recommended) ??
+      options[0];
+    const vas: VasSelection = {
+      premiumCargo: req.vas?.premiumCargo ?? false,
+      extraFreeTimeOrigin: req.vas?.extraFreeTimeOrigin ?? 0,
+      extraFreeTimeDestination: req.vas?.extraFreeTimeDestination ?? 0,
+    };
 
-    const priceFor = (rateFactor: number) =>
+    const sectionsFor = (rateFactor: number) =>
       chargeSections({
-        pol: req.pol,
-        pod: req.pod,
-        containerType: req.containerType,
-        units: quote.units,
+        pol: quote.pol,
+        pod: quote.pod,
+        rows: quote.rows,
+        originScope: quote.originScope,
+        destinationScope: quote.destinationScope,
         oceanFreight: quote.oceanFreight * rateFactor,
-        incoterm,
       });
-    const sections = priceFor(sailing.rateFactor);
+    const sections = sectionsFor(sailing.rateFactor);
     const allIn = allInTotal(sections);
+    const discount = money(quote.oceanFreight * sailing.rateFactor * quote.discountRate);
+    const extras = vasTotal(vas, quote.units);
+    const payable = money(allIn - discount + extras);
 
     // The one figure that came from outside. Absent, the response says so
     // rather than inventing a rate.
@@ -76,7 +86,7 @@ export class QuotationsService {
       });
       if (r) {
         fx[ccy] = {
-          value: Math.round(allIn * r.value * 100) / 100,
+          value: money(payable * r.value),
           source: r.source,
           asOf: r.asOf.toISOString().slice(0, 10),
           fetchedAt: r.fetchedAt.toISOString(),
@@ -85,38 +95,47 @@ export class QuotationsService {
       }
     }
 
-    const document = quoteDocument({ quote, sailing, sections, incoterm });
+    const iso = (offset: number) => new Date(sailingAt(offset)).toISOString();
 
     const response = {
       reference: quote.quoteId,
-      incoterm,
       currency: "USD",
       validity: { hours: quote.validityHours, basis: "FROM_ISSUE" as const },
-      sailings: sailings.map((s) => ({
+      scope: { origin: quote.originScope, destination: quote.destinationScope },
+      options: options.map((s) => ({
         id: s.id,
+        serviceLane: s.serviceLane,
         vessel: s.vessel,
+        voyage: s.voyage,
         via: s.via,
-        departsAt: new Date(sailingAt(s.departsInDays)).toISOString(),
+        status: s.status,
+        etd: iso(s.etdOffset),
+        eta: iso(s.etdOffset + s.transitDays),
         transitDays: s.transitDays,
         recommended: s.recommended,
-        allIn: allInTotal(priceFor(s.rateFactor)),
+        allIn: allInTotal(sectionsFor(s.rateFactor)),
       })),
       selected: {
         sailingId: sailing.id,
-        container: { type: req.containerType, label: CONTAINERS[req.containerType].label, units: quote.units },
+        containers: quote.rows,
         sections,
         allIn,
-        cutOffs: cutOffsFor(sailing).map((c) => ({
-          key: c.labelKey,
-          at: new Date(sailingAt(c.offsetDays)).toISOString(),
+        loyaltyDiscount: discount,
+        valueAddedServices: { lines: vasLines(vas, quote.units), subtotal: extras },
+        payable,
+        cutOffs: cutOffsFor(sailing).map((c) => ({ id: c.id, at: iso(c.offsetDays) })),
+        timeline: timelineFor(sailing, quote.pol, quote.pod).map((e) => ({
+          id: e.id,
+          place: e.place ?? null,
+          at: iso(e.offsetDays),
         })),
       },
       alsoIn: fx,
-      document,
+      document: quoteDocument({ quote, sailing, sections, vas }),
       provenance: {
         pricing: {
           source: "model",
-          note: "Lane base rates, surcharges and tier discounts are the portfolio's own model, not a carrier tariff.",
+          note: "Lane base rates, surcharges, tier discounts and value-added service prices are the portfolio's own model, not a carrier tariff.",
         },
         exchangeRates: Object.keys(fx).length
           ? { source: "ecb", note: "European Central Bank reference rates via Frankfurter." }
@@ -124,9 +143,6 @@ export class QuotationsService {
       },
     };
 
-    // Prisma's Json input type wants index signatures the interfaces do not
-    // declare; the shape is plain data and a round trip through JSON is the
-    // exact representation the column stores.
     const asJson = (v: unknown) => JSON.parse(JSON.stringify(v));
     await this.prisma.quotation.upsert({
       where: { id: quote.quoteId },

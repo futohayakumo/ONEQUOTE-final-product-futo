@@ -2,9 +2,10 @@
 
 import cn from "clsx";
 import { useEffect, useState } from "react";
-import type { ChargeSection, Incoterm } from "@/lib/charges";
+import type { ChargeSection } from "@/lib/charges";
 import { quoteDocumentJson, quoteDocumentText } from "@/lib/quoteDocument";
 import type { Sailing } from "@/lib/sailings";
+import type { VasSelection } from "@/lib/vas";
 import type { QuoteResult } from "@/types/quote";
 import { useT } from "../../providers/LocaleProvider";
 
@@ -26,7 +27,7 @@ export function QuoteDocument(props: {
   quote: QuoteResult;
   sailing: Sailing;
   sections: ChargeSection[];
-  incoterm: Incoterm;
+  vas: VasSelection;
 }) {
   const t = useT();
   const [format, setFormat] = useState<Format>("json");

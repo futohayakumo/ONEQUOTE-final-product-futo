@@ -1,128 +1,103 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calculateQuote, quoteRef, validateQuote } from "./pricing.ts";
+import {
+  EQUIPMENT,
+  calculateQuote,
+  emptyRow,
+  laneBaseUsd,
+  validateQuote,
+} from "./pricing.ts";
+import type { QuoteInput } from "@/types/quote";
 
-/**
- * Run with:  node --test --experimental-strip-types src/lib/pricing.test.ts
- * These three lanes are the fixtures the on-screen console output is checked
- * against, so a change here is a deliberate change to the simulated pricing.
- */
+const base: QuoteInput = {
+  pol: "JPYOK",
+  pod: "SGSIN",
+  containers: [{ equipment: "DRY20", quantity: 3, weightKg: 36_000 }],
+  commodity: "GENERAL",
+  tier: "SILVER_SAIL",
+  originScope: "CY",
+  destinationScope: "CY",
+  etdOffset: 0,
+};
 
-test("worked example A — Tokyo to Rotterdam, 120 CBM, 40' High Cube HC, Golden Sea", () => {
+test("A. three 20' dry, Yokohama to Singapore: the fixture the ticket shows", () => {
+  const q = calculateQuote({ ...base, pol: "JPYOK", pod: "SGSIN", commodity: "GENERAL", tier: "SILVER_SAIL" });
+  assert.equal(q.laneBase, 1090);
+  assert.equal(q.units, 3);
+  assert.equal(q.teuAccrued, 3);
+  assert.equal(q.oceanFreight, 3270);
+  assert.equal(q.rows[0].overweight, false);
+  assert.equal(q.nextMilestoneTeu, 10);
+  assert.match(q.quoteId, /^QTN-[0-9A-F]{6}$/);
+});
+
+test("B. mixed rows price per row and sum, and TEU counts forty-footers as two", () => {
   const q = calculateQuote({
+    ...base,
     pol: "JPTYO",
     pod: "NLRTM",
-    cbm: 120,
-    containerType: "40HC",
+    containers: [
+      { equipment: "DRY20", quantity: 2, weightKg: 40_000 },
+      { equipment: "REEFER40H", quantity: 1, weightKg: 18_000 },
+    ],
+    commodity: "CHILLED_FOOD",
     tier: "GOLDEN_SEA",
-  });
-
-  assert.equal(q.units, 2); // ceil(120 / 76)
-  assert.equal(q.oceanFreight, 8680.0); // 2480 * 1.75 * 2
-  assert.equal(q.terminalHandling, 540.0); // 120 * 4.50
-  assert.equal(q.documentation, 65.0);
-  assert.equal(q.bunkerAdjustment, 1041.6); // 12% of ocean freight
-  assert.equal(q.subtotal, 10326.6);
-  assert.equal(q.loyaltyDiscount, 619.6); // 6%
-  assert.equal(q.total, 9707.0);
-  assert.equal(q.teuAccrued, 4);
-  assert.equal(q.nextMilestoneTeu, 20);
+  } as QuoteInput & { pol: "JPTYO"; pod: "NLRTM"; commodity: "CHILLED_FOOD"; tier: "GOLDEN_SEA" });
+  assert.equal(q.rows[0].oceanFreight, 2480 * 1.0 * 2);
+  assert.equal(q.rows[1].oceanFreight, 2480 * 2.6);
+  assert.equal(q.oceanFreight, 4960 + 6448);
+  assert.equal(q.units, 3);
+  assert.equal(q.teuAccrued, 2 + 2);
+  assert.equal(q.rows[1].reefer, true);
 });
 
-test("worked example B — Singapore to Rotterdam, 30 CBM, 20' Standard GP, Blue Wave", () => {
-  const q = calculateQuote({
-    pol: "SGSIN",
-    pod: "NLRTM",
-    cbm: 30,
-    containerType: "20GP",
-    tier: "BLUE_WAVE",
-  });
-
-  assert.equal(q.units, 1);
-  assert.equal(q.oceanFreight, 1980.0);
-  assert.equal(q.subtotal, 2417.6);
-  // Blue Wave carries NO rate discount — its value is the milestone coupon.
-  assert.equal(q.loyaltyDiscount, 0);
-  assert.equal(q.total, 2417.6);
-  assert.equal(q.teuAccrued, 1);
-  assert.equal(q.nextMilestoneTeu, 5);
+test("C. the same inputs always yield the same reference, and a changed weight changes it", () => {
+  const a = calculateQuote({ ...base } as Parameters<typeof calculateQuote>[0]);
+  const b = calculateQuote({ ...base } as Parameters<typeof calculateQuote>[0]);
+  const c = calculateQuote({
+    ...base,
+    containers: [{ equipment: "DRY20", quantity: 3, weightKg: 36_001 }],
+  } as Parameters<typeof calculateQuote>[0]);
+  assert.equal(a.quoteId, b.quoteId);
+  assert.notEqual(a.quoteId, c.quoteId);
 });
 
-test("worked example C — Tokyo to Yokohama, 200 CBM, 40' Reefer RF, Platinum Tide", () => {
-  const q = calculateQuote({
-    pol: "JPTYO",
-    pod: "JPYOK",
-    cbm: 200,
-    containerType: "40RF",
-    tier: "PLATINUM_TIDE",
-  });
-
-  assert.equal(q.units, 3); // ceil(200 / 67) = 3, not 4
-  assert.equal(q.oceanFreight, 2496.0); // 320 * 2.6 * 3
-  assert.equal(q.terminalHandling, 900.0);
-  assert.equal(q.bunkerAdjustment, 299.52);
-  assert.equal(q.subtotal, 3760.52);
-  assert.equal(q.loyaltyDiscount, 376.05); // 10%
-  assert.equal(q.total, 3384.47);
-  assert.equal(q.teuAccrued, 6);
-  assert.equal(q.nextMilestoneTeu, 50);
+test("overweight is per box, not per row: 3 x 20' at 75 t is overweight, at 60 t is not", () => {
+  const heavy = calculateQuote({
+    ...base,
+    containers: [{ equipment: "DRY20", quantity: 3, weightKg: 75_000 }],
+  } as Parameters<typeof calculateQuote>[0]);
+  const light = calculateQuote({
+    ...base,
+    containers: [{ equipment: "DRY20", quantity: 3, weightKg: 60_000 }],
+  } as Parameters<typeof calculateQuote>[0]);
+  assert.equal(heavy.rows[0].overweight, true);
+  assert.equal(light.rows[0].overweight, false);
 });
 
-test("lane lookup is symmetric", () => {
-  const a = calculateQuote({
-    pol: "JPTYO",
-    pod: "NLRTM",
-    cbm: 50,
-    containerType: "20GP",
-    tier: "BLUE_WAVE",
-  });
-  const b = calculateQuote({
-    pol: "NLRTM",
-    pod: "JPTYO",
-    cbm: 50,
-    containerType: "20GP",
-    tier: "BLUE_WAVE",
-  });
-  assert.equal(a.total, b.total);
-});
-
-test("quote reference is stable and input-derived", () => {
-  const args = ["JPTYO", "NLRTM", 120, "40HC", "GOLDEN_SEA"] as const;
-  assert.equal(quoteRef(...args), quoteRef(...args));
-  assert.notEqual(
-    quoteRef(...args),
-    quoteRef("JPTYO", "NLRTM", 121, "40HC", "GOLDEN_SEA"),
+test("validation: the errors a customer can make on the real form", () => {
+  assert.deepEqual(validateQuote({ ...base, pod: "JPYOK" }).pod, { key: "quote.error.samePort" });
+  assert.deepEqual(validateQuote({ ...base, containers: [] }).containers, { key: "quote.error.noContainers" });
+  assert.equal(
+    validateQuote({ ...base, containers: [{ equipment: "DRY20", quantity: 1, weightKg: 30_000 }] })
+      .containers?.key,
+    "quote.error.overPayload",
   );
-  assert.match(quoteRef(...args), /^[0-9A-F]{6}$/);
+  assert.equal(
+    validateQuote({ ...base, commodity: "FROZEN_FOOD" }).commodity?.key,
+    "quote.error.needsReefer",
+  );
+  assert.equal(
+    validateQuote({ ...base, commodity: "FROZEN_FOOD", containers: [{ equipment: "REEFER20", quantity: 1, weightKg: 10_000 }] })
+      .commodity,
+    undefined,
+  );
+  assert.deepEqual(validateQuote({ ...base, etdOffset: null }).etd, { key: "quote.error.etd" });
+  assert.deepEqual(validateQuote(base), {});
 });
 
-test("validation rejects same port, and out-of-range volume", () => {
-  assert.ok(
-    validateQuote({
-      pol: "JPTYO",
-      pod: "JPTYO",
-      cbm: 10,
-      containerType: "20GP",
-      tier: "BLUE_WAVE",
-    }).pod,
-  );
-  assert.ok(
-    validateQuote({
-      pol: "JPTYO",
-      pod: "NLRTM",
-      cbm: 2001,
-      containerType: "20GP",
-      tier: "BLUE_WAVE",
-    }).cbm,
-  );
-  assert.deepEqual(
-    validateQuote({
-      pol: "JPTYO",
-      pod: "NLRTM",
-      cbm: 120,
-      containerType: "40HC",
-      tier: "GOLDEN_SEA",
-    }),
-    {},
-  );
+test("lanes are symmetric and an empty row is a shippable default", () => {
+  assert.equal(laneBaseUsd("SGSIN", "JPYOK"), laneBaseUsd("JPYOK", "SGSIN"));
+  const row = emptyRow();
+  assert.ok(row.weightKg / row.quantity <= EQUIPMENT[row.equipment].maxPayloadKg);
 });
