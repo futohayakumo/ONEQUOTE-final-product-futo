@@ -47,7 +47,7 @@ const IMAGE: Record<string, string | undefined> = {
   "quotation-service": "/assets/scenes/06-dashboard-display.png",
   "erp-system": "/assets/scenes/journey-5-hold.png",
 };
-const ARRIVAL_IMAGE = "/assets/scenes/12-booking-laptop.jpg";
+const ARRIVAL_IMAGE = "/assets/scenes/journey-6-arrival.png";
 
 /** Scroll distance per panel transition, in viewport heights. Lower is faster. */
 const VH_PER_STEP = 80;
@@ -235,9 +235,9 @@ export function JourneyTrack() {
               : "mx-auto grid w-full max-w-[86rem] items-center gap-10 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-16"
           }
         >
-          {/* Photographs at the two ends, drawings in between: the request
-              starts and finishes in the world and spends the middle inside
-              the system. */}
+          {/* Six drawings in one clay. The ends were photographs for a while
+              — a phone, a laptop — and the last one sat on the page like a
+              cut from another site after five drawn panels. */}
           {pn.image ? (
             <div className="flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
