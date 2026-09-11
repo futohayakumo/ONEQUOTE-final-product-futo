@@ -125,7 +125,6 @@ export function QualityEvidence() {
               >
                 {t("quality.attr.link")}
               </button>
-              .
             </p>
           </div>
 

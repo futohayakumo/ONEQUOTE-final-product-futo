@@ -130,9 +130,17 @@ export function SearchPanel({
             value={value.tier}
             onChange={(e) => set("tier", e.target.value as LoyaltyTier)}
           >
-            {TIER_ORDER.map((t) => (
-              <option key={t} value={t}>
-                {LOYALTY_TIERS[t].label}
+            {TIER_ORDER.map((id) => (
+              <option key={id} value={id}>
+                {LOYALTY_TIERS[id].label} —{" "}
+                {t("business.search.tierOption", {
+                  discount: formatDecimal(
+                    LOYALTY_TIERS[id].discountRate * 100,
+                    locale,
+                    0,
+                  ),
+                  teu: LOYALTY_TIERS[id].milestoneTeu,
+                })}
               </option>
             ))}
           </select>
@@ -141,6 +149,7 @@ export function SearchPanel({
               asked what it was, and the quiz downstream asks about it. */}
           <span className="type-caption tnum">
             {t("business.search.tierNote", {
+              tier: LOYALTY_TIERS[value.tier].label,
               discount: formatDecimal(
                 LOYALTY_TIERS[value.tier].discountRate * 100,
                 locale,

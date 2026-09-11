@@ -336,6 +336,7 @@ export function JourneyTrack() {
                 </span>
               </div>
               <p className="shrink-0 type-label tnum" aria-live="off">
+                <span className="type-caption">{t("journey.clock")} </span>
                 <span ref={clockRef}>0</span>
                 <span className="type-caption"> / {trace.totalMs} ms</span>
               </p>

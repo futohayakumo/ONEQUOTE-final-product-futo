@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 
 import cn from "clsx";
 import dynamic from "next/dynamic";
@@ -14,7 +13,6 @@ import type {
 } from "@/types/process-scene";
 import { detectWebGL, useBrowserValue } from "@/lib/useBrowserValue";
 import { formatDecimal } from "@/lib/localeFormat";
-import { ArrowRight } from "../icons/ArrowRight";
 import { useLocale, useT } from "../shell/LocaleProvider";
 import { StationOverlay, type Anchor } from "./StationOverlay";
 import { ElapsedClock } from "./ElapsedClock";
@@ -388,16 +386,6 @@ export function ProcessComparison() {
       ) : null}
 
       <RunReadout runs={runs} />
-
-      <div>
-        <Link
-          href="/process/quiz"
-          className="inline-flex items-center gap-3 border border-crimson bg-crimson px-6 py-3 type-label text-studio rounded-sharp transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
-        >
-          {t("sim.takeQuiz")}
-          <ArrowRight size={18} />
-        </Link>
-      </div>
 
       {/* Touch drag ghost. */}
       <div
