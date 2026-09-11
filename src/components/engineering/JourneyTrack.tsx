@@ -32,12 +32,19 @@ import { useLocale, useT } from "../shell/LocaleProvider";
  * the "1.3 seconds" in the heading cannot disagree with the log below.
  */
 
-const IMAGE: Record<string, string> = {
-  "new-request": "/assets/scenes/11-quote-phone.jpg",
-  "request-intake": "/assets/scenes/08-document-sharing.png",
-  "routing-gateway": "/assets/scenes/07-cloud-node-topology.png",
+/**
+ * Four of the five had the wrong picture. A phone offering air freight and
+ * trucking for "the request", a share icon for "the check", a cloud for
+ * "the hand-off", a database for "the hold" — none of them said what the
+ * panel says, so they came out. A panel with no image sets its text at
+ * full width until the drawn one arrives; see PROCESS_IMAGE_PROMPTS.md.
+ */
+const IMAGE: Record<string, string | undefined> = {
+  "new-request": undefined,
+  "request-intake": undefined,
+  "routing-gateway": undefined,
   "quotation-service": "/assets/scenes/06-dashboard-display.png",
-  "erp-system": "/assets/scenes/09-data-to-vessel-link.png",
+  "erp-system": undefined,
 };
 const ARRIVAL_IMAGE = "/assets/scenes/12-booking-laptop.jpg";
 
@@ -67,7 +74,7 @@ interface Panel {
   id: string;
   /** 1-based, as shown. The arrival panel has none. */
   no: number | null;
-  image: string;
+  image?: string;
   /** Milliseconds from the first entry to this panel's start. */
   offsetMs: number;
   /** Time in this service; the arrival panel has none. */
@@ -220,22 +227,37 @@ export function JourneyTrack() {
         }
         aria-label={t(`journey.${pn.id}.title`)}
       >
-        <div className="mx-auto grid w-full max-w-[86rem] items-center gap-10 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+        <div
+          className={
+            pn.image
+              ? "mx-auto grid w-full max-w-[86rem] items-center gap-10 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16"
+              : "mx-auto grid w-full max-w-[86rem] items-center gap-10 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-16"
+          }
+        >
           {/* Photographs at the two ends, drawings in between: the request
               starts and finishes in the world and spends the middle inside
               the system. */}
-          <div className="flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={pn.image}
-              alt=""
-              className={
-                pn.image.endsWith(".jpg")
-                  ? "aspect-[4/3] w-full max-w-[34rem] object-cover rounded-card"
-                  : "w-full max-w-[28rem] object-contain"
-              }
-            />
-          </div>
+          {pn.image ? (
+            <div className="flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pn.image}
+                alt=""
+                className={
+                  pn.image.endsWith(".jpg")
+                    ? "aspect-[4/3] w-full max-w-[34rem] object-cover rounded-card"
+                    : "w-full max-w-[28rem] object-contain"
+                }
+              />
+            </div>
+          ) : (
+            /* The number, large, where the picture will go. */
+            <div className="hidden items-center justify-center lg:flex">
+              <span className="type-page text-mist" aria-hidden>
+                {pn.no}
+              </span>
+            </div>
+          )}
 
           <div className="flex flex-col gap-5">
             <p className="flex items-center gap-3 type-overline text-muted">
