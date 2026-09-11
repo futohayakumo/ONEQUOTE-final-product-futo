@@ -1,0 +1,61 @@
+// The quotation service's own tables.
+//
+// Two kinds of data, kept apart on purpose. `Rate` and `Port` are what the
+// ingest job fetched from outside — every row names its source and when it
+// was fetched, because "where did this number come from" is the first thing
+// the site promises to answer. `Quotation` is what the service produced.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// One fetched figure. The same key from the same source is upserted, so the
+/// table holds the latest value and its fetched_at, not a history.
+model Rate {
+  id        Int      @id @default(autoincrement())
+  /// Where it came from, e.g. "ecb" — the only value today.
+  source    String
+  /// What it is, e.g. "USD/JPY".
+  key       String
+  value     Float
+  /// The date the source published it (ECB reference rates carry a date).
+  asOf      DateTime @db.Date
+  /// When our ingest job pulled it.
+  fetchedAt DateTime @default(now())
+  /// Where a reader can go and check.
+  url       String
+
+  @@unique([source, key])
+  @@map("rates")
+}
+
+/// A port from the UN/LOCODE list, with its published coordinates where the
+/// list has them. Only locations with the port function bit set are kept.
+model Port {
+  unlocode  String   @id
+  country   String
+  name      String
+  lat       Float?
+  lon       Float?
+  fetchedAt DateTime @default(now())
+  url       String
+
+  @@index([country])
+  @@map("ports")
+}
+
+/// A quotation the service produced. Request and response are stored whole so
+/// a quotation can be replayed exactly, including the rates it was priced at.
+model Quotation {
+  id        String   @id
+  request   Json
+  response  Json
+  createdAt DateTime @default(now())
+
+  @@map("quotations")
+}

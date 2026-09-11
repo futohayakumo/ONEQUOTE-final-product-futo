@@ -25,7 +25,8 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // api/ is its own package with its own tsconfig; the Next rules do not apply.
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "api/**"]),
 ]);
 
 export default eslintConfig;

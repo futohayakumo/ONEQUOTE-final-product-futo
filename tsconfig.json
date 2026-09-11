@@ -38,6 +38,7 @@
     "**/*.mts"
   ],
   "exclude": [
+    "api",
     "node_modules"
   ]
 }

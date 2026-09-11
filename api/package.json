@@ -1,0 +1,40 @@
+{
+  "name": "quotation-api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The quotation service behind the portfolio: real rates in, one priced quotation out.",
+  "scripts": {
+    "dev": "SWCRC=true node --watch --import @swc-node/register/esm-register src/main.ts",
+    "start": "SWCRC=true node --import @swc-node/register/esm-register src/main.ts",
+    "prisma": "prisma",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "ingest": "SWCRC=true node --import @swc-node/register/esm-register src/ingest/run.ts",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/schedule": "^6.0.0",
+    "@nestjs/swagger": "^11.2.0",
+    "@prisma/client": "^6.16.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@swc-node/register": "^1.12.1",
+    "@swc/core": "^1.16.2",
+    "@types/express": "^5.0.3",
+    "@types/node": "^20",
+    "prisma": "^6.16.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5"
+  },
+  "type": "module"
+}
