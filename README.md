@@ -1,12 +1,16 @@
 # Integrated Portfolio for Enterprise Delivery
 
-An interactive portfolio that shows one engineer's understanding of a global
-ocean-freight business domain, the architecture that serves it, and the
-delivery process that ships it. It is built to read as an enterprise product
-showcase rather than a dashboard or a personal site.
+An interactive portfolio built during an internship at OTSV / ONE. It shows one
+engineer's understanding of the ocean-freight quotation business, the system
+that serves a quotation, and the delivery process that ships that system. It
+reads as an enterprise product showcase, not a dashboard and not a personal
+site, and every figure on it is computed by the code rather than typed in.
 
-Every organisation, system and person named in the application is a virtual
-name. No real client, vessel, vendor or internal project code appears anywhere.
+**This repository identifies the client and is private.** The wordmark is real,
+the internal throughput and defect figures are from an internal report, and
+the photography carries the name. Do not add a remote and do not push. The
+rules for working in the tree are in `CLAUDE.md`; this file describes what is
+here.
 
 ## Running it
 
@@ -14,19 +18,28 @@ name. No real client, vessel, vendor or internal project code appears anywhere.
 pnpm install
 pnpm dev            # http://localhost:3000
 pnpm verify         # token guards, types, lint, unit tests, production build
+pnpm locales:check  # the three bundles carry the same keys and placeholders
+pnpm build:static   # STATIC_EXPORT=1 -> out/, plain files for any static host
 ```
 
-## The six screens
+The site renders in English, Japanese and Vietnamese from
+`src/locales/{en,ja,vi}.json`. The bundles are imported directly, so the
+running site has no network dependency on the translation platform;
+`pnpm locales:pull` refreshes them from Lokalise before a build and a failed
+pull leaves the last good bundle in place.
+
+## The five screens
 
 | Route | What it does |
 | :--- | :--- |
-| `/` | Entrance. Five bands, closing on the three perspectives — the gateway screen it replaced is gone |
-| `/business` | Quotation simulator, with a replayed transaction trace |
-| `/engineering` | Request flow across four platform stages. Select any node to re-route the request and read what that component does |
-| `/process` | The comparison as an argument — a lead-time chart against batch size, the protocol the quiz then tests, and the animated 3D simulation behind one click |
-| `/process/quiz` | Five-question knowledge check on the team's rules |
+| `/` | Entrance. QUOTE / TO BERTH across a photograph, then the journey from quote to delivery, the network, the quotation screen on a tilted panel, and the three perspectives |
+| `/business` | Quotation simulator. Pick a lane, a container, a volume and a loyalty tier; three sailings come back priced; the ticket itemises origin, ocean and destination charges and re-allocates them as the Incoterm changes; the same quotation is available as JSON and as the customer's email text |
+| `/engineering` | The 1.3 seconds after a customer presses Quote, told as a pinned horizontal journey — five services, one panel each, with the request's clock running. Then why the system is in pieces, in the business's terms. The system map, the C4 views, the code and the log are behind one button |
+| `/process` | Traditional scrum against AI-DLC. Five roles with a queue at every hand-off, or one Bolt of four phases inside 24–72 hours. The measured figures (×3 throughput, ×5 defects, and what was never counted), the 3D simulation behind one click, and the three rules the tooling enforces |
+| `/process/quiz` | Five questions on those rules, reached from the end of the process screen |
 
-All five are statically rendered.
+All five are statically rendered and must stay so. A loading screen — a ship
+crossing three points, cut frame to frame — plays once per tab.
 
 ## Things worth knowing before changing anything
 
@@ -34,126 +47,84 @@ All five are statically rendered.
 `shadow-md`, `rounded-lg` or `text-2xl` compile to nothing rather than raising
 an error, so a mistake fails silently and flat. `pnpm check:tokens` is what
 catches it. The rules live in `CLAUDE.md`; the tokens live in
-`src/app/globals.css` and nowhere else.
+`src/app/globals.css` and nowhere else. Note that the guard reads utility
+classes, not hex literals: the three.js materials kept the old magenta accent
+for two weeks after the palette moved, and nothing flagged it.
 
-**Do not colour-pick from `examples/*.png`.** Those comps are warm cream with a
-serif display face. The tokens are cool with Inter. The images are a layout
-reference only. Section 3 of `intro.md` is the authority.
+**Components are laid out by Atomic Design.** `src/components/` is `atoms/`,
+`molecules/`, `organisms/` (grouped by screen), `templates/` and `providers/`.
+A component takes the folder its composition earns, not the folder its screen
+suggests. The table is in `CLAUDE.md`.
 
-**The quotation model is pure and deterministic.** `src/lib/pricing.ts` calls no
-`Date` and no `Math.random`, so identical inputs always yield an identical
-quote reference and an identical trace. Three worked lanes are pinned as test
-fixtures.
+**The quotation model is pure and deterministic.** `src/lib/pricing.ts` calls
+no `Date` and no `Math.random`, so identical inputs always yield an identical
+quote reference. `src/lib/charges.ts` builds the full ticket — origin, ocean,
+destination — and decides which sections the Incoterm puts on your account.
+The sailing card and the ticket print the same all-in figure because they call
+the same function; the day they did not, a reviewer found it in a minute.
+
+**The engineering journey reads the same trace as the log.** `src/lib/trace.ts`
+walks the quotation route once and produces the hops, the log and the total.
+The journey's clock, its per-step figures and the "1.3 seconds" in the heading
+are that walk; nothing on the page re-adds milliseconds on its own.
+
+**The quality band carries the internal report and nothing else.** ×3
+throughput and ×5 defects are the team's own measurement; the 80% break-even
+catch rate is 1 − 1/5, arithmetic on that figure. What the automated review
+actually caught on this team's delivery was never counted, and the band says
+so at the same size as the claim. Everything anybody else published sits
+behind the modal, labelled as theirs. `src/lib/quality.ts` has the sources.
 
 **The delivery timing model is shared, not duplicated.**
-`src/components/organisms/process/model/processModel.ts` has no runtime imports at all, so
-the WebGL scene, the 2D readout and the no-WebGL fallback all compute the same
-numbers, and the node test runner can execute it directly. The shape of that
-model is the argument the screen makes: queue wait is superlinear in batch size
-under traditional delivery and near-flat under AI-driven, so the advantage
-widens from about 5x at 0.5 story points to about 14x at 8.
+`src/components/organisms/process/model/processModel.ts` has no runtime imports
+at all, so the WebGL scene, the 2D readout and the no-WebGL fallback all
+compute the same numbers, and the node test runner executes it directly. The
+traditional room is a queueing model whose constants were chosen to draw a
+curve, and it says so on the page. The AI-DLC room is anchored to the one
+figure the lifecycle states about itself — 24 to 72 hours — so the smallest
+item on the tray takes a day and the largest takes three.
+
+**The two rooms do not share a station list.** Traditional has five roles —
+product owner, designer, developer, QA, two reviewers — because a queue forms
+in front of a person, not a verb. AI-DLC has the four phases of a Bolt:
+Inception, 2-PC Construct, Verification, The Bolt. They share the span and the
+camera so the comparison is like for like; the different count is the point.
 
 **three.js is fenced in.** It may only be imported from
-`src/components/organisms/process/scene/**`, enforced by ESLint and by `check:tokens`.
-It loads as one lazy chunk on the process route and nowhere else. The 3D
-geometry is authored procedurally; the proportions were sketched offline and kept
-as a record of intent, not build inputs.
+`src/components/organisms/process/scene/**`, enforced by ESLint and by
+`check:tokens`. It loads as one lazy chunk on the process route, on demand,
+and the other four screens never pay for it.
 
-**Both delivery rooms share one layout on purpose.** The five station slots,
-the spacing and the camera are identical, so the only visible differences
-between them are real ones: partition walls and queue piles on one side, a
-moving belt and AI gantries on the other. Labels are DOM elements positioned on
-the scene's projected station coordinates, which is what keeps the drop targets
-aligned with the model and the typography inside the design system.
+**Flags are drawn.** Seven inline SVGs on a 24×16 box with the site's
+hairline, so a white field has an edge on a white page. They were emoji, which
+are whatever the platform decides.
 
-**The flow map draws three layers, never seventeen.** The always-on spine, the
-selected route, and the hovered node's direct connections. A numbered text
-readout carries the same route for screen readers, and is the whole flow story
-below 1024px where the connectors are not drawn at all.
+## What is still unverified
 
-## Publishing safety
+Three parts of the site state structure that has not been confirmed with a
+real employee and will be corrected after interviews:
 
-The spec this was built from (`intro.md`) and the design mockups (`examples/`)
-are deliberately gitignored: the spec contains the mapping between real names
-and the abstractions used throughout the app, so publishing it would undo all
-of them. `pnpm check:tokens` enforces this across every tracked file, tracked
-filenames, the deployable project name and git history. A `pre-push` hook runs
-the same guard, so a repository that would leak cannot be pushed by accident.
+1. what the automated review actually catches on this team's delivery;
+2. the real ONE QUOTE quotation's fields and the `POST /v1/quotations`
+   payload — the ticket was written from domain knowledge;
+3. the system map and the C4 model — the service topology is plausible, not
+   confirmed.
 
-**One item is outstanding and needs a human decision.** The spec is gitignored
-now, but it remains recoverable from an earlier commit, and a public repository
-publishes its history. Nothing has been pushed, so this is still free to fix.
-Rewriting history is not reversible, so it is left deliberately:
-
-```bash
-git checkout --orphan clean && git add -A   && git commit -m "feat: interactive delivery portfolio"   && git branch -D main && git branch -m main
-```
-
-Until `pnpm check:tokens` passes, do not add a remote.
-
-### Running a real-name demo locally
-
-Substituting the real names back in, to show the app to people who know them,
-is safe only if the teardown is complete. It is easy to get wrong:
-
-- `git checkout main` alone cleans nothing. A demo branch with no commit points
-  at the same commit as main, so the checkout is a no-op for file contents and
-  the substituted working tree follows you onto the safe branch.
-- `git checkout -f` discards tracked changes but leaves untracked files, so the
-  substitution script's `.bak` backups survive.
-- `.next` is not in git at all, and it was compiled from the substituted
-  source. Verified: 22 files in the build output carried real names.
-
-```bash
-git add . && git commit -m "safe state"
-git checkout -b demo/real-name-verification
-python main.py && pnpm build && PORT=3001 pnpm start
-pnpm demo:end          # discards, deletes, cleans, then reports
-```
-
-`pnpm demo:end` reports on the four things the demo could have left behind — a
-dirty tree, `.bak` backups, `.next`, real names in tracked files — and fails
-only on those. The outstanding git-history item predates any demo, so it is
-printed prominently but does not make a clean teardown read as a failure.
-
-Use a port other than 3000 if an editor is forwarding it; a held socket makes
-`next start` fail with `EADDRINUSE` before you see anything. The substitution script itself is
-gitignored: it contains the mapping, so committing it would publish in one file
-exactly what the abstractions exist to hide.
-
-## Static export
-
-The app has no API routes, server actions, dynamic segments, middleware or
-next/image, and every route already prerenders — so it exports to plain files
-with nothing left to run, and will sit on any static host.
-
-```bash
-pnpm build:static     # -> out/
-```
-
-It is opt-in behind `STATIC_EXPORT=1` so `pnpm build`, which `pnpm verify`
-runs, keeps exercising the same server build that `pnpm start` serves.
-
-Pages are served `noindex`. A link shared with a few people is not a private
-link: chat clients fetch it to build a preview, a click from anywhere else puts
-it in a `Referer` header, and telemetry has been enough to index unlinked URLs.
-
-**Whatever host you eventually choose, note that `wrangler pages deploy` and
-`vercel deploy` upload the working directory directly.** They never go through
-git, so neither the pre-push hook nor `check:tokens` sees them. Any real-name
-build must be gated by a check that lives in the deploy path itself.
+Do not add invented detail to those three areas in the meantime.
 
 ## Stack
 
 Next.js 16 (App Router, Turbopack), Tailwind CSS v4 with a CSS-first token
-theme, TypeScript, and `clsx`. Everything else is hand-rolled: the flow diagram
-is measured DOM plus plain SVG, the drag and drop is native, the animations are
-CSS keyframes and one `requestAnimationFrame` loop. No animation library, no
-component library, no diagram library.
+theme, TypeScript, and `clsx`. The flow diagram is measured DOM plus plain
+SVG, the drag and drop is native, the C4 views are Mermaid loaded only when
+opened, and the horizontal journey is one `requestAnimationFrame` loop against
+a pinned viewport. No animation library, no component library.
 
-The exception is the Process Comparison screen, which uses three.js through
-react-three-fiber. That is a deliberate trade: an animated model was worth
-roughly 250 kB gzipped, so the cost is fenced in. ESLint forbids importing the
-renderer outside `src/components/organisms/process/scene/**`, it loads as one lazy chunk
-on one route, and the other five screens never pay for it. A no-WebGL fallback
-implements the same contract and computes the same numbers.
+The exception is the process screen's simulation, which uses three.js through
+react-three-fiber. An animated model was worth roughly 250 kB gzipped, so the
+cost is fenced in as above, and a no-WebGL fallback implements the same
+contract and computes the same numbers.
+
+Pages are served `noindex`. `pnpm build:static` is opt-in behind
+`STATIC_EXPORT=1` so `pnpm build`, which `pnpm verify` runs, keeps exercising
+the same server build that `pnpm start` serves.

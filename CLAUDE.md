@@ -9,7 +9,7 @@ ESLint, the unit tests, and a production build.
 (`#FAF7F2`) with a serif display face. The tokens are cool (`#F8FAFC`) with
 Inter. The images are a layout reference only.
 
-Nine colours, and no others:
+Twelve tokens, and no others:
 
 | Token | Value | Use |
 | :--- | :--- | :--- |
@@ -183,7 +183,9 @@ the folder its screen suggests: a chip used by one screen is still a molecule.
   all so the node test runner can execute it directly.
 - Never call `new Date()` or read `sessionStorage` during render.
 - `<Canvas flat>` is required. R3F's default ACESFilmic tone mapping shifts
-  `#E1127A` toward salmon and would break the palette silently.
+  `#B01838` toward salmon and would break the palette silently. The scene's
+  materials carry hex literals, which `check:tokens` does not read — when the
+  palette moves, `scene/materials.ts` has to be moved by hand.
 - The scene's camera fit lives in `useFrame`, so the frame loop must stay
   `always` while motion is on. On `demand` the fit never runs and the canvas
   renders nothing.
