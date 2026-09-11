@@ -74,7 +74,7 @@ export function SearchPanel({
               className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2"
             />
             <select
-              className={`${FIELD} pl-11`}
+              className={`${FIELD} pl-12`}
               value={value.pol}
               onChange={(e) => set("pol", e.target.value as PortCode)}
             >
@@ -98,7 +98,7 @@ export function SearchPanel({
               className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2"
             />
             <select
-              className={`${FIELD} pl-11`}
+              className={`${FIELD} pl-12`}
               value={value.pod}
               onChange={(e) => set("pod", e.target.value as PortCode)}
             >

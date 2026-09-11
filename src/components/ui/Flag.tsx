@@ -184,11 +184,13 @@ export function Flag({
     <svg
       aria-hidden
       viewBox={`0 0 ${W} ${H}`}
-      // 3:2 at the cap height of the text beside it, sitting on the baseline
-      // the way a letter would rather than hanging off it like an icon.
-      width="1.2em"
-      height="0.8em"
-      className={className ?? "inline-block align-[-0.08em]"}
+      // A fixed size, not an em. Sized to the type, the flag beside a 13px
+      // caption was two-thirds of the one beside a 15px label, and at that
+      // size a crescent or a taegeuk is a smudge. One flag, one size, drawn
+      // 1:1 on its own box so the hairline lands on whole pixels.
+      width={W}
+      height={H}
+      className={className ?? "inline-block align-[-0.2em]"}
     >
       <title>{COUNTRY[cc] ?? cc}</title>
       {design}
