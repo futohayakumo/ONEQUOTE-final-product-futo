@@ -62,19 +62,18 @@ export function ProcessScreen() {
             {t("process.lede")}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-7">
-            <Link
-              href="/process/quiz"
-              className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
-            >
-              {t("process.cta.quiz")}
-              <ArrowRight size={18} />
-            </Link>
+          {/* One call to action, and it is the simulation. The quiz used to be
+              the primary button here; both non-engineer reviewers scored it
+              lowest of the five screens and asked why they were being tested.
+              It keeps its place at the end of the page, for the reader who
+              has read the page. */}
+          <div className="mt-10">
             <Link
               href="#simulation"
-              className="type-label underline underline-offset-4 transition-colors duration-150 hover:text-crimson"
+              className="inline-flex items-center gap-3 border border-crimson bg-crimson px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-charcoal hover:bg-charcoal"
             >
               {t("process.cta.sim")}
+              <ArrowRight size={18} />
             </Link>
           </div>
         </div>

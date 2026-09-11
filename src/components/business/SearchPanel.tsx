@@ -12,7 +12,8 @@ import {
 import type { ContainerType, LoyaltyTier, PortCode } from "@/types/quote";
 import { ArrowRight } from "../icons/ArrowRight";
 import { Flag } from "../ui/Flag";
-import { useT } from "../shell/LocaleProvider";
+import { formatDecimal } from "@/lib/localeFormat";
+import { useLocale, useT } from "../shell/LocaleProvider";
 
 export interface SearchState {
   pol: PortCode;
@@ -43,24 +44,18 @@ export function SearchPanel({
   onSearch: () => void;
 }) {
   const t = useT();
+  const { locale } = useLocale();
   const set = <K extends keyof SearchState>(k: K, v: SearchState[K]) =>
     onChange({ ...value, [k]: v });
 
   return (
     <section className="border border-border bg-studio p-6 rounded-card shadow-card sm:p-8">
-      <div className="flex gap-7 border-b border-border">
-        <span className="relative pb-3 type-label text-crimson">
-          {t("business.search.portToPort")}
-          <span
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-0.5 bg-crimson"
-          />
-        </span>
-        <span className="pb-3 type-label text-muted">
-          {t("business.search.multimodal")}{" "}
-          <span className="type-caption">{t("business.search.notBuilt")}</span>
-        </span>
-      </div>
+      {/* One mode, so it is a heading and not a tab. The second tab said
+          "(not built)" beside it, which both reviewers read as the site
+          admitting it was unfinished. */}
+      <p className="border-b border-border pb-3 type-overline text-muted">
+        {t("business.search.portToPort")}
+      </p>
 
       <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-2">
@@ -141,6 +136,19 @@ export function SearchPanel({
               </option>
             ))}
           </select>
+          {/* What the chosen tier means, in the two numbers it is made of.
+              "Silver Sail" was a name with nothing under it; both reviewers
+              asked what it was, and the quiz downstream asks about it. */}
+          <span className="type-caption tnum">
+            {t("business.search.tierNote", {
+              discount: formatDecimal(
+                LOYALTY_TIERS[value.tier].discountRate * 100,
+                locale,
+                0,
+              ),
+              teu: LOYALTY_TIERS[value.tier].milestoneTeu,
+            })}
+          </span>
         </label>
       </div>
 

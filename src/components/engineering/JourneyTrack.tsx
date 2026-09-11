@@ -43,6 +43,23 @@ const ARRIVAL_IMAGE = "/assets/scenes/12-booking-laptop.jpg";
 
 /** Scroll distance per panel transition, in viewport heights. Lower is faster. */
 const VH_PER_STEP = 80;
+
+/**
+ * Where inside a step the panel actually moves.
+ *
+ * Linear mapping meant the track was mid-slide for the whole of every step —
+ * a reader who stopped scrolling stopped on two half-panels with a sentence
+ * cut at the screen edge, and one reviewer took that for the page being
+ * broken. Now each panel holds still for the first and last 30% of its step
+ * and crosses in the middle 40%, eased, so any resting point that is not
+ * inside the crossing shows one whole panel.
+ */
+const DWELL = 0.3;
+
+function eased(f: number): number {
+  const u = Math.min(1, Math.max(0, (f - DWELL) / (1 - 2 * DWELL)));
+  return u * u * (3 - 2 * u);
+}
 /** Height of the sticky nav, which the pinned viewport sits beneath. */
 const NAV_PX = 64;
 
@@ -116,13 +133,14 @@ export function JourneyTrack() {
       const span = r.height - viewport;
       const p = span <= 0 ? 0 : Math.min(1, Math.max(0, (NAV_PX - r.top) / span));
 
-      const x = p * (N - 1);
+      const raw = p * (N - 1);
+      const i = Math.min(N - 2, Math.floor(raw));
+      const f = raw - i;
+      const x = i + eased(f);
       track.style.transform = `translate3d(${-x * 100}vw, 0, 0)`;
 
       // The clock runs between panel start times, so it reads the trace's
       // own entry offsets and lands on the total exactly at the end.
-      const i = Math.min(N - 2, Math.floor(x));
-      const f = x - i;
       const ms = Math.round(
         panels[i].offsetMs + (panels[i + 1].offsetMs - panels[i].offsetMs) * f,
       );
@@ -137,8 +155,29 @@ export function JourneyTrack() {
         dot.classList.toggle("border-control", !on);
       });
     };
+    // When scrolling stops inside a crossing, finish it: settle on whichever
+    // panel is nearer. Only while the track is pinned, only when the rest
+    // point is mid-crossing, and never while the reader is still moving.
+    let settle = 0;
+    const snap = () => {
+      const wrap = wrapRef.current;
+      if (!wrap) return;
+      const r = wrap.getBoundingClientRect();
+      const viewport = window.innerHeight - NAV_PX;
+      const span = r.height - viewport;
+      if (span <= 0 || r.top > NAV_PX || r.bottom < window.innerHeight) return;
+      const p = (NAV_PX - r.top) / span;
+      const raw = p * (N - 1);
+      const f = raw - Math.floor(raw);
+      if (f <= DWELL || f >= 1 - DWELL) return;
+      const target = Math.round(raw) / (N - 1);
+      const top = window.scrollY + r.top - NAV_PX + target * span;
+      window.scrollTo({ top, behavior: "smooth" });
+    };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
+      clearTimeout(settle);
+      settle = window.setTimeout(snap, 160);
     };
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -146,6 +185,7 @@ export function JourneyTrack() {
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
     };
     // panels is rebuilt each render but its values never change.
@@ -204,9 +244,19 @@ export function JourneyTrack() {
                   {pn.no}
                 </span>
               ) : null}
-              {pn.no !== null
-                ? NODES[pn.id as NodeId].label
-                : t("journey.arrival.label")}
+              {pn.no !== null ? (
+                <>
+                  {t(`journey.${pn.id}.name`)}
+                  {/* The service's own name, small: it is what the map and
+                      the log below call it, so the two stay linkable. */}
+                  <span className="text-border">·</span>
+                  <span className="normal-case tracking-normal type-caption">
+                    {NODES[pn.id as NodeId].label}
+                  </span>
+                </>
+              ) : (
+                t("journey.arrival.label")
+              )}
             </p>
             <h2 className="max-w-[20ch] type-section">
               {t(`journey.${pn.id}.title`)}

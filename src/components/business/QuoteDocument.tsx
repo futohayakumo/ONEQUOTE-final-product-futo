@@ -44,11 +44,25 @@ export function QuoteDocument(props: {
   }, [copied]);
 
   return (
-    <section className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="type-section">{t("doc.title")}</h2>
-        </div>
+    /*
+     * A <details>, closed by default, and the <pre> no longer scrolls inside
+     * itself. Open, it was a 32rem black box that captured the wheel: both
+     * non-engineer reviewers scrolled into it, stopped moving, and named it
+     * as the point they wanted to leave the page. The panel is for the
+     * integration partner, not the person reading the invoice.
+     */
+    <details className="group flex flex-col gap-5">
+      <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-4 list-none">
+        <span>
+          <span className="type-section">{t("doc.title")}</span>
+          <span className="mt-1 block type-caption">{t("doc.lede")}</span>
+        </span>
+        <span className="type-caption underline underline-offset-4 group-open:hidden">
+          {t("doc.open")}
+        </span>
+      </summary>
+
+      <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
 
         <div className="flex items-center gap-3">
           <div
@@ -106,13 +120,10 @@ export function QuoteDocument(props: {
             {format === "json" ? t("doc.jsonNote") : t("doc.textNote")}
           </span>
         </div>
-        <pre
-          tabIndex={0}
-          className="max-h-[32rem] overflow-auto bg-console px-4 py-4"
-        >
+        <pre className="overflow-x-auto bg-console px-4 py-4">
           <code className="type-console text-border">{body}</code>
         </pre>
       </div>
-    </section>
+    </details>
   );
 }

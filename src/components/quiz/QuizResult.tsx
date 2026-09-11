@@ -57,7 +57,7 @@ export function QuizResult({
                 <p className="type-label">{t(q.promptKey)}</p>
                 <p className="type-caption">
                   <span className="sr-only">
-                    {right ? t("quiz.correct") : t("quiz.notQuite")}. 
+                    {right ? t("quiz.correct") : t("quiz.notQuite")}{" "}
                   </span>
                   {t("quiz.answer", { text: correct ? t(correct.textKey) : "" })}
                 </p>

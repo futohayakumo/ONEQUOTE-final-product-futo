@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CONTAINERS, calculateQuote, validateQuote } from "@/lib/pricing";
-import { quoteForSailing, sailingsFor } from "@/lib/sailings";
+import { calculateQuote, validateQuote } from "@/lib/pricing";
+import { sailingsFor } from "@/lib/sailings";
 import {
   INCOTERM_ORDER,
   INCOTERMS,
+  allInTotal,
   chargeSections,
   type Incoterm,
 } from "@/lib/charges";
@@ -70,13 +71,23 @@ export function QuotationScreen() {
     sailings.find((s) => s.recommended) ??
     sailings[0];
 
-  // Same function the breakdown uses. Two formulas for one number is two
-  // numbers, eventually.
+  // The SAME figure the ticket prints as its all-in total, built by the same
+  // function from the same arguments. It used to be pricing.ts's `total` —
+  // freight, THC, documentation and BAF — while the ticket below itemised
+  // origin, ocean and destination in full, so a reader saw $4,008 on the
+  // card and $4,937 on the invoice for one sailing and had no way to know
+  // which was the price. Two formulas for one number is two numbers.
   const priceFor = (s: (typeof sailings)[number]) =>
-    quoteForSailing(
-      { ...quote, containerLabel: CONTAINERS[quote.containerType].label },
-      s,
-    ).total;
+    allInTotal(
+      chargeSections({
+        pol: query.pol,
+        pod: query.pod,
+        containerType: query.containerType,
+        units: quote.units,
+        oceanFreight: quote.oceanFreight * s.rateFactor,
+        incoterm,
+      }),
+    );
 
   /*
    * The charge sections, built here and passed to both renderings.

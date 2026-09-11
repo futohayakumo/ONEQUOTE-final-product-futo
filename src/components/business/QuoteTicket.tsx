@@ -298,6 +298,11 @@ export function QuoteTicket({
           <span className="type-caption">{t("quote.allIn", locale)}</span>
           <span className="type-caption tnum">${formatMoney(allIn, locale)}</span>
         </div>
+        {/* Two totals need one sentence between them, or a reader picks the
+            wrong one. "Yours" is whichever side the Incoterm puts you on. */}
+        <p className="type-caption">
+          {t("quote.totalsNote", locale, { code: incoterm })}
+        </p>
         <p className="type-caption tnum">
           {quote.teuAccrued} TEU ·{" "}
           {t("quote.nextMilestone", locale, { teu: quote.nextMilestoneTeu })}
@@ -333,7 +338,16 @@ export function QuoteTicket({
             <li>
               {t("notes.validity", locale, { hours: quote.validityHours })}
             </li>
-            <li>{t("notes.excluded", locale)}</li>
+            {/* Under DDP the seller carries duties, so a flat "duties not
+                included" under the DDP gloss was the ticket contradicting
+                itself two lines apart. The note now says what is true of
+                THIS quote: duties are the seller's, and are not priced here. */}
+            <li>
+              {t(
+                incoterm === "DDP" ? "notes.excludedDdp" : "notes.excluded",
+                locale,
+              )}
+            </li>
           </ul>
         </div>
       </div>

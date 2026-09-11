@@ -43,7 +43,7 @@ export function TechnicalDetail() {
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="inline-flex shrink-0 items-center gap-3 border border-charcoal bg-charcoal px-7 py-3.5 type-label text-studio rounded-card transition-colors duration-150 hover:border-crimson hover:bg-crimson"
+              className="inline-flex shrink-0 items-center gap-3 border border-control bg-studio px-7 py-3.5 type-label text-charcoal rounded-card transition-colors duration-150 hover:border-charcoal"
             >
               {t("detail.open")}
               <ArrowRight size={18} />

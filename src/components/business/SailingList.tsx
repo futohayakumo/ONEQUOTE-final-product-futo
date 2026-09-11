@@ -108,8 +108,14 @@ export function SailingList({
                   {/* The price and nothing under it. The lane was repeated
                       here in words, forty pixels from the departure and
                       arrival columns that already state it with a flag each. */}
-                  <span className="ml-auto type-section tnum">
-                    ${formatMoney(priceFor(s), locale)}
+                  <span className="ml-auto flex flex-col items-end">
+                    <span className="type-section tnum">
+                      ${formatMoney(priceFor(s), locale)}
+                    </span>
+                    {/* Says which number this is. The invoice below prints
+                        two — the reader's share and the whole — and this is
+                        the whole, so it says so. */}
+                    <span className="type-caption">{t("sailing.allIn")}</span>
                   </span>
                 </label>
               </li>
