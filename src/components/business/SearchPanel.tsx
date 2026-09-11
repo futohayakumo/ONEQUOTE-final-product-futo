@@ -11,7 +11,7 @@ import {
 } from "@/lib/pricing";
 import type { ContainerType, LoyaltyTier, PortCode } from "@/types/quote";
 import { ArrowRight } from "../icons/ArrowRight";
-import { flagGlyph } from "../ui/Flag";
+import { Flag } from "../ui/Flag";
 import { useT } from "../shell/LocaleProvider";
 
 export interface SearchState {
@@ -65,32 +65,50 @@ export function SearchPanel({
       <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-2">
           <span className="type-caption">{t("business.search.from")}</span>
-          <select
-            className={FIELD}
-            value={value.pol}
-            onChange={(e) => set("pol", e.target.value as PortCode)}
-          >
-            {PORT_ORDER.map((p) => (
-              <option key={p} value={p}>
-                {flagGlyph(PORTS[p].country)} {PORTS[p].city} ({p})
-              </option>
-            ))}
-          </select>
+          {/* A native <option> renders text and nothing else, so the flag
+              cannot go inside the list. It sits over the control's left
+              padding instead and shows the port that is selected. */}
+          <span className="relative">
+            <Flag
+              country={PORTS[value.pol].country}
+              className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2"
+            />
+            <select
+              className={`${FIELD} pl-11`}
+              value={value.pol}
+              onChange={(e) => set("pol", e.target.value as PortCode)}
+            >
+              {PORT_ORDER.map((p) => (
+                <option key={p} value={p}>
+                  {PORTS[p].city} ({p})
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <label className="flex flex-col gap-2">
           <span className="type-caption">{t("business.search.to")}</span>
-          <select
-            className={FIELD}
-            value={value.pod}
-            onChange={(e) => set("pod", e.target.value as PortCode)}
-          >
-            {PORT_ORDER.map((p) => (
-              <option key={p} value={p}>
-                {flagGlyph(PORTS[p].country)} {PORTS[p].city} ({p})
-              </option>
-            ))}
-          </select>
+          {/* A native <option> renders text and nothing else, so the flag
+              cannot go inside the list. It sits over the control's left
+              padding instead and shows the port that is selected. */}
+          <span className="relative">
+            <Flag
+              country={PORTS[value.pod].country}
+              className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2"
+            />
+            <select
+              className={`${FIELD} pl-11`}
+              value={value.pod}
+              onChange={(e) => set("pod", e.target.value as PortCode)}
+            >
+              {PORT_ORDER.map((p) => (
+                <option key={p} value={p}>
+                  {PORTS[p].city} ({p})
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
 
         <label className="flex flex-col gap-2">
