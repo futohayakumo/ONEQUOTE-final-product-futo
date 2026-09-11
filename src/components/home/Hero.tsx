@@ -30,7 +30,7 @@ export function Hero() {
           `w-[64%]` was viewport-relative while the headline is container-
           relative and its size is capped, so past about 1600px the two drifted
           apart: the seam kept marching right while the words stopped growing,
-          and at 1920 it fell past the end of PROGRESS. Starting 6rem left of
+          and at 1920 it fell past the end of the second line. Starting 6rem left of
           centre keeps the cut at the same point in the word at every width.
         */
         className="absolute inset-y-0 right-0 left-[calc(50%-6rem)] hidden lg:block"
