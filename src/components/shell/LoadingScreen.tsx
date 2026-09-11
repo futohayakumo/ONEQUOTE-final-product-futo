@@ -11,16 +11,23 @@ import { useT } from "./LocaleProvider";
  * reader nothing. This runs once, at load, and says what the site is about
  * before a word of it has rendered.
  *
- * It plays a full cycle even when there is nothing to wait for. A loader that
+ * It plays two full laps even when there is nothing to wait for. A loader that
  * flashes for 80ms and vanishes reads as a glitch; one that completes reads as
  * an intro. `MIN_MS` is that floor, and the fade is 400ms on top of it.
+ *
+ * It cuts between frames rather than gliding. Three drawings of a ship at
+ * three points is a kamishibai, and a kamishibai that tweens is neither a
+ * kamishibai nor an animation — the frames are the unit, so nothing here has a
+ * transition on its position.
  *
  * `sessionStorage`, not `localStorage`: it should not greet a reader who is
  * moving between screens, but it should be there again tomorrow.
  */
 const STEPS = ["loading.depart", "loading.transit", "loading.arrive"] as const;
-const STEP_MS = 620;
-const MIN_MS = STEP_MS * STEPS.length;
+const LAPS = 2;
+const FRAMES = STEPS.length * LAPS;
+const STEP_MS = 310;
+const MIN_MS = STEP_MS * FRAMES;
 const FADE_MS = 400;
 const KEY = "portfolio.intro.v1";
 
@@ -54,7 +61,9 @@ export function LoadingScreen() {
   const [state, setState] = useState<"idle" | "running" | "leaving" | "done">(
     "idle",
   );
-  const [step, setStep] = useState(0);
+  // Frame index across both laps; the position on the line is `frame % 3`.
+  const [frame, setFrame] = useState(0);
+  const step = frame % STEPS.length;
 
   useEffect(() => {
     // In an effect, never during render: this wraps every route, and reading
@@ -65,8 +74,8 @@ export function LoadingScreen() {
 
   useEffect(() => {
     if (state !== "running") return;
-    const ticks = STEPS.map((_, i) =>
-      setTimeout(() => setStep(i), i * STEP_MS),
+    const ticks = Array.from({ length: FRAMES }, (_, i) =>
+      setTimeout(() => setFrame(i), i * STEP_MS),
     );
     const out = setTimeout(() => setState("leaving"), MIN_MS);
     const gone = setTimeout(() => setState("done"), MIN_MS + FADE_MS);
@@ -94,11 +103,8 @@ export function LoadingScreen() {
         <span aria-hidden className="absolute inset-x-0 top-1/2 h-px bg-border" />
         <span
           aria-hidden
-          className="absolute left-0 top-1/2 h-px bg-crimson transition-[width] ease-linear"
-          style={{
-            width: `${(step / (STEPS.length - 1)) * 100}%`,
-            transitionDuration: `${STEP_MS}ms`,
-          }}
+          className="absolute left-0 top-1/2 h-px bg-crimson"
+          style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }}
         />
 
         <span className="relative flex justify-between">
@@ -106,22 +112,20 @@ export function LoadingScreen() {
             <span
               key={key}
               aria-hidden
-              className={`h-2.5 w-2.5 rounded-full transition-colors duration-300 ${
+              className={`h-2.5 w-2.5 rounded-full ${
                 i <= step ? "bg-crimson" : "border border-control bg-studio"
               }`}
             />
           ))}
         </span>
 
-        {/* The vessel rides the line. `left` in percent plus a half-width
-            pull-back keeps it centred on each point at any width. */}
+        {/* The vessel sits on the current point. `left` in percent plus a
+            half-width pull-back keeps it centred on each point at any width;
+            it jumps there, it does not sail there. */}
         <span
           aria-hidden
-          className="absolute top-1/2 w-24 -translate-x-1/2 -translate-y-[85%] transition-[left] ease-in-out"
-          style={{
-            left: `${(step / (STEPS.length - 1)) * 100}%`,
-            transitionDuration: `${STEP_MS}ms`,
-          }}
+          className="absolute top-1/2 w-24 -translate-x-1/2 -translate-y-[85%]"
+          style={{ left: `${(step / (STEPS.length - 1)) * 100}%` }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/spot/18-vessel-mark.png" alt="" className="w-full" />
