@@ -3,19 +3,18 @@
 import { useT } from "../shell/LocaleProvider";
 
 /**
- * Two words, as large as the grid allows, half of the second one crossing onto
- * a berth behind an angled edge.
+ * Two lines, as large as the grid allows, the end of the second one crossing
+ * onto a photograph behind an angled edge.
  *
- * The crossing is done with `mix-blend-mode: difference` on white type, which
- * is the only way to get it in one element: over the white left half the
- * difference of white against white is black, and over the photograph every
- * letter inverts whatever it lands on. Two spans in two colours would need the
- * seam's exact x-position, which moves with the viewport, the font and the
- * language — this needs none of them.
+ * The photograph is a quotation on a laptop — the thing the site is about,
+ * on the screen it is used on. It replaced a vessel at berth, and the swap
+ * took the blend mode with it: `mix-blend-mode: difference` inverted white
+ * type against dark water beautifully and inverts it against a white laptop
+ * screen into black letters over a cyan button. Charcoal, sitting on the
+ * picture, is the version that survives both.
  *
- * The angle is a clip, not a gradient. Below `lg` both are dropped: at 375px a
- * 14-degree cut is a smudge, and there is nothing for the type to invert
- * against.
+ * The angle is a clip, not a gradient. Below `lg` it is dropped: at 375px a
+ * 14-degree cut is a smudge.
  */
 export function Hero() {
   const t = useT();
@@ -38,14 +37,22 @@ export function Hero() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/assets/banners/01-port-vessel-berth.png"
+          src="/assets/banners/09-quote-on-laptop.png"
           alt=""
           className="h-full w-full object-cover"
         />
       </div>
 
-      <div className="mx-auto max-w-[86rem] px-6 py-16 lg:py-28">
-        <h1 className="type-hero text-studio mix-blend-difference">
+      <div className="relative mx-auto max-w-[86rem] px-6 py-16 lg:py-28">
+        {/*
+          Solid charcoal, no blend. `mix-blend-difference` was built for the
+          berth photograph, where the second line crossed dark water and came
+          out white. This photograph is a laptop, and its screen is white: the
+          same blend turned the letters crossing it black and the red button
+          under them cyan. The type still crosses the picture — that is the
+          composition — but it sits on it now rather than inverting it.
+        */}
+        <h1 className="type-hero text-charcoal">
           <span className="block">{t("home.hero.titleA")}</span>
           <span className="block">{t("home.hero.titleB")}</span>
         </h1>
@@ -56,7 +63,7 @@ export function Hero() {
       <div className="lg:hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/assets/banners/01-port-vessel-berth.png"
+          src="/assets/banners/09-quote-on-laptop.png"
           alt=""
           className="h-56 w-full object-cover"
         />
