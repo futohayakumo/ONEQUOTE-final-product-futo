@@ -33,18 +33,19 @@ import { useLocale, useT } from "../shell/LocaleProvider";
  */
 
 /**
- * Four of the five had the wrong picture. A phone offering air freight and
- * trucking for "the request", a share icon for "the check", a cloud for
- * "the hand-off", a database for "the hold" — none of them said what the
- * panel says, so they came out. A panel with no image sets its text at
- * full width until the drawn one arrives; see PROCESS_IMAGE_PROMPTS.md.
+ * One drawing per step, each of which says what its panel says: five fields
+ * leaving a phone; a ✓ past the gate and an ✕ stopped before it; a switch
+ * sending one card down the red track, which widens to three; one red slot
+ * on the ship with a tag on it and an hourglass beside. Drawn from the
+ * prompts in PROCESS_IMAGE_PROMPTS.md, in the same clay as the process page.
+ * A panel with no image sets its text wide instead.
  */
 const IMAGE: Record<string, string | undefined> = {
-  "new-request": undefined,
-  "request-intake": undefined,
-  "routing-gateway": undefined,
+  "new-request": "/assets/scenes/journey-1-request.png",
+  "request-intake": "/assets/scenes/journey-2-check.png",
+  "routing-gateway": "/assets/scenes/journey-3-route.png",
   "quotation-service": "/assets/scenes/06-dashboard-display.png",
-  "erp-system": undefined,
+  "erp-system": "/assets/scenes/journey-5-hold.png",
 };
 const ARRIVAL_IMAGE = "/assets/scenes/12-booking-laptop.jpg";
 
@@ -246,7 +247,7 @@ export function JourneyTrack() {
                 className={
                   pn.image.endsWith(".jpg")
                     ? "aspect-[4/3] w-full max-w-[34rem] object-cover rounded-card"
-                    : "w-full max-w-[28rem] object-contain"
+                    : "w-full max-w-[34rem] object-contain"
                 }
               />
             </div>
