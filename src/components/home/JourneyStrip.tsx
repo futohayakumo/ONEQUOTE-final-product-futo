@@ -23,7 +23,7 @@ import { Lines } from "../ui/Lines";
  * reference is explicit about not wanting.
  */
 const STEPS = [
-  { id: "quote", src: "/assets/scenes/11-quote-phone.jpg" },
+  { id: "quote", src: "/assets/scenes/13-quote-laptop.png" },
   { id: "booking", src: "/assets/scenes/12-booking-laptop.jpg" },
   { id: "delivery", src: "/assets/spot/12-perspective-process.jpg" },
 ] as const;
