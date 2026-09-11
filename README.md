@@ -33,7 +33,7 @@ pull leaves the last good bundle in place.
 | Route | What it does |
 | :--- | :--- |
 | `/` | Entrance. QUOTE / TO BERTH across a photograph, then the journey from quote to delivery, the network, the quotation screen on a tilted panel, and the three perspectives |
-| `/business` | Quotation simulator. Pick a lane, a container, a volume and a loyalty tier; three sailings come back priced; the ticket itemises origin, ocean and destination charges and re-allocates them as the Incoterm changes; the same quotation is available as JSON and as the customer's email text |
+| `/business` | The real ONE QUOTE flow, observed first-hand: origin, destination, container rows of equipment × quantity × weight, commodity, and a departure day from a calendar priced per day; then the options from that day with sort, a freight view, filters and a per-option timeline; then the accepted option with value-added services, the ticket, and the document as JSON and email text |
 | `/engineering` | The 1.3 seconds after a customer presses Quote, told as a pinned horizontal journey — five services, one panel each, with the request's clock running. Then why the system is in pieces, in the business's terms. The system map, the C4 views, the code and the log are behind one button |
 | `/process` | Traditional scrum against AI-DLC. Five roles with a queue at every hand-off, or one Bolt of four phases inside 24–72 hours. The measured figures (×3 throughput, ×5 defects, and what was never counted), the 3D simulation behind one click, and the three rules the tooling enforces |
 | `/process/quiz` | Five questions on those rules, reached from the end of the process screen |
@@ -59,9 +59,10 @@ suggests. The table is in `CLAUDE.md`.
 **The quotation model is pure and deterministic.** `src/lib/pricing.ts` calls
 no `Date` and no `Math.random`, so identical inputs always yield an identical
 quote reference. `src/lib/charges.ts` builds the full ticket — origin, ocean,
-destination — and decides which sections the Incoterm puts on your account.
-The sailing card and the ticket print the same all-in figure because they call
-the same function; the day they did not, a reviewer found it in a minute.
+destination — with haulage where the scope is Door, and groups every line
+into the four freight-view switches.
+The option card and the ticket print the same figure because they call the
+same function; the day they did not, a reviewer found it in a minute.
 
 **The engineering journey reads the same trace as the log.** `src/lib/trace.ts`
 walks the quotation route once and produces the hops, the log and the total.
@@ -105,8 +106,9 @@ Three parts of the site state structure that has not been confirmed with a
 real employee and will be corrected after interviews:
 
 1. what the automated review actually catches on this team's delivery;
-2. the real ONE QUOTE quotation's fields and the `POST /v1/quotations`
-   payload — the ticket was written from domain knowledge;
+2. inside the quotation, the exact charge-line codes the product prints and
+   what its "tariff" display mode shows — the three pages of the flow were
+   observed and rebuilt, the line codes inside the detail panel were not;
 3. the system map and the C4 model — the service topology is plausible, not
    confirmed.
 
