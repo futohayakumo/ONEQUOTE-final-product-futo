@@ -105,14 +105,11 @@ export function SailingList({
                     </span>
                   </span>
 
-                  <span className="ml-auto flex flex-col items-end gap-1">
-                    <span className="type-section tnum">
-                      ${formatMoney(priceFor(s), locale)}
-                    </span>
-                    <span className="type-caption">
-                      <Flag country={PORTS[pol].country} /> {PORTS[pol].city} →{" "}
-                      <Flag country={PORTS[pod].country} /> {PORTS[pod].city}
-                    </span>
+                  {/* The price and nothing under it. The lane was repeated
+                      here in words, forty pixels from the departure and
+                      arrival columns that already state it with a flag each. */}
+                  <span className="ml-auto type-section tnum">
+                    ${formatMoney(priceFor(s), locale)}
                   </span>
                 </label>
               </li>
