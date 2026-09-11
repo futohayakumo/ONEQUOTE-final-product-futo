@@ -9,7 +9,7 @@ const eslintConfig = defineConfig([
     // The renderer lives in exactly one lazily-loaded chunk. Without this
     // fence the other five screens silently start paying for three.js.
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/components/process/scene/**"],
+    ignores: ["src/components/organisms/process/scene/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
             {
               group: ["three", "three/*", "@react-three/*", "maath", "maath/*"],
               message:
-                "three.js may only be imported from src/components/process/scene/**. Everything else must go through the ProcessScene contract in src/types/process-scene.ts.",
+                "three.js may only be imported from src/components/organisms/process/scene/**. Everything else must go through the ProcessScene contract in src/types/process-scene.ts.",
             },
           ],
         },

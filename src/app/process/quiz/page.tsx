@@ -1,8 +1,8 @@
-import { DocumentLocale } from "@/components/shell/DocumentLocale";
+import { DocumentLocale } from "@/components/providers/DocumentLocale";
 import { t } from "@/lib/i18n";
-import { QuizRunner } from "@/components/quiz/QuizRunner";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { QuizBackLink } from "@/components/quiz/QuizBackLink";
+import { QuizRunner } from "@/components/organisms/quiz/QuizRunner";
+import { PageHeader } from "@/components/molecules/PageHeader";
+import { QuizBackLink } from "@/components/molecules/QuizBackLink";
 
 export const metadata = { title: `${t("meta.quiz")} — ${t("meta.site")}` };
 

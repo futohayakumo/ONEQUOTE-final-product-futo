@@ -46,7 +46,7 @@ quote reference and an identical trace. Three worked lanes are pinned as test
 fixtures.
 
 **The delivery timing model is shared, not duplicated.**
-`src/components/process/model/processModel.ts` has no runtime imports at all, so
+`src/components/organisms/process/model/processModel.ts` has no runtime imports at all, so
 the WebGL scene, the 2D readout and the no-WebGL fallback all compute the same
 numbers, and the node test runner can execute it directly. The shape of that
 model is the argument the screen makes: queue wait is superlinear in batch size
@@ -54,7 +54,7 @@ under traditional delivery and near-flat under AI-driven, so the advantage
 widens from about 5x at 0.5 story points to about 14x at 8.
 
 **three.js is fenced in.** It may only be imported from
-`src/components/process/scene/**`, enforced by ESLint and by `check:tokens`.
+`src/components/organisms/process/scene/**`, enforced by ESLint and by `check:tokens`.
 It loads as one lazy chunk on the process route and nowhere else. The 3D
 geometry is authored procedurally; the proportions were sketched offline and kept
 as a record of intent, not build inputs.
@@ -154,6 +154,6 @@ component library, no diagram library.
 The exception is the Process Comparison screen, which uses three.js through
 react-three-fiber. That is a deliberate trade: an animated model was worth
 roughly 250 kB gzipped, so the cost is fenced in. ESLint forbids importing the
-renderer outside `src/components/process/scene/**`, it loads as one lazy chunk
+renderer outside `src/components/organisms/process/scene/**`, it loads as one lazy chunk
 on one route, and the other five screens never pay for it. A no-WebGL fallback
 implements the same contract and computes the same numbers.

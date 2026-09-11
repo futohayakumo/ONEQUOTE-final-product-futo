@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { t } from "@/lib/i18n";
-import { LocaleProvider } from "@/components/shell/LocaleProvider";
-import { LocalizeScript } from "@/components/shell/LocalizeScript";
-import { LoadingScreen } from "@/components/shell/LoadingScreen";
-import { WordmarkBand } from "@/components/home/WordmarkBand";
-import { SiteFooter } from "@/components/shell/SiteFooter";
-import { SiteNav } from "@/components/shell/SiteNav";
-import { SkipLink } from "@/components/shell/SkipLink";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
+import { LocalizeScript } from "@/components/providers/LocalizeScript";
+import { LoadingScreen } from "@/components/templates/LoadingScreen";
+import { WordmarkBand } from "@/components/organisms/home/WordmarkBand";
+import { SiteFooter } from "@/components/templates/SiteFooter";
+import { SiteNav } from "@/components/templates/SiteNav";
+import { SkipLink } from "@/components/molecules/SkipLink";
 import { inter, mono } from "./fonts";
 import "./globals.css";
 

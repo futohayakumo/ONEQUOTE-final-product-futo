@@ -78,11 +78,11 @@ report "no serif display faces anywhere" \
 # The design-token guards below are untouched. They were never about names.
 
 report "Terminal Green confined to the console" \
-  "$(grep -rn 'text-terminal' src/ 2>/dev/null | grep -vE 'components/(quote/QuoteConsole|engineering/RequestLog|ui/CodeBlock)')"
+  "$(grep -rn 'text-terminal' src/ 2>/dev/null | grep -vE 'components/(organisms/engineering/RequestLog|atoms/CodeBlock)')"
 
 # three.js must stay inside the lazily-loaded scene chunk, or the other five
 # screens start paying ~250 kB for a renderer they never use.
-report "three.js confined to components/process/scene/" \
-  "$(grep -rlE 'from "(three|@react-three/|maath)' src/ 2>/dev/null | grep -v 'components/process/scene/')"
+report "three.js confined to components/organisms/process/scene/" \
+  "$(grep -rlE 'from "(three|@react-three/|maath)' src/ 2>/dev/null | grep -v 'components/organisms/process/scene/')"
 
 exit $fail

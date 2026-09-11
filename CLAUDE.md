@@ -156,13 +156,30 @@ Three things follow:
 The `name` in `package.json` is still neutral. It determines the deploy
 subdomain, and there is no reason to spend the client's name on a hostname.
 
+## Components are laid out by Atomic Design
+
+`src/components/` has five folders and a file goes in exactly one of them:
+
+| Folder | What lives there | Test |
+| :--- | :--- | :--- |
+| `atoms/` | one thing, composed of nothing else here — `Flag`, `Lines`, `ProgressBar`, `icons/` | imports no other component |
+| `molecules/` | a few atoms with one job — `Modal`, `PageHeader`, `OptionRow`, `StoryPointChip`, `RouteLine` | imports atoms only |
+| `organisms/` | a whole band or screen, grouped by the screen it belongs to — `home/`, `business/`, `engineering/`, `process/`, `quiz/` | composes molecules and atoms |
+| `templates/` | the frame every page sits in — `SiteNav`, `SiteFooter`, `LoadingScreen` | |
+| `providers/` | no pixels — `LocaleProvider`, `DocumentLocale`, `LocalizeScript` | |
+
+Pages are `src/app/*/page.tsx`. The engineer reviewing this asked for the
+source to be readable by its folder names, and this is the vocabulary they
+named, so a new component takes the folder its composition earns rather than
+the folder its screen suggests: a chip used by one screen is still a molecule.
+
 ## Architecture notes
 
 - All five routes must stay statically rendered. Never read `searchParams` on
   the server; sync selection state client-side with `history.replaceState`.
-- `three.js` may only be imported from `src/components/process/scene/**`.
+- `three.js` may only be imported from `src/components/organisms/process/scene/**`.
   ESLint enforces this. The 2D UI and the no-WebGL fallback share
-  `components/process/model/processModel.ts`, which has no runtime imports at
+  `components/organisms/process/model/processModel.ts`, which has no runtime imports at
   all so the node test runner can execute it directly.
 - Never call `new Date()` or read `sessionStorage` during render.
 - `<Canvas flat>` is required. R3F's default ACESFilmic tone mapping shifts

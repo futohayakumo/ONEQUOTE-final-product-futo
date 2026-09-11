@@ -1,8 +1,8 @@
-import { DocumentLocale } from "@/components/shell/DocumentLocale";
+import { DocumentLocale } from "@/components/providers/DocumentLocale";
 import { t } from "@/lib/i18n";
-import { JourneyTrack } from "@/components/engineering/JourneyTrack";
-import { TechnicalDetail } from "@/components/engineering/TechnicalDetail";
-import { WhySplit } from "@/components/engineering/WhySplit";
+import { JourneyTrack } from "@/components/organisms/engineering/JourneyTrack";
+import { TechnicalDetail } from "@/components/organisms/engineering/TechnicalDetail";
+import { WhySplit } from "@/components/organisms/engineering/WhySplit";
 
 export const metadata = { title: `${t("meta.engineering")} — ${t("meta.site")}` };
 

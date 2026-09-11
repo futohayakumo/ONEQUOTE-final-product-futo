@@ -1,6 +1,6 @@
-import { DocumentLocale } from "@/components/shell/DocumentLocale";
+import { DocumentLocale } from "@/components/providers/DocumentLocale";
 import { t } from "@/lib/i18n";
-import { ProcessScreen } from "@/components/process/v3/ProcessScreen";
+import { ProcessScreen } from "@/components/organisms/process/ProcessScreen";
 
 export const metadata = { title: `${t("meta.process")} — ${t("meta.site")}` };
 
