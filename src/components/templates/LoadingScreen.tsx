@@ -138,7 +138,7 @@ export function LoadingScreen() {
           the picture instead of the wait; a loader says it is loading. Kept
           in one language: it is a word every reader of this site knows, and
           the dots are the part that moves. */}
-      <p className="mt-10 type-overline text-muted tnum" aria-hidden>
+      <p className="mt-10 type-overline normal-case text-muted tnum" aria-hidden>
         {t("loading.label")}
         {".".repeat(step + 1)}
       </p>

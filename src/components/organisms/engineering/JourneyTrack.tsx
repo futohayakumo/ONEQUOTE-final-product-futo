@@ -329,7 +329,7 @@ export function JourneyTrack() {
           aria-hidden
           className="pointer-events-none fixed bottom-8 left-1/2 z-40 flex flex-col items-center gap-1 animate-bob"
         >
-          <span className="type-overline text-muted">scroll</span>
+          <span className="type-overline normal-case text-muted">scroll</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted">
             <path d="M8 2v11M3.5 8.5 8 13l4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
