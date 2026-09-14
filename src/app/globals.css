@@ -367,6 +367,23 @@
   }
 }
 
+/* The "scroll" cue at the foot of a pinned screen: a slow float, up and
+   down, until the reader has scrolled. Stopped outright under reduced
+   motion by the global rule above. */
+@keyframes bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, -8px);
+  }
+}
+
+@utility animate-bob {
+  animation: bob 1.6s ease-in-out infinite;
+}
+
 @utility animate-caret {
   animation: caret-blink 1s step-end infinite;
 }

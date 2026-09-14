@@ -1,15 +1,18 @@
 "use client";
 
 import cn from "clsx";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FREIGHT_GROUPS,
   chargeSections,
   groupTotal,
+  type ChargeLine,
   type ChargeSection,
   type FreightGroup,
+  type TariffCurrency,
 } from "@/lib/charges";
-import { formatDate, formatMoney, formatWeekday } from "@/lib/localeFormat";
+import { formatCurrency, formatDate, formatMoney, formatWeekday } from "@/lib/localeFormat";
+import { fetchRates, type FetchedRates } from "@/lib/quotationApi";
 import { COMMODITIES, EQUIPMENT, PORTS } from "@/lib/pricing";
 import { sailingAt, timelineFor, type Sailing } from "@/lib/sailings";
 import type { QuoteResult } from "@/types/quote";
@@ -64,6 +67,36 @@ export function OptionsList({
   );
   const [open, setOpen] = useState<string | null>(null);
 
+  /*
+   * The tariff display needs a rate per currency, and the site does not
+   * carry one of its own: they come from the service, which fetched them
+   * from the ECB. Until they arrive — or if they never do — the toggle
+   * stays on USD and says why.
+   */
+  const [rates, setRates] = useState<FetchedRates | null | "unknown">("unknown");
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetchRates(ctrl.signal).then((r) => {
+      if (!ctrl.signal.aborted) setRates(r);
+    });
+    return () => ctrl.abort();
+  }, []);
+  const canShowTariff = rates !== "unknown" && rates !== null;
+
+  /** A USD amount in the line's own currency, at the fetched rate. */
+  const inTariff = (usd: number, ccy: TariffCurrency) =>
+    ccy === "USD" || !canShowTariff ? usd : usd * (rates.usdTo[ccy] ?? 1);
+
+  /** The card's price in tariff mode: one figure per currency present. */
+  const byCurrency = (sections: ChargeSection[]) => {
+    const sums = new Map<TariffCurrency, number>();
+    for (const l of sections.flatMap((x) => x.lines)) {
+      if (!groups.has(l.group)) continue;
+      sums.set(l.currency, (sums.get(l.currency) ?? 0) + inTariff(l.amount, l.currency));
+    }
+    return [...sums.entries()];
+  };
+
   // Sections per option, once. The same function the ticket calls.
   const priced = useMemo(
     () =>
@@ -107,6 +140,11 @@ export function OptionsList({
     return next;
   };
 
+  const lineAmount = (l: ChargeLine) =>
+    display === "usd"
+      ? `$${formatMoney(l.amount, locale)}`
+      : formatCurrency(inTariff(l.amount, l.currency), l.currency, locale);
+
   const check = (checked: boolean, onChange: () => void, label: string) => (
     <label className="inline-flex cursor-pointer items-center gap-2 type-caption text-charcoal">
       <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-crimson" />
@@ -141,22 +179,32 @@ export function OptionsList({
               <span key={g.id}>{check(groups.has(g.id), () => setGroups(toggle(groups, g.id)), t(g.labelKey))}</span>
             ))}
           </fieldset>
-          <div role="radiogroup" aria-label={t("options.display")} className="flex overflow-hidden border border-control rounded-card">
-            {(["usd", "tariff"] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                role="radio"
-                aria-checked={display === d}
-                onClick={() => setDisplay(d)}
-                className={cn(
-                  "px-3 py-1.5 type-caption transition-colors duration-150",
-                  display === d ? "bg-charcoal text-studio" : "bg-studio text-muted hover:text-charcoal",
-                )}
-              >
-                {t(`options.display.${d}`)}
-              </button>
-            ))}
+          <div className="flex flex-col items-end gap-1">
+            <div role="radiogroup" aria-label={t("options.display")} className="flex overflow-hidden border border-control rounded-card">
+              {(["usd", "tariff"] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  role="radio"
+                  aria-checked={display === d}
+                  disabled={d === "tariff" && !canShowTariff}
+                  onClick={() => setDisplay(d)}
+                  className={cn(
+                    "px-3 py-1.5 type-caption transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50",
+                    display === d ? "bg-charcoal text-studio" : "bg-studio text-muted hover:text-charcoal",
+                  )}
+                >
+                  {t(`options.display.${d}`)}
+                </button>
+              ))}
+            </div>
+            <span className="type-caption">
+              {canShowTariff
+                ? t("options.tariffNote", { source: rates.source.toUpperCase(), asOf: rates.asOf })
+                : rates === null
+                  ? t("options.tariffOffline")
+                  : ""}
+            </span>
           </div>
         </div>
       </div>
@@ -282,9 +330,20 @@ export function OptionsList({
                   </div>
 
                   <div className="flex flex-col items-end gap-2">
-                    <span className="type-section tnum">
-                      {display === "usd" ? `$${formatMoney(price, locale)}` : t("options.tariffLines", { n: sections.reduce((n, x) => n + x.lines.length, 0) })}
-                    </span>
+                    {display === "usd" ? (
+                      <span className="type-section tnum">${formatMoney(price, locale)}</span>
+                    ) : (
+                      /* One figure per currency, as the tariffs are levied:
+                         a reader sees what is yen, what is dollars, and that
+                         they are not the same money. */
+                      <span className="flex flex-col items-end">
+                        {byCurrency(sections).map(([ccy, sum]) => (
+                          <span key={ccy} className="type-label tnum">
+                            {formatCurrency(sum, ccy, locale)}
+                          </span>
+                        ))}
+                      </span>
+                    )}
                     <span className="type-caption">{t("options.budget")}</span>
                     <div className="flex gap-2">
                       <button
@@ -355,15 +414,21 @@ export function OptionsList({
                           >
                             <dt>
                               <span className="type-label">{l.code}</span> {t(l.labelKey)}
-                              {display === "tariff" ? <span className="ml-2">· {t(l.basisKey, l.basisVars)}</span> : null}
+                              <span className="ml-2">· {t(l.basisKey, l.basisVars)}</span>
                             </dt>
-                            <dd className="tnum">{display === "usd" ? `$${formatMoney(l.amount, locale)}` : l.group}</dd>
+                            <dd className="tnum">{lineAmount(l)}</dd>
                           </div>
                         )),
                       )}
                       <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-2 type-label">
                         <dt>{t("options.budget")}</dt>
-                        <dd className="tnum">${formatMoney(price, locale)}</dd>
+                        <dd className="flex flex-col items-end tnum">
+                          {display === "usd"
+                            ? `$${formatMoney(price, locale)}`
+                            : byCurrency(sections).map(([ccy, sum]) => (
+                                <span key={ccy}>{formatCurrency(sum, ccy, locale)}</span>
+                              ))}
+                        </dd>
                       </div>
                     </dl>
                   </div>

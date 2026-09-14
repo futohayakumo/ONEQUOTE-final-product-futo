@@ -70,3 +70,43 @@ export async function fetchQuotation(
     clearTimeout(timer);
   }
 }
+
+/** USD → currency, as the service last fetched it from the ECB, with its date. */
+export interface FetchedRates {
+  /** e.g. { JPY: 154.18, EUR: 0.86088, SGD: 1.2664 } */
+  usdTo: Record<string, number>;
+  asOf: string;
+  source: string;
+}
+
+/**
+ * The exchange rates the service holds. Used by the options page's tariff
+ * display, which shows each charge in the currency its tariff is levied in.
+ * Without the service there are no rates and the tariff display is off —
+ * the site does not carry a rate of its own.
+ */
+export async function fetchRates(signal?: AbortSignal): Promise<FetchedRates | null> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  signal?.addEventListener("abort", () => ctrl.abort());
+  try {
+    const res = await fetch(`${API_URL}/v1/rates`, { signal: ctrl.signal });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as { source: string; key: string; value: number; asOf: string }[];
+    const usdTo: Record<string, number> = {};
+    let asOf = "";
+    let source = "";
+    for (const r of rows) {
+      const [base, quote] = r.key.split("/");
+      if (base !== "USD") continue;
+      usdTo[quote] = r.value;
+      asOf = r.asOf.slice(0, 10);
+      source = r.source;
+    }
+    return Object.keys(usdTo).length ? { usdTo, asOf, source } : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}

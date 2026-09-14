@@ -25,6 +25,25 @@ import type { PortCode, RowResult, Scope } from "@/types/quote";
  * Nothing here imports a value, so the node test runner executes it directly.
  */
 
+/**
+ * The currency each port publishes its tariff in.
+ *
+ * The real options page has a "tariff" display beside "USD": tariff shows
+ * every charge in the currency it is actually levied in — a Japanese THC in
+ * yen, a Singapore one in Singapore dollars — and USD converts them all to
+ * one. The model's amounts are USD; a line's `currency` says what it would
+ * be levied in, and the renderer converts with a fetched rate or, without
+ * one, says it cannot.
+ */
+export type TariffCurrency = "USD" | "JPY" | "SGD" | "EUR";
+
+export const PORT_CURRENCY: Record<PortCode, TariffCurrency> = {
+  JPTYO: "JPY",
+  JPYOK: "JPY",
+  SGSIN: "SGD",
+  NLRTM: "EUR",
+};
+
 /** Terminal handling, per container, by port. Ports set their own tariff. */
 const THC_USD: Record<PortCode, { origin: number; destination: number }> = {
   JPTYO: { origin: 182, destination: 182 },
@@ -83,6 +102,8 @@ export interface ChargeLine {
   code: string;
   labelKey: string;
   group: FreightGroup;
+  /** The currency the tariff is published in. `amount` is always USD. */
+  currency: TariffCurrency;
   /** What it is charged on — per container, per B/L, a share of the freight. */
   basisKey: string;
   basisVars?: Record<string, string | number>;
@@ -142,12 +163,16 @@ export function chargeSections(input: {
     subtotal: money(lines.reduce((n, l) => n + l.amount, 0)),
   });
 
+  const originCcy = PORT_CURRENCY[pol];
+  const destCcy = PORT_CURRENCY[pod];
+
   const origin: ChargeLine[] = [];
   if (originScope === "DOOR") {
     origin.push({
       code: "OHC",
       labelKey: "charge.haulage",
       group: "originCharge",
+      currency: originCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(HAULAGE_USD[pol] * units),
@@ -158,6 +183,7 @@ export function chargeSections(input: {
       code: "THC",
       labelKey: "charge.thc",
       group: "originCharge",
+      currency: originCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(THC_USD[pol].origin * units),
@@ -166,6 +192,7 @@ export function chargeSections(input: {
       code: "DOC",
       labelKey: "charge.doc",
       group: "originCharge",
+      currency: originCcy,
       basisKey: perBl.key,
       amount: DOCUMENTATION_USD,
     },
@@ -173,6 +200,7 @@ export function chargeSections(input: {
       code: "SEAL",
       labelKey: "charge.seal",
       group: "originCharge",
+      currency: originCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(SEAL_USD * units),
@@ -181,6 +209,7 @@ export function chargeSections(input: {
       code: "ISPS",
       labelKey: "charge.isps",
       group: "originCharge",
+      currency: originCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(ISPS_USD * units),
@@ -192,6 +221,7 @@ export function chargeSections(input: {
       code: "O/F",
       labelKey: "charge.of",
       group: "basicOceanFreight",
+      currency: "USD",
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(oceanFreight),
@@ -200,6 +230,7 @@ export function chargeSections(input: {
       code: "BAF",
       labelKey: "charge.baf",
       group: "freightCharge",
+      currency: "USD",
       basisKey: "basis.shareOfFreight",
       basisVars: { pct: pct(BUNKER_RATE) },
       amount: money(oceanFreight * BUNKER_RATE),
@@ -208,6 +239,7 @@ export function chargeSections(input: {
       code: "CAF",
       labelKey: "charge.caf",
       group: "freightCharge",
+      currency: "USD",
       basisKey: "basis.shareOfFreight",
       basisVars: { pct: pct(CURRENCY_RATE) },
       amount: money(oceanFreight * CURRENCY_RATE),
@@ -218,6 +250,7 @@ export function chargeSections(input: {
       code: "RFS",
       labelKey: "charge.reefer",
       group: "freightCharge",
+      currency: "USD",
       basisKey: "basis.perContainer",
       basisVars: { units: reeferUnits },
       amount: money(REEFER_SURCHARGE_USD * reeferUnits),
@@ -228,6 +261,7 @@ export function chargeSections(input: {
       code: "OWS",
       labelKey: "charge.overweight",
       group: "freightCharge",
+      currency: "USD",
       basisKey: "basis.perContainer",
       basisVars: { units: overweightUnits },
       amount: money(OVERWEIGHT_SURCHARGE_USD * overweightUnits),
@@ -239,6 +273,7 @@ export function chargeSections(input: {
       code: "DTHC",
       labelKey: "charge.thc",
       group: "destinationCharge",
+      currency: destCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(THC_USD[pod].destination * units),
@@ -247,6 +282,7 @@ export function chargeSections(input: {
       code: "D/O",
       labelKey: "charge.do",
       group: "destinationCharge",
+      currency: destCcy,
       basisKey: perBl.key,
       amount: DELIVERY_ORDER_USD,
     },
@@ -254,6 +290,7 @@ export function chargeSections(input: {
       code: "ENS",
       labelKey: "charge.ens",
       group: "destinationCharge",
+      currency: destCcy,
       basisKey: perBl.key,
       amount: MANIFEST_FILING_USD,
     },
@@ -263,6 +300,7 @@ export function chargeSections(input: {
       code: "DHC",
       labelKey: "charge.haulage",
       group: "destinationCharge",
+      currency: destCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
       amount: money(HAULAGE_USD[pod] * units),

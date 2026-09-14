@@ -23,7 +23,8 @@ import { useT } from "../providers/LocaleProvider";
  * `sessionStorage`, not `localStorage`: it should not greet a reader who is
  * moving between screens, but it should be there again tomorrow.
  */
-const STEPS = ["loading.depart", "loading.transit", "loading.arrive"] as const;
+/** Three points on the line; the caption counts them with dots. */
+const STEPS = [0, 1, 2] as const;
 const LAPS = 2;
 const FRAMES = STEPS.length * LAPS;
 const STEP_MS = 310;
@@ -132,7 +133,15 @@ export function LoadingScreen() {
         </span>
       </div>
 
-      <p className="mt-10 type-overline text-muted">{t(STEPS[step])}</p>
+      {/* "Loading." "Loading.." "Loading..." — one dot per point the ship
+          has reached. It said Departure / In transit / Arrival, which named
+          the picture instead of the wait; a loader says it is loading. Kept
+          in one language: it is a word every reader of this site knows, and
+          the dots are the part that moves. */}
+      <p className="mt-10 type-overline text-muted tnum" aria-hidden>
+        {t("loading.label")}
+        {".".repeat(step + 1)}
+      </p>
     </div>
   );
 }

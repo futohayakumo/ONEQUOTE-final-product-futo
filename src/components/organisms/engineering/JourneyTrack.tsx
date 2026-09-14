@@ -5,7 +5,6 @@ import { NODES, ROUTE_BY_NODE } from "@/lib/flow-data";
 import { buildTrace } from "@/lib/trace";
 import { formatDecimal } from "@/lib/localeFormat";
 import type { NodeId } from "@/types/flow";
-import { ArrowRight } from "../../atoms/icons/ArrowRight";
 import { useLocale, useT } from "../../providers/LocaleProvider";
 
 /**
@@ -109,6 +108,22 @@ export function JourneyTrack() {
   // "track" pins and slides; "stack" is the same content in a column. Decided
   // in an effect so the server HTML and the first client paint agree.
   const [mode, setMode] = useState<"stack" | "track">("stack");
+
+  /*
+   * The scroll cue. A sentence in the header used to say "scroll to follow
+   * the request"; a reader who has scrolled has already learned that, and
+   * one who has not is looking at the foot of the screen, not the header.
+   * So: an arrow and the word, floating at the bottom, until the page has
+   * moved a little — then gone for good.
+   */
+  const [cue, setCue] = useState(false);
+  useEffect(() => {
+    if (mode !== "track") return;
+    const onScroll = () => setCue(window.scrollY < 120);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mode]);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const fillRef = useRef<HTMLSpanElement | null>(null);
@@ -207,12 +222,6 @@ export function JourneyTrack() {
         {t("journey.title", { s: seconds })}
       </h1>
       <p className="mt-4 max-w-[62ch] type-body text-muted">{t("journey.lede")}</p>
-      {mode === "track" ? (
-        <p className="mt-6 inline-flex items-center gap-2 type-caption">
-          {t("journey.hint")}
-          <ArrowRight size={14} />
-        </p>
-      ) : null}
     </header>
   );
 
@@ -315,6 +324,17 @@ export function JourneyTrack() {
   return (
     <section>
       {header}
+      {cue ? (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed bottom-8 left-1/2 z-40 flex flex-col items-center gap-1 animate-bob"
+        >
+          <span className="type-overline text-muted">scroll</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted">
+            <path d="M8 2v11M3.5 8.5 8 13l4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      ) : null}
       {/* Tall wrapper; pinned viewport inside it. The page scrolls the wrapper's
           height and the track translates by the same fraction. */}
       <div
