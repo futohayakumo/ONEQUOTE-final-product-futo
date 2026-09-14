@@ -84,7 +84,7 @@ cd .. && pnpm build && pnpm start                   # http://localhost:3000
 - ▶ 付加サービス：揚地のフリータイムを「+」で2日 → 合計が動く
   **「実物にあるとおり、フリータイムは14日込みで、追加は日単位で買えます」**
 - → 見積書の一番下：**「総額（JPY 換算）」と「見積りサービスも同じ総額を返し、QTN-… として発行」**
-  **「ここだけがブラウザの外から来ています。API が同じ計算をして、ECB のレートで円換算し、見積りを保存しました」**
+  **「ここだけがブラウザの外から来ています。API が同じ計算をして、いま ECB から取ったレートで円換算し、見積りを保存しました。『この見積りのために取得』と書いてあるのはそのためです」**
 
 ### 1-3. API を見せる（2分）
 
@@ -93,7 +93,7 @@ cd .. && pnpm build && pnpm start                   # http://localhost:3000
 **「バックエンドは NestJS。この画面は仕様書で、コードから自動生成されています。」**
 
 - ▶ `GET /v1/rates` → Try it out → Execute → ECB の3レートと **asOf / fetchedAt / url**
-  **「数字に出どころと取得時刻が付いています。取れなかった場合は前回の値がそのまま残り、日付でそれが分かる」**
+  **「見積りのたびに ECB へ取りに行きます。数字に出どころと取得時刻が付き、取れなかった場合は保存済みの値を『cached』と明記して使う。黙って古い値を出すことはない」**
 - ▶ `GET /v1/quotations/{reference}` にさっきの番号 → 発行した見積りがそのまま再生される
 - 言う：**「計算のコードはフロントと同じファイルを import しています。だからブラウザと API が違う数字を出すことはない」**
 
@@ -142,14 +142,15 @@ C4 の Container 図をそのまま貼る（エンジニアリングの C4ビュ
 
 ```
 ブラウザ（Next.js 16, 静的5ルート）
-   │ POST /v1/quotations（400ms でタイムアウト → ブラウザ内計算にフォールバック）
+   │ POST /v1/quotations（3秒でタイムアウト → ブラウザ内計算にフォールバック）
    ▼
 Quotation API（NestJS, Swagger /docs）
    │ Prisma
+   │ 見積りのたびに ECB へ（2.5秒で諦めて保存済みレートを「cached」と明記）
    ▼
 PostgreSQL 16 ── rates（ECB）/ ports（UN/LOCODE）/ quotations
    ▲
-   └── Ingest（毎日 06:00 UTC / 手動）← api.frankfurter.dev（ECB）, UN/LOCODE CSV
+   └── Ingest（毎日 06:00 UTC / 手動）← UN/LOCODE CSV、ECB（フォールバック用の温め）
 ```
 
 一言：**「フロントは静的。API は足し算。API が無くても同じページが、1行少ないだけで出る」**
@@ -177,7 +178,7 @@ sequenceDiagram
     participant D as PostgreSQL
     participant E as ECB（Frankfurter）
 
-    Note over A,E: 毎日 06:00 UTC（または手動）
+    Note over A,E: 毎日 06:00 UTC（または手動）— フォールバック用の温め
     A->>E: GET /v1/latest?base=USD
     E-->>A: JPY / EUR / SGD, date
     A->>D: upsert rates (source, key, value, asOf, fetchedAt, url)
@@ -188,11 +189,17 @@ sequenceDiagram
     C->>W: この便で進む
     W->>P: calculateQuote + chargeSections + vas
     P-->>W: 見積書（USD）
-    W->>A: POST /v1/quotations（400ms timeout）
+    W->>A: POST /v1/quotations（3s timeout）
     A->>P: 同じ関数で同じ計算
-    A->>D: SELECT rates WHERE key='USD/JPY'
+    A->>E: GET /v1/latest?base=USD（2.5s time-box）
+    alt ECB が答えた
+        E-->>A: 今日のレート, date
+        A->>D: upsert rates
+    else 答えない
+        A->>D: SELECT rates（保存済み）— provenance.mode = cached
+    end
     A->>D: upsert quotation (id, request, response)
-    A-->>W: 同じ総額 + JPY換算 + provenance
+    A-->>W: 同じ総額 + JPY換算 + provenance（live / cached）
     W-->>C: 見積書 ＋「サービスも同じ総額を返した」＋ ECB の日付
     Note over W: A が応答しなければ、この最後の1行が無いだけ
 ```
@@ -237,6 +244,7 @@ sequenceDiagram
 
 - **なぜ Streamlit でないのか** → 本番のスタックで作るほうが、学んだことをそのまま使える。課題の「Python」は手段で、目的は「動くハブと発表」だと解釈した
 - **本物のレートは？** → 船社料率は非公開。だから「モデル」と明記し、取れるもの（為替・港）だけ本物を取った
-- **API が落ちたら？** → 400ms でブラウザ内計算に戻る。見積書に「ブラウザ内で計算しました」と出る（実演可）
+- **API が落ちたら？** → 3秒でブラウザ内計算に戻る。見積書に「ブラウザ内で計算しました」と出る（実演可）
+- **ECB が落ちたら？** → 2.5秒で保存済みレートに戻り、見積書に「いま取れなかったので {日時} に保存したレート」と出る。`ECB_URL=http://127.0.0.1:9` で API を起動すれば実演できる
 - **インコタームズは？** → 船社の見積りは輸送範囲（CY / Door）で表す。インコタームズは売主・買主の契約なので外した
 - **3倍・5倍は本当か？** → 社内報告の値。外部から再現はできない、とページにも書いた。公開調査（1.5倍・1.4倍前後）は別のモーダルに、他社のものとして置いてある

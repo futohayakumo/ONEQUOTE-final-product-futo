@@ -11,7 +11,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
     "ingest": "SWCRC=true node --import @swc-node/register/esm-register src/ingest/run.ts",
-    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
+    "test": "SWCRC=true node --import @swc-node/register/esm-register --test \"src/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

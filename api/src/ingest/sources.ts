@@ -11,8 +11,12 @@
  * unit-tested against a canned response.
  */
 
-/** ECB reference rates, via Frankfurter (an open mirror of the ECB feed). */
-export const ECB_URL = "https://api.frankfurter.dev/v1/latest";
+/**
+ * ECB reference rates, via Frankfurter (an open mirror of the ECB feed).
+ * Overridable so the fallback can be shown on purpose: point it at a host
+ * that does not answer and every quotation says "cached", with the time.
+ */
+export const ECB_URL = process.env.ECB_URL ?? "https://api.frankfurter.dev/v1/latest";
 export const ECB_SOURCE = "ecb";
 /** The currencies the site formats money in, plus the euro the ECB quotes against. */
 export const ECB_SYMBOLS = ["JPY", "EUR", "SGD"] as const;

@@ -26,6 +26,14 @@ export function formatDate(ms: number, locale: Locale): string {
   });
 }
 
+/** The date plus the clock, UTC, for an instant a reader may want to check against a log. */
+export function formatDateTime(ms: number, locale: Locale): string {
+  const d = new Date(ms);
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${formatDate(ms, locale)} ${hh}:${mm} UTC`;
+}
+
 export function formatWeekday(ms: number, locale: Locale): string {
   return t(`weekday.${new Date(ms).getUTCDay()}`, locale);
 }

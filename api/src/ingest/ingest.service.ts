@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { PrismaService } from "../prisma/prisma.service.ts";
+import { RatesService } from "../rates/rates.service.ts";
 import { fetchEcbRates, fetchUnlocodePorts } from "./sources.ts";
 
 export interface IngestReport {
@@ -10,19 +11,23 @@ export interface IngestReport {
 }
 
 /**
- * Pulls the outside data in and stores it; nothing else reads the network.
+ * Pulls the outside data in on a schedule and stores it.
  *
- * A quotation request never calls an external API. The ingest runs on a
- * schedule (and on demand), writes what it got with a fetched_at, and the
- * quotation reads the table. If ECB is down, the last good rate stays, with
- * its date, and the response says how old it is — which is the honest thing
- * and also the thing that keeps a demo alive when a third party is not.
+ * Two sources, two cadences. UN/LOCODE changes twice a year, so a daily pull
+ * is already generous and nothing reads it live. The ECB publishes once a
+ * working day, and a quotation fetches it live at issue (RatesService); this
+ * pull only keeps the table warm, so that the day the ECB does not answer
+ * the quotation still has a rate to fall back on — dated, and labelled as
+ * the fallback.
  */
 @Injectable()
 export class IngestService {
   private readonly log = new Logger(IngestService.name);
 
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(RatesService) private readonly rates: RatesService,
+  ) {}
 
   /** ECB publishes around 16:00 CET on working days; 06:00 UTC the next morning is safe. */
   @Cron(CronExpression.EVERY_DAY_AT_6AM)
@@ -39,13 +44,7 @@ export class IngestService {
 
     try {
       const rates = await fetchEcbRates();
-      for (const r of rates) {
-        await this.prisma.rate.upsert({
-          where: { source_key: { source: r.source, key: r.key } },
-          create: { ...r, fetchedAt: new Date() },
-          update: { value: r.value, asOf: r.asOf, url: r.url, fetchedAt: new Date() },
-        });
-      }
+      await this.rates.store(rates);
       report.rates.fetched = rates.length;
       this.log.log(`ECB: ${rates.length} rates as of ${rates[0]?.asOf.toISOString().slice(0, 10)}`);
     } catch (e) {

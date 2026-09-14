@@ -20,20 +20,27 @@ docker compose up
 | :--- | :--- |
 | `POST /v1/quotations` | Price a shipment. Returns three sailings all-in, the selected sailing's ticket by section, cut-offs, the partner document, and the total in other currencies at the fetched ECB rate with that rate's date |
 | `GET /v1/quotations/:reference` | Replay a quotation exactly as issued |
-| `GET /v1/rates` | The exchange rates in use, with source, date and fetch time |
+| `GET /v1/rates` | Today's ECB rates, fetched now — or the stored ones, labelled `cached` with the reason, when the ECB does not answer |
 | `GET /v1/ports?country=JP` | Seaports from UN/LOCODE in the routed countries |
-| `POST /v1/ingest/run` | Fetch both sources now (also runs daily at 06:00 UTC) |
+| `POST /v1/ingest/run` | Fetch both sources now (also runs daily at 06:00 UTC); keeps the rate table warm for the fallback |
 | `GET /v1/health` | Up, and how many rates and ports are loaded |
 
 ## Where the numbers come from
 
 - **Exchange rates** — European Central Bank reference rates, via
   [Frankfurter](https://api.frankfurter.dev/), an open mirror of the ECB
-  feed. Fetched by the ingest, stored with the ECB's own date, served from
-  the table. A quotation never calls the ECB.
+  feed. **Fetched at the moment of quoting**, the way a real quotation
+  freezes its rate at issue, stored with the ECB's own date, and printed
+  with that date. When the ECB does not answer inside 2.5 s the last stored
+  rate serves instead, and the response says `cached`, why, and when it was
+  stored — never a stale figure passed off as today's. Set `ECB_URL` to a
+  dead host to see that path on purpose.
 - **Ports** — [UN/LOCODE](https://github.com/datasets/un-locode), the UNECE
   code list, filtered to seaports in the seven countries the site routes
-  through. 2,272 of them, with coordinates where the list has them.
+  through. 2,272 of them, with coordinates where the list has them. This
+  one is fetched daily, not per quotation: the list changes twice a year,
+  and fetching a hundred thousand rows per quote would be slower, not more
+  honest.
 - **Prices** — the portfolio's own model, imported from `../src/lib`: lane
   base rates, container factors, surcharges and tier discounts. Not a
   carrier tariff, and every response says so in `provenance`.

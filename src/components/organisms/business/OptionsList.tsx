@@ -11,7 +11,7 @@ import {
   type FreightGroup,
   type TariffCurrency,
 } from "@/lib/charges";
-import { formatCurrency, formatDate, formatMoney, formatWeekday } from "@/lib/localeFormat";
+import { formatCurrency, formatDate, formatDateTime, formatMoney, formatWeekday } from "@/lib/localeFormat";
 import { fetchRates, type FetchedRates } from "@/lib/quotationApi";
 import { COMMODITIES, EQUIPMENT, PORTS } from "@/lib/pricing";
 import { sailingAt, timelineFor, type Sailing } from "@/lib/sailings";
@@ -200,7 +200,13 @@ export function OptionsList({
             </div>
             <span className="type-caption">
               {canShowTariff
-                ? t("options.tariffNote", { source: rates.source.toUpperCase(), asOf: rates.asOf })
+                ? rates.mode === "cached"
+                  ? t("options.tariffNoteCached", {
+                      source: rates.source.toUpperCase(),
+                      asOf: rates.asOf,
+                      storedAt: formatDateTime(Date.parse(rates.fetchedAt), locale),
+                    })
+                  : t("options.tariffNote", { source: rates.source.toUpperCase(), asOf: rates.asOf })
                 : rates === null
                   ? t("options.tariffOffline")
                   : ""}

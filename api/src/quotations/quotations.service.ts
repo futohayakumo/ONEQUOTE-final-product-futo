@@ -5,6 +5,7 @@ import { quoteDocument } from "../../../src/lib/quoteDocument.ts";
 import { availableEtdOffsets, cutOffsFor, optionsFrom, sailingAt, timelineFor } from "../../../src/lib/sailings.ts";
 import { NO_VAS, vasLines, vasTotal, type VasSelection } from "../../../src/lib/vas.ts";
 import { PrismaService } from "../prisma/prisma.service.ts";
+import { RatesService } from "../rates/rates.service.ts";
 import type { QuotationRequestDto } from "./quotation.dto.ts";
 
 /** A figure with its provenance attached — the shape everything from outside takes. */
@@ -26,10 +27,17 @@ const money = (x: number) => Math.round(x * 100) / 100;
  * Deliberately no new arithmetic. The site and the service share the pricing
  * modules by import, so a price the browser computes offline and a price this
  * service returns are the same number for the same inputs.
+ *
+ * The rate is fetched at issue, the way a real quotation freezes its rate at
+ * issue; when the ECB does not answer, the stored rate serves and the
+ * provenance says `cached`, with when it was stored.
  */
 @Injectable()
 export class QuotationsService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(RatesService) private readonly rates: RatesService,
+  ) {}
 
   async quote(req: QuotationRequestDto) {
     const input = {
@@ -77,13 +85,13 @@ export class QuotationsService {
     const extras = vasTotal(vas, quote.units);
     const payable = money(allIn - discount + extras);
 
-    // The one figure that came from outside. Absent, the response says so
-    // rather than inventing a rate.
+    // The one figure that came from outside — fetched now, for this
+    // quotation. Absent, the response says so rather than inventing a rate.
     const fx: Record<string, Sourced<number>> = {};
-    for (const ccy of req.alsoIn ?? []) {
-      const r = await this.prisma.rate.findUnique({
-        where: { source_key: { source: "ecb", key: `USD/${ccy}` } },
-      });
+    const wanted = req.alsoIn ?? [];
+    const current = wanted.length ? await this.rates.current() : null;
+    for (const ccy of wanted) {
+      const r = current?.rates.find((x) => x.key === `USD/${ccy}`);
       if (r) {
         fx[ccy] = {
           value: money(payable * r.value),
@@ -138,7 +146,14 @@ export class QuotationsService {
           note: "Lane base rates, surcharges, tier discounts and value-added service prices are the portfolio's own model, not a carrier tariff.",
         },
         exchangeRates: Object.keys(fx).length
-          ? { source: "ecb", note: "European Central Bank reference rates via Frankfurter." }
+          ? {
+              source: "ecb",
+              mode: current!.mode,
+              note:
+                current!.mode === "live"
+                  ? "European Central Bank reference rates via Frankfurter, fetched for this quotation."
+                  : `The ECB did not answer within the time-box (${current!.reason}); the last stored rate serves, with the time it was stored.`,
+            }
           : { source: "none", note: "No currency conversion was requested." },
       },
     };

@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate, formatDecimal, formatMoney, formatWeekday, localiseVars } from "@/lib/localeFormat";
+import { formatDate, formatDateTime, formatDecimal, formatMoney, formatWeekday, localiseVars } from "@/lib/localeFormat";
 import { allInTotal, type ChargeSection } from "@/lib/charges";
 import { t, type Locale } from "@/lib/i18n";
 import { COMMODITIES, EQUIPMENT, LOYALTY_TIERS, PORTS } from "@/lib/pricing";
@@ -60,7 +60,16 @@ function RemoteLine({
         {agrees
           ? t("quote.remote.agrees", locale, { ref: remote.reference })
           : t("quote.remote.differs", locale, { ref: remote.reference })}
-        {fx ? " " + t("quote.remote.fx", locale, { asOf: fx.asOf, source: fx.source.toUpperCase() }) : ""}
+        {fx
+          ? " " +
+            (remote.provenance.exchangeRates.mode === "cached"
+              ? t("quote.remote.fxCached", locale, {
+                  asOf: fx.asOf,
+                  source: fx.source.toUpperCase(),
+                  storedAt: formatDateTime(Date.parse(fx.fetchedAt), locale),
+                })
+              : t("quote.remote.fx", locale, { asOf: fx.asOf, source: fx.source.toUpperCase() }))
+          : ""}
       </p>
     </div>
   );

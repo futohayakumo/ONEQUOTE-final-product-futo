@@ -11,13 +11,16 @@ import type { Commodity, ContainerRow, LoyaltyTier, PortCode, Scope } from "@/ty
  * the screen waits for it, nothing changes if it fails, and a static export
  * on a host with no API is the same page minus one line.
  *
- * Four hundred milliseconds, then we stop waiting. A portfolio that hangs on
- * a service that is not running is worse than one that says it is not.
+ * Three seconds, then we stop waiting. The service asks the ECB live for
+ * every quotation, and that round trip is most of the wait; the ticket is
+ * already on screen, so the wait costs one line arriving late. A portfolio
+ * that hangs on a service that is not running is worse than one that says
+ * it is not, so the wait is bounded.
  */
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000";
 
-const TIMEOUT_MS = 400;
+const TIMEOUT_MS = 3000;
 
 export interface Sourced<T> {
   value: T;
@@ -29,11 +32,17 @@ export interface Sourced<T> {
   url: string;
 }
 
+/** `live` — the ECB answered for this request. `cached` — the stored rate served, and the response says why. */
+export type RateMode = "live" | "cached";
+
 export interface RemoteQuotation {
   reference: string;
   selected: { sailingId: string; allIn: number; payable: number };
   alsoIn: Record<string, Sourced<number>>;
-  provenance: { pricing: { source: string }; exchangeRates: { source: string } };
+  provenance: {
+    pricing: { source: string };
+    exchangeRates: { source: string; mode?: RateMode; note?: string };
+  };
 }
 
 export async function fetchQuotation(
@@ -71,12 +80,15 @@ export async function fetchQuotation(
   }
 }
 
-/** USD → currency, as the service last fetched it from the ECB, with its date. */
+/** USD → currency, as the service fetched it from the ECB for this request, with its date. */
 export interface FetchedRates {
   /** e.g. { JPY: 154.18, EUR: 0.86088, SGD: 1.2664 } */
   usdTo: Record<string, number>;
   asOf: string;
   source: string;
+  mode: RateMode;
+  /** When `cached`: the instant the stored rate was fetched. */
+  fetchedAt: string;
 }
 
 /**
@@ -92,18 +104,23 @@ export async function fetchRates(signal?: AbortSignal): Promise<FetchedRates | n
   try {
     const res = await fetch(`${API_URL}/v1/rates`, { signal: ctrl.signal });
     if (!res.ok) return null;
-    const rows = (await res.json()) as { source: string; key: string; value: number; asOf: string }[];
+    const body = (await res.json()) as {
+      mode: RateMode;
+      rates: { source: string; key: string; value: number; asOf: string; fetchedAt: string }[];
+    };
     const usdTo: Record<string, number> = {};
     let asOf = "";
     let source = "";
-    for (const r of rows) {
+    let fetchedAt = "";
+    for (const r of body.rates) {
       const [base, quote] = r.key.split("/");
       if (base !== "USD") continue;
       usdTo[quote] = r.value;
       asOf = r.asOf.slice(0, 10);
       source = r.source;
+      fetchedAt = r.fetchedAt;
     }
-    return Object.keys(usdTo).length ? { usdTo, asOf, source } : null;
+    return Object.keys(usdTo).length ? { usdTo, asOf, source, mode: body.mode, fetchedAt } : null;
   } catch {
     return null;
   } finally {
