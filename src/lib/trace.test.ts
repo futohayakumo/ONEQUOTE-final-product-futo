@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildTrace, serviceMs } from "./trace.ts";
 
-const ROUTE = ["new-request", "request-intake", "routing-gateway", "erp-system"];
+const ROUTE = ["web-app", "node-gateway", "booking", "apigee", "rate-engine"];
 const label = (id: string) => id;
 
 /** Parse hh:mm:ss.mmm back to milliseconds, so the assertions read the same

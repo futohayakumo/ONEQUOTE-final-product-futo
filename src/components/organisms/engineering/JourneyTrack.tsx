@@ -40,11 +40,11 @@ import { useLocale, useT } from "../../providers/LocaleProvider";
  * A panel with no image sets its text wide instead.
  */
 const IMAGE: Record<string, string | undefined> = {
-  "new-request": "/assets/scenes/journey-1-request.png",
-  "request-intake": "/assets/scenes/journey-2-check.png",
-  "routing-gateway": "/assets/scenes/journey-3-route.png",
-  "quotation-service": "/assets/scenes/06-dashboard-display.png",
-  "erp-system": "/assets/scenes/journey-5-hold.png",
+  "web-app": "/assets/scenes/journey-1-request.png",
+  "node-gateway": "/assets/scenes/journey-3-route.png",
+  booking: "/assets/scenes/06-dashboard-display.png",
+  apigee: "/assets/scenes/journey-2-check.png",
+  "rate-engine": "/assets/scenes/journey-5-hold.png",
 };
 const ARRIVAL_IMAGE = "/assets/scenes/journey-6-arrival.png";
 
@@ -89,7 +89,7 @@ export function JourneyTrack() {
   // skips the pricing service; a story about a quotation that never visits
   // the place the price is worked out would be a story about nothing.
   const trace = buildTrace(
-    ROUTE_BY_NODE["quotation-service"],
+    ROUTE_BY_NODE["booking"],
     (id) => NODES[id as NodeId].label,
   );
   const panels: Panel[] = [

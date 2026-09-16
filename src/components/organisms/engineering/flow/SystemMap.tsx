@@ -32,7 +32,7 @@ export function SystemMap({
   const t = useT();
 
   const [peek, setPeek] = useState<NodeId | null>(null);
-  const [focusNode, setFocusNode] = useState<NodeId>("new-request");
+  const [focusNode, setFocusNode] = useState<NodeId>("web-app");
   const { containerRef, registerNode, rects, size } = useNodeGeometry();
   const gridRef = useRef<HTMLDivElement>(null);
 

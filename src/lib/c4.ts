@@ -40,24 +40,23 @@ export const C4_LEVELS: readonly C4Level[] = [
     audienceKey: "c4.context.audience",
     bodyKey: "c4.context.body",
     chart: `flowchart TB
-  customer["Customer<br/>books ocean freight"]
-  partner["Partner system<br/>posts rate requests"]
-  sales["Sales / operations<br/>quotes, exceptions"]
-
-  subgraph platform ["Quotation platform"]
-    aoq["Advanced Quotation<br/>prices a lane, reserves a rate"]
+  customer["Customer<br/>quotes and books ocean freight"]
+  subgraph oq ["ONE QUOTE — e-commerce quotation and booking"]
+    app["ONE QUOTE<br/>booking, OOG, value-added services,<br/>campaigns and alerts"]
   end
-
-  erp["ERP System<br/>system of record for<br/>rates and bookings"]
-  mail["Notification provider<br/>email delivery"]
-  bi["Analytics &amp; Reporting<br/>TEU accrual, campaign uptake"]
-
-  customer -->|"requests a rate"| aoq
-  partner -->|"HTTPS / JSON"| aoq
-  sales -->|"overrides, holds"| aoq
-  aoq -->|"reserves rate, confirms booking"| erp
-  aoq -->|"sends the quotation"| mail
-  aoq -->|"emits events"| bi`,
+  subgraph ent ["Enterprise systems"]
+    sched["Schedule Management"]
+    space["Vessel Space Allocation"]
+    rates["Rate Engine"]
+    opus["OPUS<br/>booking intake"]
+  end
+  bq["BigQuery warehouse<br/>reporting, isolated"]
+  customer -->|"searches, accepts"| app
+  app -->|"via Apigee"| sched
+  app -->|"via Apigee"| space
+  app -->|"via Apigee"| rates
+  app -->|"via Apigee"| opus
+  app -.->|"logs, GA, HEAP → Pub/Sub"| bq`
   },
   {
     id: "container",
@@ -69,32 +68,31 @@ export const C4_LEVELS: readonly C4Level[] = [
     bodyKey: "c4.container.body",
     chart: `flowchart TB
   customer["Customer"]
-
-  subgraph platform ["Quotation platform"]
-    web["Web Portal<br/>[Next.js / React]"]
-    gw["Routing Gateway<br/>[nginx]"]
-    quote["Quotation Service<br/>[NestJS / Node.js]"]
-    campaign["Campaign Service<br/>[NestJS / Node.js]"]
-    notify["Notification Service<br/>[NestJS / Node.js]"]
-    db[("Operational store<br/>[PostgreSQL]")]
-    lake[("Data Platform<br/>[read replica]")]
+  subgraph oq ["ONE QUOTE"]
+    web["Web app<br/>[browser]"]
+    gw["API Gateway<br/>[Node.js · REST + gRPC]"]
+    core["Booking · OOG<br/>[services]"]
+    vas["Premium · OSL+ · D&amp;D · PUDO<br/>[value-added services]"]
+    sales["Campaigns · Coupons · Price Alerts<br/>NotifyMe · Missing Route<br/>[support and sales]"]
+    infra["Translation · Feature Flags<br/>[infrastructure]"]
+    db[("Operational store<br/>[PostgreSQL — per the team memo]")]
   end
-
-  flags["Feature Flag Service<br/>[LaunchDarkly]"]
-  i18n["Translation API<br/>[Lokalise]"]
-  erp["ERP System<br/>rates, bookings"]
-
+  apigee["Apigee<br/>[Google API gateway]"]
+  ent["Schedule · Space · Rate Engine · OPUS<br/>[enterprise systems]"]
+  pubsub["Pub/Sub<br/>[GCP]"]
+  bq[("BigQuery<br/>[GCP warehouse]")]
   customer -->|"HTTPS"| web
-  web -->|"HTTPS / JSON"| gw
-  gw -->|"/quotations"| quote
-  gw -->|"/campaigns"| campaign
-  quote -->|"reads / writes"| db
-  quote -->|"reserves a rate"| erp
-  quote -->|"asks for the discount"| campaign
-  quote -->|"queues the result"| notify
-  quote -.->|"reads a flag"| flags
-  web -.->|"pulls copy at build"| i18n
-  db -->|"replicates"| lake`,
+  web -->|"REST"| gw
+  gw -->|"gRPC"| core
+  gw -->|"gRPC"| vas
+  gw -->|"gRPC"| sales
+  gw -.->|"flags, copy"| infra
+  core -->|"reads / writes"| db
+  core -->|"rates, sailings, space, booking"| apigee
+  apigee --> ent
+  web -.->|"GA, HEAP"| pubsub
+  gw -.->|"logs"| pubsub
+  pubsub --> bq`
   },
   {
     id: "component",
@@ -105,29 +103,26 @@ export const C4_LEVELS: readonly C4Level[] = [
     audienceKey: "c4.component.audience",
     bodyKey: "c4.component.body",
     chart: `flowchart TB
-  gw["Routing Gateway<br/>[nginx]"]
-
-  subgraph quote ["Quotation Service [NestJS]"]
-    ctrl["QuotationController<br/>validates the request DTO"]
-    lanes["LaneResolver<br/>port pair to base rate"]
-    plan["ContainerPlanner<br/>CBM to a box count"]
-    charges["ChargeCalculator<br/>THC, DOC, BAF, CAF"]
-    loyalty["LoyaltyClient<br/>tier discount, TEU accrual"]
-    erpc["ErpClient<br/>reserves the rate for 72h"]
+  gw["API Gateway<br/>[Node.js]"]
+  subgraph booking ["ONE Quote Booking — components inferred, not confirmed"]
+    ctrl["BookingController<br/>validates the request DTO"]
+    sched["ScheduleClient<br/>sailings for a lane and date"]
+    rates["RateClient<br/>charges per sailing, by freight group"]
+    vas["VasAttacher<br/>premium, free time, PUDO"]
+    offers["OfferApplier<br/>campaigns and coupons at display"]
+    opus["OpusClient<br/>hands an accepted booking over"]
   end
-
-  db[("PostgreSQL")]
-  erp["ERP System"]
-
-  gw --> ctrl
-  ctrl --> lanes
-  ctrl --> plan
-  lanes --> charges
-  plan --> charges
-  charges --> loyalty
-  loyalty --> erpc
-  erpc -->|"booking.rate.reserve"| erp
-  lanes -->|"tariff lookup"| db`,
+  apigee["Apigee"]
+  gw -->|"gRPC"| ctrl
+  ctrl --> sched
+  ctrl --> rates
+  sched --> vas
+  rates --> vas
+  vas --> offers
+  offers --> opus
+  sched -->|"schedule management"| apigee
+  rates -->|"rate engine"| apigee
+  opus -->|"OPUS intake"| apigee`
   },
   {
     id: "code",

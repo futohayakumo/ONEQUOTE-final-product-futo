@@ -1,5 +1,6 @@
 "use client";
 
+import { NODES } from "@/lib/flow-data";
 import type { FlowStage, NodeId } from "@/types/flow";
 import { FlowNode } from "../../../molecules/FlowNode";
 import { useT } from "../../../providers/LocaleProvider";
@@ -40,10 +41,15 @@ export function StageColumn({
       <p className="type-overline text-muted">{t(stage.titleKey)}</p>
 
       <ul className="flex flex-col gap-4">
-        {stage.nodes.map((id) => {
+        {stage.nodes.map((id, i) => {
           const hop = route.indexOf(id);
+          // A group heading above the first node of each run — the services
+          // column is eleven long, and reads as three short lists this way.
+          const group = NODES[id].groupKey;
+          const heads = group && (i === 0 || NODES[stage.nodes[i - 1]].groupKey !== group);
           return (
-            <li key={id}>
+            <li key={id} className={heads && i > 0 ? "mt-3" : undefined}>
+              {heads ? <p className="mb-3 type-caption">{t(group)}</p> : null}
               <FlowNode
                 id={id}
                 selected={selected === id}

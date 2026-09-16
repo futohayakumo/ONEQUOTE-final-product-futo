@@ -3,146 +3,164 @@ import type { CatalogEntry, ComponentId } from "@/types/flow";
 /**
  * WHAT / WHEN / HOW for each inspectable component.
  *
- * Zero-leakage: no vendor, client, vessel or internal project name appears
- * here — not in the copy, and not in the snippets. Every proper noun is one of
- * the mapped virtual names.
+ * The components are the ones the technical lead named (2026-09-16). The
+ * prose says what each is for; the snippets are illustrative — how such a
+ * piece is typically written, in the stack the team's own memo names
+ * (Node.js, NestJS, PostgreSQL, GCP) — and not this company's source, which
+ * this site has not seen. Where a snippet leans on an assumption, the
+ * comment inside it says so.
  */
 
 export const COMPONENT_ORDER: readonly ComponentId[] = [
-  "web-portal",
-  "routing-gateway",
-  "quotation-service",
-  "campaign-service",
+  "web-app",
+  "node-gateway",
+  "booking",
+  "oog",
+  "campaigns",
   "feature-flags",
-  "translation-api",
-  "data-platform",
+  "translation",
+  "apigee",
+  "bigquery",
 ] as const;
 
 export const COMPONENT_CATALOG: Record<ComponentId, CatalogEntry> = {
-  "web-portal": {
-    id: "web-portal",
-    // Named for the node it is anchored to, so the index, the map and the card
-    // all say the same thing.
-    label: "Request Intake",
-    nodeId: "request-intake",
-    stage: "portal",
-    whatKey: "catalog.web-portal.what",
-    whenKey: "catalog.web-portal.when",
+  "web-app": {
+    id: "web-app",
+    label: "ONE QUOTE web",
+    nodeId: "web-app",
+    stage: "client",
+    whatKey: "catalog.web-app.what",
+    whenKey: "catalog.web-app.when",
     how: {
-      lang: "typescript — server-side rate fetch",
-      code: `// Rendered on the server. The portal never prices anything itself.
-export default async function LanePage({ params }: { params: { lane: string } }) {
-  const rates = await fetch(
-    \`\${process.env.SERVICE_GATEWAY_URL}/v1/lanes/\${params.lane}/rates\`,
-    {
-      headers: { "x-trace-id": crypto.randomUUID() },
-      // Rates are volatile; never serve a stale price from the CDN.
-      cache: "no-store",
-    },
-  ).then((r) => r.json());
-
-  return <LaneRateTable rates={rates} />;
+      lang: "typescript — the browser asks, never prices",
+      code: `// The web app renders the three pages of the flow and holds no tariff.
+// Every price on screen came back from the gateway on this call.
+export async function searchOptions(input: QuoteInput, signal: AbortSignal) {
+  const res = await fetch(\`\${GATEWAY_URL}/v1/quotes/options\`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-trace-id": traceId() },
+    body: JSON.stringify(input),
+    signal,
+  });
+  if (!res.ok) throw new QuoteError(await res.json());
+  return (await res.json()) as OptionsPage;   // sailings, all-in, freight groups
 }`,
     },
   },
 
-  "routing-gateway": {
-    id: "routing-gateway",
-    label: "Routing Gateway",
-    nodeId: "routing-gateway",
-    stage: "service",
-    whatKey: "catalog.routing-gateway.what",
-    whenKey: "catalog.routing-gateway.when",
+  "node-gateway": {
+    id: "node-gateway",
+    label: "Node.js API Gateway",
+    nodeId: "node-gateway",
+    stage: "platform",
+    whatKey: "catalog.node-gateway.what",
+    whenKey: "catalog.node-gateway.when",
     how: {
-      lang: "nginx.conf",
-      code: `upstream quotation_service {
-  least_conn;
-  server quotation-svc-a:3000 max_fails=3 fail_timeout=10s;
-  server quotation-svc-b:3000 max_fails=3 fail_timeout=10s;
-}
+      lang: "typescript — REST in, gRPC out",
+      code: `// One edge for every client interface. The browser speaks REST to it;
+// it speaks gRPC to the services behind it, so the wire format inside the
+// platform is typed and the one outside stays plain.
+app.post("/v1/quotes/options", rateLimit({ windowMs: 1_000, max: 20 }), async (req, res) => {
+  const meta = new grpc.Metadata();
+  meta.set("x-trace-id", req.header("x-trace-id") ?? randomUUID());
 
-limit_req_zone $binary_remote_addr zone=quote_rl:10m rate=20r/s;
+  const call = promisify(bookingClient.searchOptions.bind(bookingClient));
+  const page = await call(SearchOptionsRequest.fromObject(req.body), meta, {
+    deadline: Date.now() + 5_000,
+  });
 
-server {
-  listen 443 ssl http2;
-
-  location /v1/quotations/ {
-    limit_req      zone=quote_rl burst=40 nodelay;
-    proxy_set_header X-Trace-Id  $request_id;
-    proxy_set_header X-Real-IP   $remote_addr;
-    proxy_read_timeout 15s;
-    proxy_next_upstream error timeout http_502;
-    proxy_pass http://quotation_service;
-  }
-}`,
+  res.json(page.toObject());
+});`,
     },
   },
 
-  "quotation-service": {
-    id: "quotation-service",
-    label: "Quotation Service",
-    nodeId: "quotation-service",
+  booking: {
+    id: "booking",
+    label: "ONE Quote Booking",
+    nodeId: "booking",
     stage: "service",
-    whatKey: "catalog.quotation-service.what",
-    whenKey: "catalog.quotation-service.when",
+    whatKey: "catalog.booking.what",
+    whenKey: "catalog.booking.when",
     how: {
-      lang: "typescript — pricing orchestration",
+      lang: "typescript — a quotation, assembled",
       code: `@Injectable()
-export class QuotationService {
-  async quote(dto: QuoteRequestDto): Promise<Quotation> {
-    const lane = await this.lanes.resolve(dto.pol, dto.pod);
-    const plan = this.containers.plan(dto.cargoVolumeCbm, dto.containerType);
+export class BookingService {
+  async options(dto: SearchOptionsDto): Promise<OptionsPage> {
+    // Everything the enterprise owns is asked for through Apigee.
+    const [sailings, rates] = await Promise.all([
+      this.apigee.schedule.sailings(dto.pol, dto.pod, dto.etd),
+      this.apigee.rateEngine.rates(dto.pol, dto.pod, dto.containers),
+    ]);
 
-    const oceanFreight = lane.baseRate * plan.multiplier * plan.units;
-    const subtotal =
-      oceanFreight +
-      dto.cargoVolumeCbm * THC_PER_CBM +
-      DOCUMENTATION_FEE +
-      oceanFreight * BAF_RATE;
+    // The service composes; it does not invent a rate of its own.
+    return sailings.map((s) => ({
+      sailing: s,
+      charges: groupByFreightView(rates.for(s)),   // O/F, surcharges, origin, destination
+      allIn: rates.for(s).total(),
+    }));
+  }
 
-    // Discount is owned by the loyalty domain, never inlined here.
-    const { rate } = await this.loyalty.discountFor(dto.customerRef);
-
-    // Reserving in the ERP is what makes the quote bookable, not just shown.
-    return this.erp.reserveRate({
-      total: round2(subtotal * (1 - rate)),
-      ttlHours: RATE_VALIDITY_HOURS,
-    });
+  async accept(dto: AcceptDto): Promise<Booking> {
+    // A confirmed booking is handed to OPUS, the booking system of record.
+    return this.apigee.opus.intake(dto);
   }
 }`,
     },
   },
 
-  "campaign-service": {
-    id: "campaign-service",
-    label: "Campaign Service",
-    nodeId: "campaign-service",
+  oog: {
+    id: "oog",
+    label: "OOG",
+    nodeId: "oog",
     stage: "service",
-    whatKey: "catalog.campaign-service.what",
-    whenKey: "catalog.campaign-service.when",
+    whatKey: "catalog.oog.what",
+    whenKey: "catalog.oog.when",
     how: {
-      lang: "typescript — cohort definition",
-      code: `// Cohorts are declarative and versioned, so a campaign can be replayed
-// and audited long after it ran.
-export const LAPSED_CORRIDOR_SHIPPER = defineCohort({
-  key: "lapsed-corridor-shipper",
-  version: 3,
-  where: {
-    lastBookedCorridor: { within: "P180D" },
-    bookedThisQuarter: false,
-    teuAccruedLifetime: { gte: 20 },
+      lang: "typescript — when a box is not a box",
+      code: `// Out-of-gauge cargo does not fit a standard container. Flat racks and
+// open tops are the equipment; the dimensions decide the surcharge and
+// whether adjacent slots are lost.
+export function classify(cargo: CargoDims): OogClass {
+  const over = {
+    height: Math.max(0, cargo.heightCm - OPEN_TOP_MAX_HEIGHT_CM),
+    width: Math.max(0, cargo.widthCm - FLAT_RACK_INTERNAL_WIDTH_CM),
+    length: Math.max(0, cargo.lengthCm - FLAT_RACK_INTERNAL_LENGTH_CM),
+  };
+  const lostSlots =
+    (over.width > 0 ? 1 : 0) + (over.length > 0 ? 1 : 0); // neighbours you cannot sell
+  return { equipment: over.height > 0 ? "OPEN_TOP" : "FLAT_RACK", over, lostSlots };
+}`,
+    },
   },
-  // Never target an account with an unresolved billing hold.
-  exclude: { billingHold: true },
+
+  campaigns: {
+    id: "campaigns",
+    label: "Campaigns",
+    nodeId: "campaigns",
+    stage: "service",
+    whatKey: "catalog.campaigns.what",
+    whenKey: "catalog.campaigns.when",
+    how: {
+      lang: "typescript — a campaign is a rule, not a discount",
+      code: `// A campaign says WHO sees WHAT offer on WHICH lanes, and when it ends.
+// It is applied to a quotation at display time; the rate underneath is
+// untouched, so the offer can be withdrawn without re-pricing anything.
+export const AUTUMN_TRANSPACIFIC = defineCampaign({
+  key: "autumn-tp-2026",
+  window: { from: "2026-09-01", to: "2026-10-31" },
+  lanes: [{ pol: "JP*", pod: "US*" }],
+  audience: { bookedLastQuarter: false, tier: ["SILVER_SAIL", "GOLDEN_SEA"] },
+  offer: { kind: "percent-off-basic-ocean-freight", value: 5 },
+  stackableWithCoupons: false,
 });`,
     },
   },
 
   "feature-flags": {
     id: "feature-flags",
-    label: "Feature Flag Service",
+    label: "Feature Flags",
     nodeId: "feature-flags",
-    stage: "service",
+    stage: "platform",
     whatKey: "catalog.feature-flags.what",
     whenKey: "catalog.feature-flags.when",
     how: {
@@ -155,25 +173,25 @@ export const LAPSED_CORRIDOR_SHIPPER = defineCohort({
 };
 
 // Default is FALSE. If evaluation fails or times out, we take the old path.
-if (await this.flags.boolVariation("flex-cart.multi-port", context, false)) {
-  return this.flexCart.holdMultiPort(dto);
+if (await this.flags.boolVariation("oog.self-service", context, false)) {
+  return this.oog.quote(dto);
 }
 
-return this.flexCart.holdSinglePort(dto);`,
+return this.oog.requestManualQuote(dto);`,
     },
   },
 
-  "translation-api": {
-    id: "translation-api",
-    label: "Lokalise",
-    nodeId: "translation-api",
-    stage: "service",
-    whatKey: "catalog.translation-api.what",
-    whenKey: "catalog.translation-api.when",
+  translation: {
+    id: "translation",
+    label: "Translation",
+    nodeId: "translation",
+    stage: "platform",
+    whatKey: "catalog.translation.what",
+    whenKey: "catalog.translation.when",
     how: {
       lang: "typescript — locale bundle load",
       code: `// Pulled at build time and committed to the artefact, so a runtime
-// outage in the localisation platform can never break the portal.
+// outage in the localisation platform can never break the web app.
 export async function loadMessages(locale: Locale) {
   const bundle = await translations.download({
     locale,
@@ -188,27 +206,55 @@ export async function loadMessages(locale: Locale) {
     },
   },
 
-  "data-platform": {
-    id: "data-platform",
-    label: "Data Platform",
-    nodeId: "data-platform",
-    stage: "platform",
-    whatKey: "catalog.data-platform.what",
-    whenKey: "catalog.data-platform.when",
+  apigee: {
+    id: "apigee",
+    label: "Apigee Gateway",
+    nodeId: "apigee",
+    stage: "enterprise",
+    whatKey: "catalog.apigee.what",
+    whenKey: "catalog.apigee.when",
     how: {
-      lang: "sql — read replica",
-      code: `-- TEU accrual this month, with the next Blue Wave milestone.
--- Blue Wave has no rate discount, so the 5-TEU coupon is its whole value.
-SELECT c.customer_ref,
-       c.loyalty_tier,
-       SUM(b.teu)                        AS teu_accrued,
-       CEIL((SUM(b.teu) + 1) / 5.0) * 5  AS next_milestone_teu
-FROM   bookings  b
-JOIN   customers c ON c.id = b.customer_id
-WHERE  b.booked_at >= date_trunc('month', now())
-  AND  c.loyalty_tier = 'BLUE_WAVE'
-GROUP  BY c.customer_ref, c.loyalty_tier
-ORDER  BY teu_accrued DESC;`,
+      lang: "xml — an Apigee proxy in front of the rate engine",
+      code: `<!-- ONE QUOTE never holds enterprise credentials. Apigee holds them,
+     enforces the quota the rate engine was sized for, and smooths bursts. -->
+<ProxyEndpoint name="rate-engine">
+  <PreFlow>
+    <Request>
+      <Step><Name>Verify-API-Key</Name></Step>
+      <Step><Name>Quota-RateEngine-1000-per-minute</Name></Step>
+      <Step><Name>SpikeArrest-50ps</Name></Step>
+      <Step><Name>Assign-Trace-Header</Name></Step>
+    </Request>
+  </PreFlow>
+  <HTTPProxyConnection><BasePath>/rates/v1</BasePath></HTTPProxyConnection>
+  <RouteRule name="default"><TargetEndpoint>rate-engine-prod</TargetEndpoint></RouteRule>
+</ProxyEndpoint>`,
+    },
+  },
+
+  bigquery: {
+    id: "bigquery",
+    label: "BigQuery Warehouse",
+    nodeId: "bigquery",
+    stage: "enterprise",
+    whatKey: "catalog.bigquery.what",
+    whenKey: "catalog.bigquery.when",
+    how: {
+      lang: "sql — a scheduled query over the warehouse",
+      code: `-- Runs on a schedule inside BigQuery. Reads events that arrived through
+-- Pub/Sub from logs and analytics; never touches the transactional store.
+SELECT
+  DATE(event_ts)                                   AS day,
+  JSON_VALUE(payload, '$.pol')                     AS pol,
+  JSON_VALUE(payload, '$.pod')                     AS pod,
+  COUNTIF(event = 'quote.options.viewed')          AS searches,
+  COUNTIF(event = 'quote.accepted')                AS accepted,
+  SAFE_DIVIDE(COUNTIF(event = 'quote.accepted'),
+              COUNTIF(event = 'quote.options.viewed')) AS conversion
+FROM \`one-quote-analytics.events.web\`
+WHERE event_ts >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 14 DAY)
+GROUP BY day, pol, pod
+ORDER BY day DESC, searches DESC;`,
     },
   },
 };
@@ -217,26 +263,17 @@ export const PLATFORM_NOTE = {
   titleKey: "platform.title",
   bodyKey: "platform.body",
   code: {
-    lang: "yaml — horizontal scaling policy",
-    code: `apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: quotation-service
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: quotation-service
-  minReplicas: 3
-  maxReplicas: 24
-  metrics:
-    - type: Pods
-      pods:
-        metric: { name: http_request_duration_p95_seconds }
-        target: { type: AverageValue, averageValue: "0.45" }
-  behavior:
-    scaleDown:
-      # Never shed capacity faster than traffic actually falls.
-      stabilizationWindowSeconds: 300`,
+    lang: "text — the two gateways, and what sits behind each",
+    code: `browser ──REST──▶ Node.js API Gateway ──gRPC──▶ ONE QUOTE services
+                                                    │
+                                                    ▼ (anything the enterprise owns)
+                                            Apigee (Google)
+                                                    ├──▶ Schedule Management
+                                                    ├──▶ Vessel Space Allocation
+                                                    ├──▶ Rate Engine
+                                                    └──▶ OPUS  (booking intake)
+
+logs · Google Analytics · HEAP ──Pub/Sub──▶ BigQuery ──scheduled queries──▶ reports
+                                            (never reads the transactional DB)`,
   },
-};
+} as const;

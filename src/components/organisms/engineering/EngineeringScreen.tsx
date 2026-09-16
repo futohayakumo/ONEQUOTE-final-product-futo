@@ -32,7 +32,7 @@ export function EngineeringScreen() {
   // Opens on the service the rest of the site keeps pointing at, rather than
   // on a 22px heading that announces absence. A portfolio's default state
   // should be its most interesting one.
-  const [selected, setSelected] = useState<NodeId | null>("quotation-service");
+  const [selected, setSelected] = useState<NodeId | null>("booking");
 
   const select = useCallback((id: NodeId | null) => {
     setSelected(id);
