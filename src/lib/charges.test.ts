@@ -30,7 +30,7 @@ test("every section's lines add up to its own subtotal", () => {
 
 test("terminal handling is charged per container, not per volume", () => {
   const thc = cy[0].lines.find((l) => l.code === "THC")!;
-  assert.equal(thc.amount, 178 * 3);
+  assert.equal(thc.amount, 182 * 3); // Japan's THC, per container
   assert.deepEqual(thc.basisVars, { units: 3 });
 });
 
@@ -41,7 +41,7 @@ test("per-bill-of-lading charges do not scale with the box count", () => {
     rows: calculateQuote({ ...quote, containers: [{ equipment: "DRY20", quantity: 1, weightKg: 12_000 }] }).rows,
     originScope: "CY",
     destinationScope: "CY",
-    oceanFreight: 1090,
+    oceanFreight: 1144,
   });
   const doc = (s: typeof cy) => s[0].lines.find((l) => l.code === "DOC")!.amount;
   assert.equal(doc(cy), doc(one));
@@ -60,14 +60,14 @@ test("Door adds haulage at that end only, and nowhere else changes", () => {
   assert.ok(!door[2].lines.some((l) => l.code === "DHC"));
   assert.equal(door[1].subtotal, cy[1].subtotal);
   assert.equal(door[2].subtotal, cy[2].subtotal);
-  assert.equal(allInTotal(door) - allInTotal(cy), 240 * 3);
+  assert.equal(allInTotal(door) - allInTotal(cy), 260 * 3); // Japan's haulage, per container
 });
 
 test("the four freight-view groups partition every line", () => {
   const all = groupTotal(cy, ["basicOceanFreight", "freightCharge", "originCharge", "destinationCharge"]);
   assert.equal(all, allInTotal(cy));
-  assert.equal(groupTotal(cy, ["basicOceanFreight"]), 3270);
-  assert.equal(groupTotal(cy, ["freightCharge"]), Math.round((3270 * 0.12 + 3270 * 0.025) * 100) / 100);
+  assert.equal(groupTotal(cy, ["basicOceanFreight"]), 3432);
+  assert.equal(groupTotal(cy, ["freightCharge"]), Math.round((3432 * 0.12 + 3432 * 0.025) * 100) / 100);
 });
 
 test("BAF and CAF track the ocean freight they are charged on", () => {

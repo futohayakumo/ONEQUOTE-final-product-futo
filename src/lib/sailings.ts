@@ -1,3 +1,5 @@
+import { laneDistanceNm } from "./pricing.ts";
+import { transitDaysFromNm } from "./ports.ts";
 import type { PortCode } from "@/types/quote";
 
 /**
@@ -56,15 +58,6 @@ function hash(text: string): number {
   return h;
 }
 
-const BASE_TRANSIT: Record<string, number> = {
-  "JPTYO|JPYOK": 1,
-  "JPTYO|SGSIN": 12,
-  "JPTYO|NLRTM": 32,
-  "JPYOK|SGSIN": 12,
-  "JPYOK|NLRTM": 31,
-  "NLRTM|SGSIN": 24,
-};
-
 const HUBS = ["Busan", "Kaohsiung", "Colombo", "Jebel Ali"];
 
 /** Days the schedule covers, from the reference day. */
@@ -79,7 +72,9 @@ export const SCHEDULE_DAYS = 56;
  */
 export function scheduleFor(pol: PortCode, pod: PortCode): Sailing[] {
   const key = laneKey(pol, pod);
-  const base = BASE_TRANSIT[key] ?? 14;
+  // Transit is the sea distance at service speed, plus a day in port. The
+  // distance comes from the ports' coordinates, not from a table.
+  const base = transitDaysFromNm(laneDistanceNm(pol, pod));
   const seed = hash(key);
   const lane = `${pol.slice(2, 3)}${pod.slice(2, 3)}`;
 

@@ -4,6 +4,7 @@ import { calculateQuote, validateQuote } from "../../../src/lib/pricing.ts";
 import { quoteDocument } from "../../../src/lib/quoteDocument.ts";
 import { availableEtdOffsets, cutOffsFor, optionsFrom, sailingAt, timelineFor } from "../../../src/lib/sailings.ts";
 import { NO_VAS, vasLines, vasTotal, type VasSelection } from "../../../src/lib/vas.ts";
+import { PORTS_META } from "../../../src/lib/ports.ts";
 import { PrismaService } from "../prisma/prisma.service.ts";
 import { RatesService } from "../rates/rates.service.ts";
 import type { QuotationRequestDto } from "./quotation.dto.ts";
@@ -51,7 +52,17 @@ export class QuotationsService {
       etdOffset: req.etdOffset,
     };
     const errors = validateQuote(input);
-    if (!availableEtdOffsets(req.pol, req.pod).includes(req.etdOffset)) {
+    // The snapshot the pricing reads is the same UN/LOCODE pull the table
+    // holds; the table is the live copy, and a code the pull no longer lists
+    // is refused here even if a stale browser still offers it.
+    const known = await this.prisma.port.findMany({
+      where: { unlocode: { in: [req.pol, req.pod] }, lat: { not: null } },
+      select: { unlocode: true },
+    });
+    const listed = new Set(known.map((k) => k.unlocode));
+    if (!errors.pol && !listed.has(req.pol)) errors.pol = { key: "quote.error.unknownPort" };
+    if (!errors.pod && !listed.has(req.pod)) errors.pod = { key: "quote.error.unknownPort" };
+    if (!Object.keys(errors).length && !availableEtdOffsets(req.pol, req.pod).includes(req.etdOffset)) {
       errors.etd = { key: "quote.error.etd" };
     }
     if (Object.keys(errors).length) {
@@ -143,7 +154,13 @@ export class QuotationsService {
       provenance: {
         pricing: {
           source: "model",
-          note: "Lane base rates, surcharges, tier discounts and value-added service prices are the portfolio's own model, not a carrier tariff.",
+          note: "Surcharges, tier discounts and value-added service prices are the portfolio's own model, not a carrier tariff. The lane's base rate and transit are a line in the sea distance between the two ports.",
+        },
+        ports: {
+          source: PORTS_META.source,
+          note: `UN/LOCODE seaports with coordinates, ${PORTS_META.withCoordinates} of ${PORTS_META.seaports} in the routed countries; sea distance summed over standard chokepoints, ${quote.laneNm} nm for this lane.`,
+          fetchedAt: PORTS_META.fetchedAt,
+          url: PORTS_META.url,
         },
         exchangeRates: Object.keys(fx).length
           ? {

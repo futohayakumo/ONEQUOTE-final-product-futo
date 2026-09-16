@@ -89,16 +89,16 @@ export function localiseVars(
 
 /**
  * An amount in one of the tariff currencies, with that currency's own
- * conventions: yen has no minor unit, the rest have two. The symbol is the
+ * conventions: yen and won have no minor unit, the rest have two. The symbol is the
  * one a freight invoice prints, so Singapore dollars are S$ and not $.
  */
 export function formatCurrency(
   n: number,
-  currency: "USD" | "JPY" | "SGD" | "EUR",
+  currency: "USD" | "JPY" | "SGD" | "EUR" | "KRW",
   locale: Locale,
 ): string {
-  const symbol = { USD: "$", JPY: "¥", SGD: "S$", EUR: "€" }[currency];
-  if (currency === "JPY") {
+  const symbol = { USD: "$", JPY: "¥", SGD: "S$", EUR: "€", KRW: "₩" }[currency];
+  if (currency === "JPY" || currency === "KRW") {
     return `${symbol}${formatMoney(Math.round(n), locale).replace(/[.,]00$/, "")}`;
   }
   return `${symbol}${formatMoney(n, locale)}`;

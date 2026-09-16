@@ -1,4 +1,10 @@
-export type PortCode = "JPTYO" | "JPYOK" | "SGSIN" | "NLRTM";
+/**
+ * A UN/LOCODE, five letters: two for the country, three for the place. The
+ * ports the site can quote are the ones in `data/ports.ts` — every seaport
+ * in the routed countries that UN/LOCODE places on the map — and
+ * `lib/ports.ts` says whether a code is one of them.
+ */
+export type PortCode = string;
 
 /**
  * The four equipment types ONE QUOTE offers, observed on the real form on
@@ -86,6 +92,8 @@ export interface QuoteResult {
   /** Containers across all rows. */
   units: number;
   teuAccrued: number;
+  /** Sea distance for the lane, nautical miles, via the standard chokepoints. */
+  laneNm: number;
   laneBase: number;
   /** Base ocean freight across all rows, before surcharges and discount. */
   oceanFreight: number;

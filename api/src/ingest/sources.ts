@@ -18,8 +18,8 @@
  */
 export const ECB_URL = process.env.ECB_URL ?? "https://api.frankfurter.dev/v1/latest";
 export const ECB_SOURCE = "ecb";
-/** The currencies the site formats money in, plus the euro the ECB quotes against. */
-export const ECB_SYMBOLS = ["JPY", "EUR", "SGD"] as const;
+/** The tariff currencies the site converts to. TWD, LKR and AED are not ECB-quoted and stay USD. */
+export const ECB_SYMBOLS = ["JPY", "EUR", "SGD", "KRW"] as const;
 
 export interface FetchedRate {
   source: string;

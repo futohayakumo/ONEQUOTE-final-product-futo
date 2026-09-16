@@ -1,5 +1,6 @@
 import type { Sailing } from "./sailings.ts";
-import { PORTS, EQUIPMENT, LOYALTY_TIERS } from "./pricing.ts";
+import { EQUIPMENT, LOYALTY_TIERS } from "./pricing.ts";
+import { portByCode } from "./ports.ts";
 import { allInTotal, type ChargeSection } from "./charges.ts";
 import { cutOffsFor, sailingAt, voyageLabel } from "./sailings.ts";
 import { vasLines, vasTotal, FREE_TIME_INCLUDED_DAYS, type VasSelection } from "./vas.ts";
@@ -51,8 +52,9 @@ export function quoteDocument({ quote, sailing, sections, vas }: QuoteDocumentIn
     validity: { hours: quote.validityHours, basis: "FROM_ISSUE" },
     scope: { origin: quote.originScope, destination: quote.destinationScope },
     routing: {
-      portOfLoading: { code: quote.pol, city: PORTS[quote.pol].city },
-      portOfDischarge: { code: quote.pod, city: PORTS[quote.pod].city },
+      portOfLoading: { code: quote.pol, city: portByCode(quote.pol)?.name ?? quote.pol },
+      portOfDischarge: { code: quote.pod, city: portByCode(quote.pod)?.name ?? quote.pod },
+      seaDistanceNm: quote.laneNm,
       transhipment: sailing.via,
       transitDays: sailing.transitDays,
     },

@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
   Max,
   Min,
   ValidateNested,
@@ -18,11 +19,11 @@ import {
   EQUIPMENT_ORDER,
   MAX_QUANTITY_PER_ROW,
   MAX_ROWS,
-  PORT_ORDER,
   SCOPE_ORDER,
   TIER_ORDER,
 } from "../../../src/lib/pricing.ts";
 import { SCHEDULE_DAYS } from "../../../src/lib/sailings.ts";
+import { ECB_SYMBOLS } from "../ingest/sources.ts";
 import { MAX_EXTRA_FREE_TIME_DAYS } from "../../../src/lib/vas.ts";
 import type {
   Commodity,
@@ -81,12 +82,18 @@ export class VasDto {
 }
 
 export class QuotationRequestDto {
-  @ApiProperty({ enum: PORT_ORDER, example: "JPYOK", description: "Port of loading, UN/LOCODE" })
-  @IsIn(PORT_ORDER as readonly string[])
+  @ApiProperty({
+    example: "JPYOK",
+    description: "Port of loading, UN/LOCODE. Any seaport in the routed countries that UN/LOCODE places on the map — GET /v1/ports lists them.",
+  })
+  @Matches(/^[A-Z]{2}[A-Z2-9]{3}$/)
   pol!: PortCode;
 
-  @ApiProperty({ enum: PORT_ORDER, example: "SGSIN", description: "Port of discharge, UN/LOCODE" })
-  @IsIn(PORT_ORDER as readonly string[])
+  @ApiProperty({
+    example: "NLRTM",
+    description: "Port of discharge, UN/LOCODE. Same list.",
+  })
+  @Matches(/^[A-Z]{2}[A-Z2-9]{3}$/)
   pod!: PortCode;
 
   @ApiProperty({ type: [ContainerRowDto], minItems: 1, maxItems: MAX_ROWS })
@@ -145,6 +152,6 @@ export class QuotationRequestDto {
     type: [String],
   })
   @IsOptional()
-  @IsIn(["JPY", "EUR", "SGD"], { each: true })
+  @IsIn(ECB_SYMBOLS as readonly string[], { each: true })
   alsoIn?: string[];
 }

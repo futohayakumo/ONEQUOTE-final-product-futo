@@ -13,7 +13,8 @@
     "verify": "pnpm check:tokens && pnpm exec tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "build:static": "STATIC_EXPORT=1 next build",
     "locales:pull": "node scripts/pull-locales.mjs",
-    "locales:check": "node --experimental-strip-types --test src/lib/i18n.test.ts"
+    "locales:check": "node --experimental-strip-types --test src/lib/i18n.test.ts",
+    "ports:pull": "node --experimental-strip-types scripts/pull-ports.mts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

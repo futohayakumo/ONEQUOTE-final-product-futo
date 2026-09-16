@@ -8,25 +8,24 @@ import {
   LOYALTY_TIERS,
   MAX_QUANTITY_PER_ROW,
   MAX_ROWS,
-  PORTS,
-  PORT_ORDER,
   SCOPE_ORDER,
   TIER_ORDER,
   emptyRow,
+  laneDistanceNm,
 } from "@/lib/pricing";
-import { formatDecimal } from "@/lib/localeFormat";
+import { formatDate, formatDecimal } from "@/lib/localeFormat";
+import { PORTS_META, transitDaysFromNm } from "@/lib/ports";
 import type {
   Commodity,
   ContainerRow,
   EquipmentType,
   LoyaltyTier,
-  PortCode,
   QuoteInput,
   Scope,
 } from "@/types/quote";
 import { ArrowRight } from "../../atoms/icons/ArrowRight";
-import { Flag } from "../../atoms/Flag";
 import { DepartureCalendar } from "../../molecules/DepartureCalendar";
+import { PortField } from "../../molecules/PortField";
 import { useLocale, useT } from "../../providers/LocaleProvider";
 
 /**
@@ -84,31 +83,15 @@ export function SearchPanel({
     set("containers", [...value.containers, emptyRow(next)]);
   };
 
+  const distanceNm = value.pol && value.pod ? laneDistanceNm(value.pol, value.pod) : 0;
+
   const portSelect = (key: "pol" | "pod", labelKey: string) => (
-    <label className="flex flex-col gap-2">
-      <span className="type-caption">{t(labelKey)}</span>
-      {/* A native <option> renders text and nothing else, so the flag sits
-          over the control's left padding and shows the port selected. */}
-      <span className="relative">
-        {value[key] ? (
-          <Flag
-            country={PORTS[value[key] as PortCode].country}
-            className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2"
-          />
-        ) : null}
-        <select
-          className={`${FIELD} pl-11`}
-          value={value[key]}
-          onChange={(e) => set(key, e.target.value as PortCode)}
-        >
-          {PORT_ORDER.map((p) => (
-            <option key={p} value={p}>
-              {PORTS[p].city} ({p})
-            </option>
-          ))}
-        </select>
-      </span>
-    </label>
+    <PortField
+      label={t(labelKey)}
+      value={value[key]}
+      onChange={(code) => set(key, code)}
+      className={FIELD}
+    />
   );
 
   return (
@@ -117,10 +100,30 @@ export function SearchPanel({
         {t("business.search.portToPort")}
       </p>
 
-      {/* ── Route and scope ─────────────────────────────────── */}
-      <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {/* ── Route ──────────────────────────────────────────── */}
+      <div className="mt-7 grid gap-5 sm:grid-cols-2">
         {portSelect("pol", "business.search.from")}
         {portSelect("pod", "business.search.to")}
+      </div>
+      {/* Where the ports come from, and how many the list could not place:
+          the one line on the form that is real data rather than a model. */}
+      <p className="mt-3 max-w-[70ch] type-caption">
+        {t("business.search.portsNote", {
+          placed: formatDecimal(PORTS_META.withCoordinates, locale, 0),
+          total: formatDecimal(PORTS_META.seaports, locale, 0),
+          date: formatDate(Date.parse(PORTS_META.fetchedAt), locale),
+        })}
+        {distanceNm > 0
+          ? " " +
+            t("business.search.distance", {
+              nm: formatDecimal(distanceNm, locale, 0),
+              days: transitDaysFromNm(distanceNm),
+            })
+          : ""}
+      </p>
+
+      {/* ── Scope ──────────────────────────────────────────── */}
+      <div className="mt-5 grid gap-5 sm:grid-cols-2">
         {(["originScope", "destinationScope"] as const).map((key) => (
           <label key={key} className="flex flex-col gap-2">
             <span className="type-caption">{t(`business.search.${key}`)}</span>

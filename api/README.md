@@ -27,7 +27,7 @@ docker compose up
 
 ## Where the numbers come from
 
-- **Exchange rates** — European Central Bank reference rates, via
+- **Exchange rates** — European Central Bank reference rates (JPY, EUR, SGD, KRW), via
   [Frankfurter](https://api.frankfurter.dev/), an open mirror of the ECB
   feed. **Fetched at the moment of quoting**, the way a real quotation
   freezes its rate at issue, stored with the ECB's own date, and printed
@@ -37,13 +37,18 @@ docker compose up
   dead host to see that path on purpose.
 - **Ports** — [UN/LOCODE](https://github.com/datasets/un-locode), the UNECE
   code list, filtered to seaports in the seven countries the site routes
-  through. 2,272 of them, with coordinates where the list has them. This
-  one is fetched daily, not per quotation: the list changes twice a year,
-  and fetching a hundred thousand rows per quote would be slower, not more
-  honest.
-- **Prices** — the portfolio's own model, imported from `../src/lib`: lane
-  base rates, container factors, surcharges and tier discounts. Not a
-  carrier tariff, and every response says so in `provenance`.
+  through. 2,272 of them, with coordinates where the list has them — 610
+  do, and only those can be quoted: a quotation names two of them, the
+  service checks both against the table, and the pricing derives the lane's
+  distance, base rate and transit from their coordinates (see
+  `src/lib/ports.ts`). Fetched daily, not per quotation: the list changes
+  twice a year, and fetching a hundred thousand rows per quote would be
+  slower, not more honest. `pnpm ports:pull` at the root writes the same
+  rows into the browser's snapshot.
+- **Prices** — the portfolio's own model, imported from `../src/lib`: a
+  base rate that is a line in the sea distance, container factors,
+  surcharges by country, tier discounts. Not a carrier tariff, and every
+  response says so in `provenance`.
 
 The service and the site share `pricing.ts`, `charges.ts`, `sailings.ts`
 and `quoteDocument.ts` by import, so a price the browser computes offline

@@ -13,7 +13,9 @@ import {
 } from "@/lib/charges";
 import { formatCurrency, formatDate, formatDateTime, formatMoney, formatWeekday } from "@/lib/localeFormat";
 import { fetchRates, type FetchedRates } from "@/lib/quotationApi";
-import { COMMODITIES, EQUIPMENT, PORTS } from "@/lib/pricing";
+import { COMMODITIES, EQUIPMENT } from "@/lib/pricing";
+import { portName } from "@/lib/ports";
+import { portCurrency } from "@/lib/charges";
 import { sailingAt, timelineFor, type Sailing } from "@/lib/sailings";
 import type { QuoteResult } from "@/types/quote";
 import { Flag, HUB_COUNTRY } from "../../atoms/Flag";
@@ -82,6 +84,10 @@ export function OptionsList({
     return () => ctrl.abort();
   }, []);
   const canShowTariff = rates !== "unknown" && rates !== null;
+  // A port whose tariff currency the ECB does not quote stays in USD, and
+  // the note says so rather than letting a reader think Taiwan levies in dollars.
+  const usdOnlyEnd =
+    portCurrency(quote.pol) === "USD" || portCurrency(quote.pod) === "USD";
 
   /** A USD amount in the line's own currency, at the fetched rate. */
   const inTariff = (usd: number, ccy: TariffCurrency) =>
@@ -210,6 +216,7 @@ export function OptionsList({
                 : rates === null
                   ? t("options.tariffOffline")
                   : ""}
+              {canShowTariff && display === "tariff" && usdOnlyEnd ? " " + t("options.tariffUsdOnly") : ""}
             </span>
           </div>
         </div>
@@ -222,8 +229,8 @@ export function OptionsList({
             <h3 className="type-overline text-muted">{t("options.summary")}</h3>
             <dl className="mt-3 flex flex-col gap-2 type-caption">
               {[
-                [t("business.search.from"), `${PORTS[quote.pol].city} (${quote.pol})`],
-                [t("business.search.to"), `${PORTS[quote.pod].city} (${quote.pod})`],
+                [t("business.search.from"), `${portName(quote.pol)} (${quote.pol})`],
+                [t("business.search.to"), `${portName(quote.pod)} (${quote.pod})`],
                 [t("business.search.containers"), quote.rows.map((r) => `${r.quantity} × ${EQUIPMENT[r.equipment].label}`).join(", ")],
                 [t("business.search.commodity"), t(COMMODITIES[quote.commodity].labelKey)],
                 [t("options.etdFrom"), formatDate(sailingAt(options[0]?.etdOffset ?? 0), locale)],
@@ -321,7 +328,7 @@ export function OptionsList({
                     <span className="type-caption">{t("quote.departs")}</span>
                     <span className="type-label tnum">{formatDate(etd, locale)}</span>
                     <span className="type-caption">
-                      {formatWeekday(etd, locale)} · <Flag country={PORTS[quote.pol].country} /> {quote.pol}
+                      {formatWeekday(etd, locale)} · <Flag country={quote.pol.slice(0, 2)} /> {quote.pol}
                     </span>
                   </div>
 
@@ -331,7 +338,7 @@ export function OptionsList({
                     <span className="type-caption">{t("quote.arrives")}</span>
                     <span className="type-label tnum">{formatDate(eta, locale)}</span>
                     <span className="type-caption">
-                      {formatWeekday(eta, locale)} · <Flag country={PORTS[quote.pod].country} /> {quote.pod}
+                      {formatWeekday(eta, locale)} · <Flag country={quote.pod.slice(0, 2)} /> {quote.pod}
                     </span>
                   </div>
 

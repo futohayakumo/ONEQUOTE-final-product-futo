@@ -33,7 +33,7 @@ pull leaves the last good bundle in place.
 | Route | What it does |
 | :--- | :--- |
 | `/` | Entrance. QUOTE / TO BERTH across a photograph, then the journey from quote to delivery, the network, the quotation screen on a tilted panel, and the three perspectives |
-| `/business` | The real ONE QUOTE flow, observed first-hand: origin, destination, container rows of equipment × quantity × weight, commodity, and a departure day from a calendar priced per day; then the options from that day with sort, a freight view, filters and a per-option timeline; then the accepted option with value-added services, the ticket, and the document as JSON and email text |
+| `/business` | The real ONE QUOTE flow, observed first-hand: origin and destination from 610 UN/LOCODE seaports in seven countries, container rows of equipment × quantity × weight, commodity, and a departure day from a calendar priced per day; then the options from that day with sort, a freight view, filters and a per-option timeline; then the accepted option with value-added services, the ticket, and the document as JSON and email text |
 | `/engineering` | The 1.3 seconds after a customer presses Quote, told as a pinned horizontal journey — web app, Node.js gateway, ONE Quote Booking, Apigee, rate engine — with the request's clock running. Then why the system is in pieces, in the business's terms. The system map (the services the technical lead named, in his grouping), the C4 views, the code and the log are behind one button |
 | `/process` | Traditional scrum against AI-DLC. Five roles with a queue at every hand-off, or one Bolt of four phases inside 72 working hours. The adopted figures (×3 throughput, ×5 defects found — a POC benchmark, not yet the team's own record), the 3D simulation behind one click, and the three rules the tooling enforces |
 | `/process/quiz` | Five questions on those rules, reached from the end of the process screen |
@@ -61,6 +61,16 @@ no `Date` and no `Math.random`, so identical inputs always yield an identical
 quote reference. `src/lib/charges.ts` builds the full ticket — origin, ocean,
 destination — with haulage where the scope is Door, and groups every line
 into the four freight-view switches.
+
+**The ports are real, and the lane is derived from them.** `src/data/ports.ts`
+is a snapshot of UN/LOCODE — every seaport in the seven routed countries that
+the list places on the map, 610 of 2,272, with the fetch date on the file
+(`pnpm ports:pull` refreshes it; the API ingests the same list into
+PostgreSQL and refuses a code the list does not place). `src/lib/ports.ts`
+sums the sea distance over the standard chokepoints between two regions —
+Singapore Strait, south of Sri Lanka, Bab el-Mandeb, Suez, Gibraltar, the
+Channel — and the lane's base rate and transit are a line in that distance.
+The distance is real geography; the line is a model, and the form says both.
 The option card and the ticket print the same figure because they call the
 same function; the day they did not, a reviewer found it in a minute.
 

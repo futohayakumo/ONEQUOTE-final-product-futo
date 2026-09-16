@@ -35,30 +35,54 @@ import type { PortCode, RowResult, Scope } from "@/types/quote";
  * be levied in, and the renderer converts with a fetched rate or, without
  * one, says it cannot.
  */
-export type TariffCurrency = "USD" | "JPY" | "SGD" | "EUR";
+export type TariffCurrency = "USD" | "JPY" | "SGD" | "EUR" | "KRW";
 
-export const PORT_CURRENCY: Record<PortCode, TariffCurrency> = {
-  JPTYO: "JPY",
-  JPYOK: "JPY",
-  SGSIN: "SGD",
-  NLRTM: "EUR",
+/**
+ * The currency each country's ports publish their tariff in — where the ECB
+ * publishes a reference rate for it. Taiwan, Sri Lanka and the Emirates
+ * levy in TWD, LKR and AED, none of which the ECB quotes, so their lines
+ * stay in USD and the tariff display says why rather than inventing a rate.
+ */
+const COUNTRY_CURRENCY: Record<string, TariffCurrency> = {
+  JP: "JPY",
+  KR: "KRW",
+  SG: "SGD",
+  NL: "EUR",
 };
 
-/** Terminal handling, per container, by port. Ports set their own tariff. */
-const THC_USD: Record<PortCode, { origin: number; destination: number }> = {
-  JPTYO: { origin: 182, destination: 182 },
-  JPYOK: { origin: 178, destination: 178 },
-  SGSIN: { origin: 131, destination: 131 },
-  NLRTM: { origin: 214, destination: 214 },
-};
+export function portCurrency(port: PortCode): TariffCurrency {
+  return COUNTRY_CURRENCY[port.slice(0, 2)] ?? "USD";
+}
 
-/** Inland haulage between the yard and a door, per container, by port. */
-const HAULAGE_USD: Record<PortCode, number> = {
-  JPTYO: 260,
-  JPYOK: 240,
-  SGSIN: 190,
-  NLRTM: 310,
+/**
+ * Terminal handling per container, by country. Ports set their own tariff;
+ * a country-level figure is the model's resolution, and says so.
+ */
+const THC_USD: Record<string, number> = {
+  JP: 182,
+  KR: 150,
+  TW: 140,
+  SG: 131,
+  LK: 120,
+  AE: 160,
+  NL: 214,
 };
+const DEFAULT_THC_USD = 160;
+
+/** Inland haulage between the yard and a door, per container, by country. */
+const HAULAGE_USD: Record<string, number> = {
+  JP: 260,
+  KR: 220,
+  TW: 200,
+  SG: 190,
+  LK: 170,
+  AE: 210,
+  NL: 310,
+};
+const DEFAULT_HAULAGE_USD = 220;
+
+const thc = (port: PortCode) => THC_USD[port.slice(0, 2)] ?? DEFAULT_THC_USD;
+const haulage = (port: PortCode) => HAULAGE_USD[port.slice(0, 2)] ?? DEFAULT_HAULAGE_USD;
 
 /** Per bill of lading, not per container. */
 const DOCUMENTATION_USD = 65;
@@ -163,8 +187,8 @@ export function chargeSections(input: {
     subtotal: money(lines.reduce((n, l) => n + l.amount, 0)),
   });
 
-  const originCcy = PORT_CURRENCY[pol];
-  const destCcy = PORT_CURRENCY[pod];
+  const originCcy = portCurrency(pol);
+  const destCcy = portCurrency(pod);
 
   const origin: ChargeLine[] = [];
   if (originScope === "DOOR") {
@@ -175,7 +199,7 @@ export function chargeSections(input: {
       currency: originCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
-      amount: money(HAULAGE_USD[pol] * units),
+      amount: money(haulage(pol) * units),
     });
   }
   origin.push(
@@ -186,7 +210,7 @@ export function chargeSections(input: {
       currency: originCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
-      amount: money(THC_USD[pol].origin * units),
+      amount: money(thc(pol) * units),
     },
     {
       code: "DOC",
@@ -276,7 +300,7 @@ export function chargeSections(input: {
       currency: destCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
-      amount: money(THC_USD[pod].destination * units),
+      amount: money(thc(pod) * units),
     },
     {
       code: "D/O",
@@ -303,7 +327,7 @@ export function chargeSections(input: {
       currency: destCcy,
       basisKey: perContainer.key,
       basisVars: perContainer.vars,
-      amount: money(HAULAGE_USD[pod] * units),
+      amount: money(haulage(pod) * units),
     });
   }
 

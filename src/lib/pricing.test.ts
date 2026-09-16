@@ -22,10 +22,12 @@ const base: QuoteInput = {
 
 test("A. three 20' dry, Yokohama to Singapore: the fixture the ticket shows", () => {
   const q = calculateQuote({ ...base, pol: "JPYOK", pod: "SGSIN", commodity: "GENERAL", tier: "SILVER_SAIL" });
-  assert.equal(q.laneBase, 1090);
+  // Yokohama–Singapore is 2,862 nm by the Singapore Strait: 686 + 0.16 × nm.
+  assert.equal(q.laneNm, 2862);
+  assert.equal(q.laneBase, 1144);
   assert.equal(q.units, 3);
   assert.equal(q.teuAccrued, 3);
-  assert.equal(q.oceanFreight, 3270);
+  assert.equal(q.oceanFreight, 3432);
   assert.equal(q.rows[0].overweight, false);
   assert.equal(q.nextMilestoneTeu, 10);
   assert.match(q.quoteId, /^QTN-[0-9A-F]{6}$/);
@@ -43,9 +45,11 @@ test("B. mixed rows price per row and sum, and TEU counts forty-footers as two",
     commodity: "CHILLED_FOOD",
     tier: "GOLDEN_SEA",
   } as QuoteInput & { pol: "JPTYO"; pod: "NLRTM"; commodity: "CHILLED_FOOD"; tier: "GOLDEN_SEA" });
-  assert.equal(q.rows[0].oceanFreight, 2480 * 1.0 * 2);
-  assert.equal(q.rows[1].oceanFreight, 2480 * 2.6);
-  assert.equal(q.oceanFreight, 4960 + 6448);
+  // Tokyo–Rotterdam, 10,915 nm via Singapore, Sri Lanka, Suez and the Channel.
+  assert.equal(q.laneBase, 2432);
+  assert.equal(q.rows[0].oceanFreight, 2432 * 1.0 * 2);
+  assert.equal(q.rows[1].oceanFreight, Math.round(2432 * 2.6 * 100) / 100);
+  assert.equal(q.oceanFreight, Math.round((4864 + 2432 * 2.6) * 100) / 100);
   assert.equal(q.units, 3);
   assert.equal(q.teuAccrued, 2 + 2);
   assert.equal(q.rows[1].reefer, true);

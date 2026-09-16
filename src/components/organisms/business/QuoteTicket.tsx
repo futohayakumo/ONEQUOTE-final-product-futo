@@ -3,7 +3,8 @@
 import { formatDate, formatDateTime, formatDecimal, formatMoney, formatWeekday, localiseVars } from "@/lib/localeFormat";
 import { allInTotal, type ChargeSection } from "@/lib/charges";
 import { t, type Locale } from "@/lib/i18n";
-import { COMMODITIES, EQUIPMENT, LOYALTY_TIERS, PORTS } from "@/lib/pricing";
+import { COMMODITIES, EQUIPMENT, LOYALTY_TIERS } from "@/lib/pricing";
+import { portName } from "@/lib/ports";
 import type { RemoteQuotation } from "@/lib/quotationApi";
 import { cutOffsFor, legsFor, sailingAt, type Sailing } from "@/lib/sailings";
 import { FREE_TIME_INCLUDED_DAYS, vasLines, vasTotal, type VasSelection } from "@/lib/vas";
@@ -99,7 +100,7 @@ export function QuoteTicket({
   const payable = Math.round((charges - discount + extrasTotal) * 100) / 100;
 
   const arrival = sailing.etdOffset + sailing.transitDays;
-  const legs = legsFor(sailing, PORTS[pol].city, PORTS[pod].city);
+  const legs = legsFor(sailing, portName(pol), portName(pod));
   const cutOffs = cutOffsFor(sailing);
 
   return (
@@ -127,10 +128,10 @@ export function QuoteTicket({
       <div className="flex flex-wrap items-start justify-between gap-8 px-6 py-7 sm:px-8">
         <div className="flex flex-col gap-1">
           <span className="type-overline text-muted">{t("quote.departs", locale)}</span>
-          <span className="type-section">{PORTS[pol].city}</span>
+          <span className="type-section">{portName(pol)}</span>
           <span className="type-label tnum">{formatDate(sailingAt(sailing.etdOffset), locale)}</span>
           <span className="type-caption">
-            {formatWeekday(sailingAt(sailing.etdOffset), locale)} · <Flag country={PORTS[pol].country} /> {pol}
+            {formatWeekday(sailingAt(sailing.etdOffset), locale)} · <Flag country={pol.slice(0, 2)} /> {pol}
           </span>
         </div>
 
@@ -159,10 +160,10 @@ export function QuoteTicket({
 
         <div className="flex flex-col items-end gap-1 text-right">
           <span className="type-overline text-muted">{t("quote.arrives", locale)}</span>
-          <span className="type-section">{PORTS[pod].city}</span>
+          <span className="type-section">{portName(pod)}</span>
           <span className="type-label tnum">{formatDate(sailingAt(arrival), locale)}</span>
           <span className="type-caption">
-            {formatWeekday(sailingAt(arrival), locale)} · <Flag country={PORTS[pod].country} /> {pod}
+            {formatWeekday(sailingAt(arrival), locale)} · <Flag country={pod.slice(0, 2)} /> {pod}
           </span>
         </div>
       </div>

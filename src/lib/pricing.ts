@@ -1,3 +1,4 @@
+import { isPortCode, laneBaseFromNm, portByCode, seaDistanceNm } from "./ports.ts";
 import type {
   Commodity,
   ContainerRow,
@@ -20,36 +21,12 @@ import type {
  * asked for cargo volume in cubic metres and one container type; the product
  * asks for equipment type × quantity × cargo weight, several rows at once, a
  * commodity, and a departure date, and offers exactly four equipment types.
- * The lane base rates, factors and surcharges below are still the
- * portfolio's own model — not a carrier tariff — and every response says so.
+ * The equipment factors and surcharges below are still the portfolio's own
+ * model — not a carrier tariff — and every response says so. The lane's base
+ * rate is no longer a table either: since 2026-09-16 it is a line in the sea
+ * distance between the two ports, and the ports are every seaport UN/LOCODE
+ * places in the routed countries (`ports.ts`).
  */
-
-export const PORTS: Record<
-  PortCode,
-  { code: PortCode; city: string; country: string }
-> = {
-  JPTYO: { code: "JPTYO", city: "Tokyo", country: "JP" },
-  JPYOK: { code: "JPYOK", city: "Yokohama", country: "JP" },
-  SGSIN: { code: "SGSIN", city: "Singapore", country: "SG" },
-  NLRTM: { code: "NLRTM", city: "Rotterdam", country: "NL" },
-};
-
-export const PORT_ORDER: readonly PortCode[] = [
-  "JPTYO",
-  "JPYOK",
-  "SGSIN",
-  "NLRTM",
-] as const;
-
-/** Base ocean rate in USD per 20' dry container. Symmetric: the key is sorted. */
-export const LANE_BASE_USD: Record<string, number> = {
-  "JPTYO|JPYOK": 320, // domestic feeder
-  "JPTYO|SGSIN": 1150,
-  "JPTYO|NLRTM": 2480,
-  "JPYOK|SGSIN": 1090,
-  "JPYOK|NLRTM": 2420,
-  "NLRTM|SGSIN": 1980,
-};
 
 /**
  * The four equipment types, and what each does to the price.
@@ -173,8 +150,19 @@ export function laneKey(a: PortCode, b: PortCode): string {
   return [a, b].sort().join("|");
 }
 
+/** Sea distance for the lane, or 0 when either code is not a placed port. */
+export function laneDistanceNm(a: PortCode, b: PortCode): number {
+  const pa = portByCode(a);
+  const pb = portByCode(b);
+  return pa && pb ? seaDistanceNm(pa, pb) : 0;
+}
+
+/**
+ * Base ocean rate for the lane, USD per 20' dry — a line in the sea
+ * distance between the two ports (see `ports.ts`), not a table.
+ */
 export function laneBaseUsd(a: PortCode, b: PortCode): number {
-  return LANE_BASE_USD[laneKey(a, b)] ?? 0;
+  return laneBaseFromNm(laneDistanceNm(a, b));
 }
 
 /** An empty container row, the way the form starts one. */
@@ -190,7 +178,9 @@ export function validateQuote(input: QuoteInput): QuoteErrors {
   // in. A message carries its bound as a variable so the limit stays stated
   // once, here.
   if (!input.pol) errors.pol = { key: "quote.error.pol" };
+  else if (!isPortCode(input.pol)) errors.pol = { key: "quote.error.unknownPort" };
   if (!input.pod) errors.pod = { key: "quote.error.pod" };
+  else if (!isPortCode(input.pod)) errors.pod = { key: "quote.error.unknownPort" };
   if (input.pol && input.pod && input.pol === input.pod) {
     errors.pod = { key: "quote.error.samePort" };
   }
@@ -274,7 +264,8 @@ export function calculateQuote(input: {
   const { pol, pod, containers, commodity, tier, originScope, destinationScope } =
     input;
 
-  const laneBase = laneBaseUsd(pol, pod);
+  const laneNm = laneDistanceNm(pol, pod);
+  const laneBase = laneBaseFromNm(laneNm);
   const loyalty = LOYALTY_TIERS[tier];
   const rows = containers.map((r) => priceRow(r, laneBase));
 
@@ -305,6 +296,7 @@ export function calculateQuote(input: {
     rows,
     units,
     teuAccrued,
+    laneNm,
     laneBase,
     oceanFreight,
     discountRate: loyalty.discountRate,

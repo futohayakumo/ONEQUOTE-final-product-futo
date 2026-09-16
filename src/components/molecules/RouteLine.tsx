@@ -1,7 +1,7 @@
 "use client";
 
 import { HUB_COUNTRY, Flag } from "../atoms/Flag";
-import { PORTS } from "@/lib/pricing";
+import { portName } from "@/lib/ports";
 import type { PortCode } from "@/types/quote";
 import { useT } from "../providers/LocaleProvider";
 
@@ -73,7 +73,7 @@ export function RouteLine({
       ) : null}
 
       <span className="sr-only">
-        {PORTS[pol].city} → {PORTS[pod].city}
+        {portName(pol)} → {portName(pod)}
       </span>
     </span>
   );
