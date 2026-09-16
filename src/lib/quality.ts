@@ -17,8 +17,8 @@
 
 export interface Evidence {
   id: string;
-  /** Internal telemetry, or a published study anyone can go and read. */
-  origin: "internal" | "published";
+  /** A proof-of-concept benchmark, or a published study anyone can go and read. */
+  origin: "poc" | "published";
   /**
    * Bundle keys, not prose. This screen switches language like every other
    * one, and a citation whose metric and sample stay English while the
@@ -44,31 +44,35 @@ export interface Evidence {
 }
 
 /**
- * The team's own measurement, and the headline this screen reports.
+ * The headline this screen reports, and where it is from.
  *
- * It is larger than anything published — three times the throughput against a
- * best published figure of about 1.5, and five times the defects against a
- * published spread of 1.09 to 1.68. That gap is not hidden; it is the most
- * interesting thing on the page, and the modal exists to show it.
+ * ×3 throughput and ×5 defect DETECTION are the figures the team adopted
+ * with AI-DLC. Until 2026-09-16 this site called them the team's own
+ * measurement; the technical lead corrected that: they originate from
+ * external proof-of-concept benchmarks, and the team's own numbers — every
+ * defect, task, assignee and resolution time, in Jira, reported every two
+ * weeks — have not yet been reported as a multiplier. So the label says
+ * "POC benchmark", the note says it is not this team's record, and the gap
+ * block says what the team's own record would need to show.
  *
- * Internal telemetry is legitimate evidence and weaker evidence than a
- * multi-organisation study: nobody outside can reproduce it. It is labelled
- * so a reader can weigh it accordingly, and `methodology` is a field rather
- * than a comment because the first question a sceptic asks is how it was
- * counted.
+ * Two things follow. The ×5 is detection, not injection: five times the
+ * defects FOUND, which is the case for the automated gate rather than a
+ * charge against the assistant. And a POC is weaker evidence than a
+ * multi-organisation study, which is why the published medians sit beside
+ * it in the modal rather than being replaced by it.
  */
-export const INTERNAL: {
+export const POC: {
   labelKey: string;
   speed: number;
   defects: number;
   noteKey: string;
   methodologyKey: string;
 } = {
-  labelKey: "quality.internal.label",
+  labelKey: "quality.poc.label",
   speed: 3,
   defects: 5,
-  noteKey: "quality.internal.note",
-  methodologyKey: "quality.internal.methodology",
+  noteKey: "quality.poc.note",
+  methodologyKey: "quality.poc.methodology",
 };
 
 /** Lead time. Every published source agrees it improves; none says threefold. */
@@ -190,16 +194,16 @@ export const PUBLISHED_DEFECT = mid(DEFECT_EVIDENCE);
 export const RECOVERY = mid(RECOVERY_EVIDENCE);
 
 /**
- * The figures this screen reports are the internal ones. The published
- * medians stay exported beside them, because the comparison is the point and
- * a number that only appears inside a modal is a number nobody reads.
+ * The figures this screen reports are the POC ones. The published medians
+ * stay exported beside them, because the comparison is the point and a
+ * number that only appears inside a modal is a number nobody reads.
  */
-export const SPEED_FACTOR = INTERNAL.speed;
-export const DEFECT_FACTOR = INTERNAL.defects;
+export const SPEED_FACTOR = POC.speed;
+export const DEFECT_FACTOR = POC.defects;
 
-/** How far the internal figure sits above the published spread. */
-export const SPEED_GAP = INTERNAL.speed / PUBLISHED_SPEED;
-export const DEFECT_GAP = INTERNAL.defects / PUBLISHED_DEFECT;
+/** How far the POC figure sits above the published spread. */
+export const SPEED_GAP = POC.speed / PUBLISHED_SPEED;
+export const DEFECT_GAP = POC.defects / PUBLISHED_DEFECT;
 
 /** Defects per thousand lines, without AI. Code Ninety's measured baseline. */
 export const BASELINE_DEFECTS_PER_KLOC = 3.2;
@@ -255,7 +259,7 @@ export function quality(mode: QualityMode): QualityOutcome {
  * The catch rate at which the assisted path stops being worse than doing
  * nothing.
  *
- * This falls straight out of the internal figure and is the most useful thing
+ * This falls straight out of the POC figure and is the most useful thing
  * on the page. At a 5x injection rate, automated review at the published 73%
  * catch rate still lets more defects through than writing the code by hand.
  * The gate has to reach 80% before the trade is even neutral — so "add AI

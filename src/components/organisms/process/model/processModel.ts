@@ -115,17 +115,21 @@ export const MODEL = {
   QUEUE_EXPONENT: 1.3,
 
   /**
-   * The Bolt, anchored to the window the lifecycle specifies rather than to
-   * constants picked to draw a curve.
+   * The Bolt, anchored to the one figure the lifecycle states about itself
+   * rather than to constants picked to draw a curve.
    *
-   * AI-DLC states one number about itself: requirements to production in 24 to
-   * 72 hours. So the smallest item takes a day and the largest takes three,
-   * and everything between is linear in batch size. It is still a model — the
-   * mapping from story points to hours is ours — but the endpoints belong to
-   * the process, which is one more thing on this page that was not invented.
+   * The AI-DLC document says "24 to 72 hours"; the technical lead's
+   * correction (2026-09-16) is that a Bolt is a target window of UP TO 72
+   * WORKING hours — counted in working hours, not elapsed calendar days.
+   * So the cap is the process's, and the two things that are ours are: the
+   * working day is eight hours, and the largest item on the tray (8 SP, a
+   * fortnight for one person) is the one that uses the whole window, with
+   * everything smaller in proportion. Days everywhere in this model are
+   * working days — the tray's own caption calls 8 SP "a fortnight", which
+   * is ten of them — so the two rooms are compared in the same unit.
    */
-  BOLT_MIN_DAYS: 1.0,
-  BOLT_MAX_DAYS: 3.0,
+  BOLT_MAX_WORKING_HOURS: 72,
+  HOURS_PER_WORKING_DAY: 8,
 } as const;
 
 export function touchDays(step: StepId, sp: number): number {
@@ -140,20 +144,22 @@ export function queueDays(gapIndex: number, sp: number): number {
     : MODEL.PR_QUEUE_BASE + MODEL.PR_QUEUE_K * scaled;
 }
 
+/** One Bolt, end to end, for a batch of `sp`, in working hours. */
+export function boltHours(sp: number): number {
+  const hi = STORY_POINTS[STORY_POINTS.length - 1];
+  return MODEL.BOLT_MAX_WORKING_HOURS * (sp / hi);
+}
+
 /**
- * One Bolt, end to end, for a batch of `sp`.
+ * The same, in working days, for the comparison with the other room.
  *
- * Linear between the two endpoints the lifecycle names: 24 hours for the
- * smallest item on the tray, 72 for the largest. Nothing here is superlinear,
- * because nothing inside a Bolt queues — that is the whole structural claim,
- * and it is the reason the gap against the other room widens with batch size
- * rather than staying flat.
+ * Proportional to batch size, and never above the cap. Nothing here is
+ * superlinear, because nothing inside a Bolt queues — that is the whole
+ * structural claim, and it is the reason the other room's queue, which grows
+ * faster than linearly, pulls away from this one as the batch grows.
  */
 export function boltDays(sp: number): number {
-  const lo = STORY_POINTS[0];
-  const hi = STORY_POINTS[STORY_POINTS.length - 1];
-  const t = (sp - lo) / (hi - lo);
-  return MODEL.BOLT_MIN_DAYS + t * (MODEL.BOLT_MAX_DAYS - MODEL.BOLT_MIN_DAYS);
+  return boltHours(sp) / MODEL.HOURS_PER_WORKING_DAY;
 }
 
 /**

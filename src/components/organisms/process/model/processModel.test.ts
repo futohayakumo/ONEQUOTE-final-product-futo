@@ -7,6 +7,8 @@ import {
   compare,
   phaseFor,
   wallSeconds,
+  boltHours,
+  MODEL,
 } from "./processModel.ts";
 
 const near = (a: number, b: number, tol: number) =>
@@ -30,16 +32,15 @@ test("traditional totals match the published table", () => {
   }
 });
 
-test("a Bolt lands inside the 24-72 hour window the lifecycle specifies", () => {
-  // Not a table of chosen constants any more: the endpoints are the process's
-  // own stated figure, and the smallest and largest items on the tray sit
-  // exactly on them.
+test("a Bolt never exceeds the 72 working hours the lifecycle allows, and the largest item uses all of them", () => {
   for (const sp of STORY_POINTS) {
-    const hours = buildSchedule("ai-dlc", sp).totalDays * 24;
-    assert.ok(hours >= 24 && hours <= 72, `${sp} sp ran ${hours} hours`);
+    const hours = buildSchedule("ai-dlc", sp).totalDays * MODEL.HOURS_PER_WORKING_DAY;
+    assert.ok(hours > 0 && hours <= 72, `${sp} sp ran ${hours} working hours`);
   }
-  near(buildSchedule("ai-dlc", 0.5).totalDays * 24, 24, 0.01);
-  near(buildSchedule("ai-dlc", 8).totalDays * 24, 72, 0.01);
+  near(boltHours(8), 72, 0.01);
+  near(buildSchedule("ai-dlc", 8).totalDays * MODEL.HOURS_PER_WORKING_DAY, 72, 0.01);
+  // Proportional: half the batch, half the Bolt.
+  near(boltHours(4), 36, 0.01);
 });
 
 test("the four Bolt phases are the AI-DLC room, and the five roles are not", () => {
@@ -57,15 +58,20 @@ test("the four Bolt phases are the AI-DLC room, and the five roles are not", () 
   );
 });
 
-test("the advantage GROWS with batch size — this is the whole argument", () => {
+test("the advantage is at least threefold at every size, and LARGEST for the smallest item", () => {
+  // A half-day task still pays four hand-off queues in the traditional room —
+  // 2.4 days before any work — so the smallest item suffers the most.
+  for (const sp of STORY_POINTS) {
+    assert.ok(compare(sp).ratio >= 3.5, `${sp} sp ratio ${compare(sp).ratio}`);
+  }
   const small = compare(0.5).ratio;
   const large = compare(8).ratio;
-  near(small, 3.8, 0.15);
-  near(large, 11.8, 0.3);
-  assert.ok(large > small * 2.5, "ratio must widen sharply with story points");
+  near(small, 6.7, 0.2);
+  near(large, 3.9, 0.2);
+  assert.ok(small > large, "fixed hand-off cost punishes the smallest batch hardest");
 });
 
-test("wall clock spreads in traditional and stays flat in ai-dlc", () => {
+test("wall clock spreads in traditional and stays short in ai-dlc", () => {
   const tSmall = buildSchedule("traditional", 0.5).wallMs;
   const tLarge = buildSchedule("traditional", 8).wallMs;
   const aSmall = buildSchedule("ai-dlc", 0.5).wallMs;
@@ -75,9 +81,11 @@ test("wall clock spreads in traditional and stays flat in ai-dlc", () => {
     tLarge / tSmall >= 2.8,
     `traditional spread ${tLarge / tSmall} < 2.8`,
   );
+  // The Bolt scales with the batch (a 72-hour cap is nine working days for
+  // 8 SP), but the playback compresses it under five seconds either way.
   assert.ok(
-    aLarge / aSmall <= 1.2,
-    `ai-dlc spread ${aLarge / aSmall} > 1.2`,
+    aLarge / aSmall <= 1.5 && aLarge <= 5000,
+    `ai-dlc spread ${aLarge / aSmall}, large ${aLarge}ms`,
   );
 
   // Every ai-dlc run must last long enough for five station beats to be
@@ -85,7 +93,7 @@ test("wall clock spreads in traditional and stays flat in ai-dlc", () => {
   for (const sp of STORY_POINTS) {
     const ms = buildSchedule("ai-dlc", sp).wallMs;
     assert.ok(
-      ms >= 3600 && ms <= 4200,
+      ms >= 3600 && ms <= 5000,
       `ai-dlc ${sp}SP wall ${ms}ms out of range`,
     );
   }

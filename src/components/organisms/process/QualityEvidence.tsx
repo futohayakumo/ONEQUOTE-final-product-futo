@@ -6,7 +6,7 @@ import {
   DEFECT_EVIDENCE,
   DEFECT_FACTOR,
   DEFECT_GAP,
-  INTERNAL,
+  POC,
   PUBLISHED_DEFECT,
   PUBLISHED_SPEED,
   RECOVERY,
@@ -60,11 +60,17 @@ function Sources({ rows }: { rows: readonly Evidence[] }) {
  * had no way to tell which was which, and the honest answer to "where did
  * 4.38 defects per thousand lines come from" is arithmetic, not a measurement.
  *
- * So the band now carries the internal report and nothing else: two measured
- * multipliers, one figure derived from them by division, and a statement of
- * what was never counted. Everything anybody else published — including the
- * catch rates, which are genuinely interesting — sits behind the modal, where
- * it is labelled as theirs.
+ * So the band carries one source and nothing else: the two multipliers the
+ * team adopted from the POC benchmark, one figure derived from them by
+ * division, and a statement of what the team's own record has not yet
+ * reported. Everything anybody else published — including the catch rates,
+ * which are genuinely interesting — sits behind the modal, labelled as theirs.
+ *
+ * The provenance of the two multipliers was corrected on 2026-09-16: the
+ * site had called them the team's own measurement, and the technical lead
+ * said they are POC benchmarks. The team's own delivery IS measured — in
+ * Jira, every two weeks — but not yet reported as a multiplier, and the
+ * band says exactly that.
  */
 export function QualityEvidence() {
   const t = useT();
@@ -73,7 +79,7 @@ export function QualityEvidence() {
   const num = (n: number, digits = 2) => formatDecimal(n, locale, digits);
 
   /*
-   * All three are the internal figure or a consequence of it.
+   * All three are the POC figure or a consequence of it.
    *
    * The break-even catch rate is 1 - 1/5: if five times as many defects are
    * written, a gate has to stop four of every five just to return the release
@@ -83,12 +89,12 @@ export function QualityEvidence() {
   const CARDS = [
     {
       key: "leadTime",
-      value: t("quality.times", { n: num(INTERNAL.speed) }),
+      value: t("quality.times", { n: num(POC.speed) }),
       params: {},
     },
     {
       key: "defects",
-      value: t("quality.times", { n: num(INTERNAL.defects) }),
+      value: t("quality.times", { n: num(POC.defects) }),
       params: {},
     },
     {
@@ -113,11 +119,11 @@ export function QualityEvidence() {
                 this band is part of the claim. */}
             <p className="mt-4 max-w-[60ch] type-caption">
               {t("quality.attr.pre", {
-                speed: INTERNAL.speed,
-                defects: INTERNAL.defects,
+                speed: POC.speed,
+                defects: POC.defects,
               })}{" "}
-              <strong className="type-label">{t(INTERNAL.labelKey)}</strong>
-              {t("quality.attr.post", { note: t(INTERNAL.noteKey) })}{" "}
+              <strong className="type-label">{t(POC.labelKey)}</strong>
+              {t("quality.attr.post", { note: t(POC.noteKey) })}{" "}
               <button
                 type="button"
                 onClick={() => setOpen(true)}
@@ -165,8 +171,8 @@ export function QualityEvidence() {
           <h3 className="type-section">{t("quality.gap.title")}</h3>
           <p className="max-w-[70ch] type-body">
             {t("quality.gap.body", {
-              speed: INTERNAL.speed,
-              defects: INTERNAL.defects,
+              speed: POC.speed,
+              defects: POC.defects,
               breakEven: Math.round(BREAK_EVEN_CATCH * 100),
             })}
           </p>
@@ -186,14 +192,14 @@ export function QualityEvidence() {
             })}
           </p>
           <p className="max-w-[70ch] type-caption">
-            {t(INTERNAL.methodologyKey)}
+            {t(POC.methodologyKey)}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {(
               [
-                ["quality.modal.throughput", INTERNAL.speed, PUBLISHED_SPEED],
-                ["quality.modal.defects", INTERNAL.defects, PUBLISHED_DEFECT],
+                ["quality.modal.throughput", POC.speed, PUBLISHED_SPEED],
+                ["quality.modal.defects", POC.defects, PUBLISHED_DEFECT],
               ] as const
             ).map(([labelKey, ours, theirs]) => (
               <div

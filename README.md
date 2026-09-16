@@ -7,7 +7,7 @@ reads as an enterprise product showcase, not a dashboard and not a personal
 site, and every figure on it is computed by the code rather than typed in.
 
 **This repository identifies the client and is private.** The wordmark is real,
-the internal throughput and defect figures are from an internal report, and
+the throughput and defect figures are the ones the team adopted, and
 the photography carries the name. Do not add a remote and do not push. The
 rules for working in the tree are in `CLAUDE.md`; this file describes what is
 here.
@@ -35,7 +35,7 @@ pull leaves the last good bundle in place.
 | `/` | Entrance. QUOTE / TO BERTH across a photograph, then the journey from quote to delivery, the network, the quotation screen on a tilted panel, and the three perspectives |
 | `/business` | The real ONE QUOTE flow, observed first-hand: origin, destination, container rows of equipment × quantity × weight, commodity, and a departure day from a calendar priced per day; then the options from that day with sort, a freight view, filters and a per-option timeline; then the accepted option with value-added services, the ticket, and the document as JSON and email text |
 | `/engineering` | The 1.3 seconds after a customer presses Quote, told as a pinned horizontal journey — five services, one panel each, with the request's clock running. Then why the system is in pieces, in the business's terms. The system map, the C4 views, the code and the log are behind one button |
-| `/process` | Traditional scrum against AI-DLC. Five roles with a queue at every hand-off, or one Bolt of four phases inside 24–72 hours. The measured figures (×3 throughput, ×5 defects, and what was never counted), the 3D simulation behind one click, and the three rules the tooling enforces |
+| `/process` | Traditional scrum against AI-DLC. Five roles with a queue at every hand-off, or one Bolt of four phases inside 72 working hours. The adopted figures (×3 throughput, ×5 defects found — a POC benchmark, not yet the team's own record), the 3D simulation behind one click, and the three rules the tooling enforces |
 | `/process/quiz` | Five questions on those rules, reached from the end of the process screen |
 
 All five are statically rendered and must stay so. A loading screen — a ship
@@ -69,11 +69,13 @@ walks the quotation route once and produces the hops, the log and the total.
 The journey's clock, its per-step figures and the "1.3 seconds" in the heading
 are that walk; nothing on the page re-adds milliseconds on its own.
 
-**The quality band carries the internal report and nothing else.** ×3
-throughput and ×5 defects are the team's own measurement; the 80% break-even
-catch rate is 1 − 1/5, arithmetic on that figure. What the automated review
-actually caught on this team's delivery was never counted, and the band says
-so at the same size as the claim. Everything anybody else published sits
+**The quality band carries one source and nothing else.** ×3 throughput and
+×5 defects *found* are the external POC benchmark the team adopted with
+AI-DLC — not, as this site said until 2026-09-16, the team's own
+measurement. The team's own delivery is tracked in Jira and reported every
+two weeks, but has not yet been reported as a multiplier, and the band says
+so at the same size as the claim. The 80% break-even catch rate is 1 − 1/5,
+arithmetic on the adopted figure. Everything anybody else published sits
 behind the modal, labelled as theirs. `src/lib/quality.ts` has the sources.
 
 **The delivery timing model is shared, not duplicated.**
@@ -82,8 +84,9 @@ at all, so the WebGL scene, the 2D readout and the no-WebGL fallback all
 compute the same numbers, and the node test runner executes it directly. The
 traditional room is a queueing model whose constants were chosen to draw a
 curve, and it says so on the page. The AI-DLC room is anchored to the one
-figure the lifecycle states about itself — 24 to 72 hours — so the smallest
-item on the tray takes a day and the largest takes three.
+figure the lifecycle states about itself — a cap of 72 *working* hours, per
+the technical lead — so the largest item on the tray uses the whole window
+and the rest are in proportion, at eight hours to a working day.
 
 **The two rooms do not share a station list.** Traditional has five roles —
 product owner, designer, developer, QA, two reviewers — because a queue forms

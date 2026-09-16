@@ -6,7 +6,7 @@ import {
   BREAK_EVEN_CATCH,
   DEFECT_FACTOR,
   DEFECT_GAP,
-  INTERNAL,
+  POC,
   PUBLISHED_DEFECT,
   PUBLISHED_SPEED,
   RECOVERY_IS_ENOUGH,
@@ -58,7 +58,7 @@ test("the published factors are the median of the published rows", () => {
     const m = Math.floor(f.length / 2);
     return f.length % 2 ? f[m] : (f[m - 1] + f[m]) / 2;
   };
-  // SPEED_FACTOR and DEFECT_FACTOR are the INTERNAL figures — the headline.
+  // SPEED_FACTOR and DEFECT_FACTOR are the POC figures — the headline.
   // These two are what the published table adds up to, shown beside it.
   assert.equal(PUBLISHED_SPEED, median(SPEED_EVIDENCE.map((e) => e.factor)));
   assert.equal(PUBLISHED_DEFECT, median(DEFECT_EVIDENCE.map((e) => e.factor)));
@@ -102,26 +102,27 @@ test("automated review changes what escapes, not what is written", () => {
   assert.equal(withQa.speed, assisted.speed, "review does not cost lead time");
 });
 
-test("the headline is the internal figure, and it is labelled as one", () => {
-  assert.equal(quality("ai-assisted").speed, INTERNAL.speed);
-  assert.match(EN[INTERNAL.labelKey], /internal/i);
-  assert.ok(EN[INTERNAL.noteKey].length > 0, "the caveat travels with the figure");
+test("the headline is the POC figure, and it is labelled as one", () => {
+  assert.equal(quality("ai-assisted").speed, POC.speed);
+  assert.match(EN[POC.labelKey], /POC|proof/i);
+  assert.doesNotMatch(EN[POC.labelKey], /internal|our own/i);
+  assert.ok(EN[POC.noteKey].length > 0, "the caveat travels with the figure");
   assert.ok(
-    EN[INTERNAL.methodologyKey].length > 40,
+    EN[POC.methodologyKey].length > 40,
     "a sceptic asks how it was counted",
   );
 });
 
-test("the internal figure sits above every published one, and says so", () => {
+test("the POC figure sits above every published one, and says so", () => {
   // Not a defect in the data — the gap is the most interesting thing here, and
   // a test that let it drift silently would be hiding it.
-  assert.ok(SPEED_GAP > 1, `internal speed is ${SPEED_GAP.toFixed(1)}x published`);
-  assert.ok(DEFECT_GAP > 1, `internal defects are ${DEFECT_GAP.toFixed(1)}x published`);
-  for (const e of DEFECT_EVIDENCE) assert.ok(e.factor < INTERNAL.defects);
-  for (const e of SPEED_EVIDENCE) assert.ok(e.factor < INTERNAL.speed);
+  assert.ok(SPEED_GAP > 1, `POC speed is ${SPEED_GAP.toFixed(1)}x published`);
+  assert.ok(DEFECT_GAP > 1, `POC defects are ${DEFECT_GAP.toFixed(1)}x published`);
+  for (const e of DEFECT_EVIDENCE) assert.ok(e.factor < POC.defects);
+  for (const e of SPEED_EVIDENCE) assert.ok(e.factor < POC.speed);
 });
 
-test("automated review is NOT sufficient at the internal defect rate", () => {
+test("automated review is NOT sufficient at the POC defect rate", () => {
   // The finding that falls out of the internal number, and the reason the page
   // does not end at "add AI review".
   const base = quality("traditional");
@@ -134,10 +135,10 @@ test("automated review is NOT sufficient at the internal defect rate", () => {
 });
 
 test("break-even is derived, not asserted", () => {
-  assert.equal(BREAK_EVEN_CATCH, 1 - 1 / INTERNAL.defects);
+  assert.equal(BREAK_EVEN_CATCH, 1 - 1 / POC.defects);
   // A gate exactly at break-even leaves the baseline rate untouched.
   const escaped =
-    BASELINE_DEFECTS_PER_KLOC * INTERNAL.defects * (1 - BREAK_EVEN_CATCH);
+    BASELINE_DEFECTS_PER_KLOC * POC.defects * (1 - BREAK_EVEN_CATCH);
   assert.ok(Math.abs(escaped - BASELINE_DEFECTS_PER_KLOC) < 1e-9);
 });
 
