@@ -20,7 +20,7 @@
 /opt/homebrew/opt/postgresql@16/bin/pg_ctl -D /opt/homebrew/var/postgresql@16 start
 cd api && SWCRC=true node --import @swc-node/register/esm-register src/main.ts &
 curl -s -X POST localhost:4000/v1/ingest/run        # ECB レートを当日分に
-curl -s localhost:4000/v1/health                    # {"ok":true,"rates":3,"ports":2272}
+curl -s localhost:4000/v1/health                    # {"ok":true,"rates":4,"ports":2272}
 
 # 2. サイトは本番ビルドで（dev の初回コンパイル待ちを消す）
 cd .. && pnpm build && pnpm start                   # http://localhost:3000
@@ -28,7 +28,7 @@ cd .. && pnpm build && pnpm start                   # http://localhost:3000
 
 - ブラウザは **1440px 以上、ズーム 100%**、右上の言語は **日本語**
 - タブを3つ開いておく：`localhost:3000`、`localhost:4000/docs`（Swagger）、
-  `localhost:3000/engineering?n=quotation-service`（技術詳細を開いた状態）
+  `localhost:3000/engineering?n=booking`（技術詳細を開いた状態）
 - ローディング画面はタブごとに1回。**見せたいなら新しいタブで開く**
 - プロセスの3Dは本番ビルドなら1秒で出る。dev なら初回12秒かかるので dev では見せない
 - 万一 API が落ちていても**サイトは全部動く**。見積書の下に「ブラウザ内で計算しました」と出るだけ。その場合は「これが設計どおりのフォールバックです」と言えばよい
@@ -94,7 +94,7 @@ cd .. && pnpm build && pnpm start                   # http://localhost:3000
 
 **「バックエンドは NestJS。この画面は仕様書で、コードから自動生成されています。」**
 
-- ▶ `GET /v1/rates` → Try it out → Execute → ECB の3レートと **asOf / fetchedAt / url**
+- ▶ `GET /v1/rates` → Try it out → Execute → ECB の4レート（JPY・EUR・SGD・KRW）と **asOf / fetchedAt / url**
   **「見積りのたびに ECB へ取りに行きます。数字に出どころと取得時刻が付き、取れなかった場合は保存済みの値を『cached』と明記して使う。黙って古い値を出すことはない」**
 - ▶ `GET /v1/quotations/{reference}` にさっきの番号 → 発行した見積りがそのまま再生される
 - 言う：**「計算のコードはフロントと同じファイルを import しています。だからブラウザと API が違う数字を出すことはない」**
