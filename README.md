@@ -16,7 +16,8 @@ here.
 
 ```bash
 pnpm install
-pnpm dev            # http://localhost:3000
+pnpm boot           # PostgreSQL + API + site, one command (--prod builds the site); pnpm halt stops
+pnpm dev            # http://localhost:3000 (site only)
 pnpm verify         # token guards, types, lint, unit tests, production build
 pnpm locales:check  # the three bundles carry the same keys and placeholders
 pnpm build:static   # STATIC_EXPORT=1 -> out/, plain files for any static host
@@ -26,7 +27,8 @@ The site renders in English, Japanese and Vietnamese from
 `src/locales/{en,ja,vi}.json`. The bundles are imported directly, so the
 running site has no network dependency on the translation platform;
 `pnpm locales:pull` refreshes them from Lokalise before a build and a failed
-pull leaves the last good bundle in place.
+pull leaves the last good bundle in place. On Windows, `pnpm boot:win` does
+what `pnpm boot` does; `WINDOWS.md` has the three installs it needs.
 
 ## The five screens
 

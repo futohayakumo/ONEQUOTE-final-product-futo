@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "description": "The quotation service behind the portfolio: real rates in, one priced quotation out.",
   "scripts": {
-    "dev": "SWCRC=true node --watch --import @swc-node/register/esm-register src/main.ts",
-    "start": "SWCRC=true node --import @swc-node/register/esm-register src/main.ts",
+    "dev": "cross-env SWCRC=true node --watch --import @swc-node/register/esm-register src/main.ts",
+    "start": "cross-env SWCRC=true node --import @swc-node/register/esm-register src/main.ts",
     "prisma": "prisma",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
-    "ingest": "SWCRC=true node --import @swc-node/register/esm-register src/ingest/run.ts",
+    "ingest": "cross-env SWCRC=true node --import @swc-node/register/esm-register src/ingest/run.ts",
     "test": "SWCRC=true node --import @swc-node/register/esm-register --test \"src/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -32,6 +32,7 @@
     "@swc/core": "^1.16.2",
     "@types/express": "^5.0.3",
     "@types/node": "^20",
+    "cross-env": "^10.1.0",
     "prisma": "^6.16.2",
     "tsx": "^4.20.5",
     "typescript": "^5"

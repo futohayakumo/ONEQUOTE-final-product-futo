@@ -14,7 +14,11 @@
     "build:static": "STATIC_EXPORT=1 next build",
     "locales:pull": "node scripts/pull-locales.mjs",
     "locales:check": "node --experimental-strip-types --test src/lib/i18n.test.ts",
-    "ports:pull": "node --experimental-strip-types scripts/pull-ports.mts"
+    "ports:pull": "node --experimental-strip-types scripts/pull-ports.mts",
+    "boot": "bash scripts/up.sh",
+    "halt": "bash scripts/down.sh",
+    "boot:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/up.ps1",
+    "halt:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/halt.ps1"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
