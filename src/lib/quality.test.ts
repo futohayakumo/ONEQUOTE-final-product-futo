@@ -66,7 +66,7 @@ test("the published factors are the median of the published rows", () => {
 });
 
 test("no PUBLISHED source is quoted as saying three times faster", () => {
-  // The internal report says 3x and is labelled as internal. No study in the
+  // The POC benchmark says 3x and is labelled as one. No study in the
   // table may be made to say it — if one genuinely reports 3x it belongs here
   // as a row, where it moves the published median honestly.
   for (const e of SPEED_EVIDENCE) {

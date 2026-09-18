@@ -76,6 +76,14 @@ The distance is real geography; the line is a model, and the form says both.
 The option card and the ticket print the same figure because they call the
 same function; the day they did not, a reviewer found it in a minute.
 
+**The exchange rate is fetched when the quotation is issued.** The service
+asks the ECB (via Frankfurter) for every quotation and every `GET /v1/rates`,
+stores what it got, and prints the ECB's own date. When the ECB does not
+answer inside 2.5 s the stored rate serves, labelled `cached` with the time it
+was stored — on the ticket and on the options page, in all three languages.
+The browser never holds a rate of its own: without the service the tariff
+display is off and the ticket says the figure was computed in the browser.
+
 **The engineering journey reads the same trace as the log.** `src/lib/trace.ts`
 walks the quotation route once and produces the hops, the log and the total.
 The journey's clock, its per-step figures and the "1.3 seconds" in the heading
@@ -141,6 +149,15 @@ theme, TypeScript, and `clsx`. The flow diagram is measured DOM plus plain
 SVG, the drag and drop is native, the C4 views are Mermaid loaded only when
 opened, and the horizontal journey is one `requestAnimationFrame` loop against
 a pinned viewport. No animation library, no component library.
+
+Behind it, in `api/`: NestJS 11 with Swagger at `/docs`, Prisma 6 on
+PostgreSQL 16, run through `@swc-node/register` (esbuild-based runners emit
+no decorator metadata, and Nest's injection and validation silently stop
+working). It imports the same `src/lib/*.ts` the browser runs, adds the ECB
+rate and a stored record, and is strictly additive: the site is static and
+prices every shipment itself, so a host with no API serves the same page
+minus one line. `api/README.md` has the routes and the data sources;
+`docker-compose.yml` runs the database and the service together.
 
 The exception is the process screen's simulation, which uses three.js through
 react-three-fiber. An animated model was worth roughly 250 kB gzipped, so the

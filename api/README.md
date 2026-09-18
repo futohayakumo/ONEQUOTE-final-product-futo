@@ -5,7 +5,10 @@ things the browser cannot have: exchange rates that were actually fetched
 from the ECB, and a record of every quotation issued.
 
 ```bash
-# local, against a Postgres on localhost (brew install postgresql@16)
+# the one-command way, from the repository root: Postgres + API + site
+pnpm boot                   # pnpm boot:win on Windows; WINDOWS.md has the installs
+
+# by hand, against a Postgres on localhost (brew install postgresql@16)
 cp .env.example .env        # set your user in DATABASE_URL
 pnpm install                # from the repository root
 pnpm db:migrate             # creates the tables
@@ -59,4 +62,7 @@ and a price this service returns are the same number for the same inputs.
 Run with `@swc-node/register`, not `tsx`: swc emits decorator metadata,
 which Nest's dependency injection and its validation pipe both read. Under
 esbuild the pipe silently validated nothing. The root `package.json` is
-`"type": "module"` so the shared modules load as ESM here too.
+`"type": "module"` so the shared modules load as ESM here too. The scripts
+set `SWCRC=true` through `cross-env` so they run on Windows shells as well,
+and the tests (`pnpm test`) go through the same loader, since strip-types
+cannot parse decorators.
