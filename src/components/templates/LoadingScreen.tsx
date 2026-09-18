@@ -79,12 +79,24 @@ export function LoadingScreen() {
       setTimeout(() => setFrame(i), i * STEP_MS),
     );
     const out = setTimeout(() => setState("leaving"), MIN_MS);
-    const gone = setTimeout(() => setState("done"), MIN_MS + FADE_MS);
     return () => {
       ticks.forEach(clearTimeout);
       clearTimeout(out);
-      clearTimeout(gone);
     };
+  }, [state]);
+
+  /*
+   * The unmount is its own effect. It used to be a third timer inside the
+   * one above — and that effect is keyed on `state`, so the moment the state
+   * became "leaving" its cleanup ran and cleared the very timer that would
+   * have set "done". The loader faded to opacity 0 and stayed mounted, a
+   * full-screen layer at z-100 that swallowed every click on the page
+   * beneath it. Found on the morning of the presentation, on a fresh tab.
+   */
+  useEffect(() => {
+    if (state !== "leaving") return;
+    const gone = setTimeout(() => setState("done"), FADE_MS);
+    return () => clearTimeout(gone);
   }, [state]);
 
   if (state === "done" || state === "idle") return null;
@@ -94,7 +106,7 @@ export function LoadingScreen() {
       role="status"
       aria-label={t("loading.label")}
       className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-studio transition-opacity ease-out ${
-        state === "leaving" ? "opacity-0" : "opacity-100"
+        state === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       style={{ transitionDuration: `${FADE_MS}ms` }}
     >
